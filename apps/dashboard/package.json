@@ -10,7 +10,7 @@
  },
  "dependencies": {
   "@tailwindcss/vite": "4.3.3",
-  "@tanstack/react-router": "1.170.32",
+  "@tanstack/react-router": "1.170.33",
   "@types/node": "26.4.1",
   "lucide-react": "1.41.0",
   "react": "19.2.8",
@@ -20,7 +20,7 @@
  },
  "devDependencies": {
   "@cloudflare/workers-types": "5.20260906.1",
-  "@tanstack/router-plugin": "1.168.35",
+  "@tanstack/router-plugin": "1.168.36",
   "@vitejs/plugin-react": "6.1.1",
   "vite": "8.2.2",
   "wrangler": "4.129.0"
