@@ -1,6 +1,6 @@
 <div align="center">
 
-# Maze Identity Platform Setup
+# Muljax Identity Platform Setup
 
 An open-source identity platform built on Cloudflare Workers.
 
@@ -48,7 +48,7 @@ bun install
 
 ## Generate the OIDC private key
 
-Maze Identity Platform requires an OIDC private key for signing tokens. You do not need to generate this key manually.
+Muljax Identity Platform requires an OIDC private key for signing tokens. You do not need to generate this key manually.
 
 Run:
 
@@ -60,7 +60,7 @@ This will generate the `OIDC_PRIVATE_KEY` secret for you.
 
 ## Deploy
 
-Maze Identity Platform uses [Alchemy](https://alchemy.run/) as its infrastructure-as-code layer. The complete infrastructure is managed by Alchemy, including the Cloudflare Workers, D1 database, profile storage, database migrations, and other required resources.
+Muljax Identity Platform uses [Alchemy](https://alchemy.run/) as its infrastructure-as-code layer. The complete infrastructure is managed by Alchemy, including the Cloudflare Workers, D1 database, profile storage, database migrations, and other required resources.
 
 Once your `.env` is configured and the OIDC private key has been generated, the entire platform can be provisioned and deployed with a single command:
 
