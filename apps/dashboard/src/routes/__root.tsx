@@ -1,4 +1,8 @@
-import { createRootRoute, Outlet } from "@tanstack/react-router";
+import {
+	createRootRoute,
+	type ErrorComponentProps,
+	Outlet,
+} from "@tanstack/react-router";
 
 import NotFound from "@/components/ui/NotFound";
 
@@ -12,7 +16,10 @@ function RootLayout() {
 	return <Outlet />;
 }
 
-function RootError({ error }: { error: Error }) {
+function RootError({ error }: ErrorComponentProps) {
+	const message =
+		error instanceof Error ? error.message : "An unexpected error occurred.";
+
 	return (
 		<div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
 			<div className="max-w-lg text-center">
@@ -20,9 +27,7 @@ function RootError({ error }: { error: Error }) {
 					Something went wrong
 				</h1>
 
-				<p className="mt-2 text-sm text-zinc-400">
-					{error.message || "An unexpected error occurred."}
-				</p>
+				<p className="mt-2 text-sm text-zinc-400">{message}</p>
 
 				<button
 					type="button"
