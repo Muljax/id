@@ -1,10 +1,10 @@
 # Security Policy
 
-Maze ID takes security seriously. If you believe you have found a security vulnerability, please report it responsibly through GitHub's private vulnerability reporting.
+Muljax ID takes security seriously. If you believe you have found a security vulnerability, please report it responsibly through GitHub's private vulnerability reporting.
 
 ## Supported Versions
 
-Maze ID is currently pre-1.0. Only the **latest released version** is supported with security updates.
+Muljax ID is currently pre-1.0. Only the **latest released version** is supported with security updates.
 
 | Version                | Supported          |
 | ---------------------- | ------------------ |
