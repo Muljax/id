@@ -137,7 +137,7 @@ function PasskeysPage() {
 					</h1>
 
 					<p className="mt-2 text-sm leading-6 text-zinc-500">
-						Manage the passkeys you use to sign in to your Maze ID account.
+						Manage the passkeys you use to sign in to your Muljax ID account.
 					</p>
 				</div>
 
@@ -297,7 +297,7 @@ function PasskeysPage() {
 			<Modal
 				open={passkeyToDelete !== null}
 				title="Remove passkey"
-				description="Are you sure you want to remove this passkey? You will no longer be able to use it to sign in to your Maze ID account."
+				description="Are you sure you want to remove this passkey? You will no longer be able to use it to sign in to your Muljax ID account."
 				onClose={() => {
 					if (!deleting) {
 						setPasskeyToDelete(null);

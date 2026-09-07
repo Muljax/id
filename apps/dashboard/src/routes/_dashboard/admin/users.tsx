@@ -32,7 +32,7 @@ function UsersPage() {
 					Users
 				</h1>
 				<p className="mt-2 text-sm leading-6 text-zinc-500">
-					View users registered with Maze ID.
+					View users registered with Muljax ID.
 				</p>
 			</header>
 

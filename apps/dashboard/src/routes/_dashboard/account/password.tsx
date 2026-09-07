@@ -69,7 +69,7 @@ function ChangePasswordPage() {
 					Password
 				</h1>
 				<p className="mt-2 text-sm leading-6 text-zinc-500">
-					Update the password you use to sign in to Maze ID.
+					Update the password you use to sign in to Muljax ID.
 				</p>
 			</div>
 

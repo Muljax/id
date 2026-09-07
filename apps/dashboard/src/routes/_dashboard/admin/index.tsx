@@ -17,7 +17,7 @@ function AdminOverviewPage() {
 			<h1 className="text-xl font-semibold text-white">Admin</h1>
 
 			<p className="mt-1 text-sm text-zinc-500">
-				Manage Maze ID and its users.
+				Manage Muljax ID and its users.
 			</p>
 		</div>
 	);

@@ -345,7 +345,7 @@ function AuthorizePage() {
 		<div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4 py-12">
 			<div className="w-full max-w-2xl">
 				<div className="mb-8 text-center">
-					<p className="text-sm font-medium text-zinc-500">Maze ID</p>
+					<p className="text-sm font-medium text-zinc-500">Muljax ID</p>
 
 					<h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-white">
 						Authorize application
@@ -368,7 +368,7 @@ function AuthorizePage() {
 						</h2>
 
 						<p className="mt-1 text-sm text-zinc-500">
-							wants to access your Maze ID account.
+							wants to access your Muljax ID account.
 						</p>
 
 						{client?.client_id && (

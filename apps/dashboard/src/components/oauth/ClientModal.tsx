@@ -134,7 +134,7 @@ export default function ClientModal({
 					? "Save these credentials now. The client secret will not be shown again."
 					: editing
 						? "Update this application's OAuth configuration."
-						: "Register an application that will use Maze ID for authentication."
+						: "Register an application that will use Muljax ID for authentication."
 			}
 			onClose={onClose}
 		>

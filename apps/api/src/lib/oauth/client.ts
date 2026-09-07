@@ -12,7 +12,7 @@ export const OAUTH_CLIENT_TYPES = ["public", "confidential"] as const;
 export type OAuthClientType = (typeof OAUTH_CLIENT_TYPES)[number];
 
 /**
- * OIDC scopes supported by Maze ID.
+ * OIDC scopes supported by Muljax ID.
  */
 export const OIDC_SCOPES = ["openid", "profile", "email"] as const;
 

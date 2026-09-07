@@ -41,7 +41,7 @@ export const Api = Cloudflare.Worker("Api", {
 		INSTANCE_NAME: Config.string("INSTANCE_NAME"),
 		DASHBOARD_DOMAIN: DashboardDomain,
 
-		RP_NAME: "Maze ID",
+		RP_NAME: "Muljax ID",
 		RP_ID: DashboardDomain,
 		ORIGIN: ApiUrl,
 		OIDC_ISSUER: Config.string("OIDC_ISSUER"),

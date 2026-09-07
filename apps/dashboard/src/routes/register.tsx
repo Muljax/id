@@ -85,7 +85,7 @@ function RegisterPage() {
 					</h1>
 
 					<p className="mt-2 text-sm leading-6 text-zinc-500">
-						Create your Maze ID account to get started.
+						Create your Muljax ID account to get started.
 					</p>
 				</div>
 

@@ -78,7 +78,7 @@ function AuthorizedAppsPage() {
 				</h1>
 
 				<p className="mt-2 text-sm leading-6 text-zinc-500">
-					Manage applications that have access to your Maze ID account.
+					Manage applications that have access to your Muljax ID account.
 				</p>
 			</div>
 

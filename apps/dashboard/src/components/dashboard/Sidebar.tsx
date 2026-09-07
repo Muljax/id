@@ -26,7 +26,7 @@ export default function Sidebar({ isAdmin }: SidebarProps) {
 		<aside className="flex min-h-screen w-60 shrink-0 flex-col bg-zinc-950">
 			<div className="px-5 pb-6 pt-7">
 				<div className="text-sm font-semibold tracking-[-0.01em] text-zinc-200">
-					Maze ID
+					Muljax ID
 				</div>
 			</div>
 

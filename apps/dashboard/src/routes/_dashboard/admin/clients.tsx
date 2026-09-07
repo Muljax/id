@@ -104,7 +104,7 @@ function ClientsPage() {
 						OAuth clients
 					</h1>
 					<p className="mt-2 text-sm leading-6 text-zinc-500">
-						Manage applications that can authenticate users with Maze ID.
+						Manage applications that can authenticate users with Muljax ID.
 					</p>
 				</div>
 
@@ -138,7 +138,7 @@ function ClientsPage() {
 					<div className="border-b border-white/8 px-6 py-5">
 						<h2 className="text-sm font-medium text-white">OAuth clients</h2>
 						<p className="mt-1 text-sm text-zinc-500">
-							Applications registered with your Maze ID instance.
+							Applications registered with your Muljax ID instance.
 						</p>
 					</div>
 
