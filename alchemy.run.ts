@@ -8,7 +8,7 @@ import { Database } from "./alchemy/database.ts";
 import { ProfileBucket } from "./alchemy/storage.ts";
 
 export default Alchemy.Stack(
-	"MazeId",
+	"MuljaxId",
 	{
 		providers: Cloudflare.providers(),
 		state: Cloudflare.state(),

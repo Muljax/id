@@ -8,7 +8,7 @@ const SIGN_ALGORITHM = {
 	hash: "SHA-256",
 } as const;
 
-const KEY_ID = "maze-id-1";
+const KEY_ID = "Muljax-id-1";
 
 /**
  * Imports an ECDSA private key from a serialized JWK.
