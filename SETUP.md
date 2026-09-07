@@ -1,20 +1,20 @@
 <div align="center">
 
-# Muljax Identity Platform Setup
+# Muljaxax Identity Platform Setup
 
 An open-source identity platform built on Cloudflare Workers.
 
 <br />
 
-[![Bun](https://img.shields.io/badge/Bun-000000?logo=bun\&logoColor=white)](https://bun.sh/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript\&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-61DAFB?logo=react\&logoColor=black)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite\&logoColor=white)](https://vite.dev/)
-[![Hono](https://img.shields.io/badge/Hono-E36002?logo=hono\&logoColor=white)](https://hono.dev/)
-[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020?logo=cloudflare\&logoColor=white)](https://workers.cloudflare.com/)
-[![Cloudflare D1](https://img.shields.io/badge/Cloudflare%20D1-F38020?logo=cloudflare\&logoColor=white)](https://developers.cloudflare.com/d1/)
-[![Drizzle ORM](https://img.shields.io/badge/Drizzle%20ORM-C5F74F?logo=drizzle\&logoColor=black)](https://orm.drizzle.team/)
-[![Alchemy](https://img.shields.io/badge/Alchemy-5A45FF?logo=alchemy\&logoColor=white)](https://alchemy.run/)
+[![Bun](https://img.shields.io/badge/Bun-000000?logo=bun&logoColor=white)](https://bun.sh/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+[![Hono](https://img.shields.io/badge/Hono-E36002?logo=hono&logoColor=white)](https://hono.dev/)
+[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
+[![Cloudflare D1](https://img.shields.io/badge/Cloudflare%20D1-F38020?logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/d1/)
+[![Drizzle ORM](https://img.shields.io/badge/Drizzle%20ORM-C5F74F?logo=drizzle&logoColor=black)](https://orm.drizzle.team/)
+[![Alchemy](https://img.shields.io/badge/Alchemy-5A45FF?logo=alchemy&logoColor=white)](https://alchemy.run/)
 
 </div>
 
@@ -22,10 +22,10 @@ An open-source identity platform built on Cloudflare Workers.
 
 Before getting started, make sure you have:
 
-* [Bun](https://bun.sh/) installed
-* A [Cloudflare](https://www.cloudflare.com/) account
-* A Cloudflare API token with the permissions required by Alchemy
-* The repository cloned locally
+- [Bun](https://bun.sh/) installed
+- A [Cloudflare](https://www.cloudflare.com/) account
+- A Cloudflare API token with the permissions required by Alchemy
+- The repository cloned locally
 
 ## Configure `.env`
 
@@ -117,10 +117,10 @@ This is expected behavior and does not indicate that the deployment has failed. 
 
 If deployment fails for another reason, verify that:
 
-* Your Cloudflare credentials have the required permissions.
-* All required `.env` values are populated.
-* The `OIDC_PRIVATE_KEY` has been generated.
-* You are running `bun run deploy` from the repository root.
+- Your Cloudflare credentials have the required permissions.
+- All required `.env` values are populated.
+- The `OIDC_PRIVATE_KEY` has been generated.
+- You are running `bun run deploy` from the repository root.
 
 Because infrastructure and database setup are handled by Alchemy, manual Cloudflare or D1 configuration should generally not be necessary.
 

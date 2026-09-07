@@ -122,7 +122,7 @@ function LoginPage() {
 					<p className="mt-2 text-sm leading-6 text-zinc-500">
 						{forceLogin
 							? "Sign in again to continue to this application."
-							: "Sign in to continue to your Maze account."}
+							: "Sign in to continue to your Muljax account."}
 					</p>
 				</div>
 

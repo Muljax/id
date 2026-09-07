@@ -1,6 +1,6 @@
 <div align="center">
 
-# Contributing to Muljax ID
+# Contributing to Muljaxax ID
 
 Thanks for contributing to Muljax ID!
 
@@ -8,15 +8,15 @@ An open-source identity platform built on Cloudflare Workers.
 
 <br />
 
-[![Bun](https://img.shields.io/badge/Bun-000000?logo=bun\&logoColor=white)](https://bun.sh/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript\&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-61DAFB?logo=react\&logoColor=black)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite\&logoColor=white)](https://vite.dev/)
-[![Hono](https://img.shields.io/badge/Hono-E36002?logo=hono\&logoColor=white)](https://hono.dev/)
-[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020?logo=cloudflare\&logoColor=white)](https://workers.cloudflare.com/)
-[![Cloudflare D1](https://img.shields.io/badge/Cloudflare%20D1-F38020?logo=cloudflare\&logoColor=white)](https://developers.cloudflare.com/d1/)
-[![Drizzle ORM](https://img.shields.io/badge/Drizzle%20ORM-C5F74F?logo=drizzle\&logoColor=black)](https://orm.drizzle.team/)
-[![Alchemy](https://img.shields.io/badge/Alchemy-5A45FF?logo=alchemy\&logoColor=white)](https://alchemy.run/)
+[![Bun](https://img.shields.io/badge/Bun-000000?logo=bun&logoColor=white)](https://bun.sh/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+[![Hono](https://img.shields.io/badge/Hono-E36002?logo=hono&logoColor=white)](https://hono.dev/)
+[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
+[![Cloudflare D1](https://img.shields.io/badge/Cloudflare%20D1-F38020?logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/d1/)
+[![Drizzle ORM](https://img.shields.io/badge/Drizzle%20ORM-C5F74F?logo=drizzle&logoColor=black)](https://orm.drizzle.team/)
+[![Alchemy](https://img.shields.io/badge/Alchemy-5A45FF?logo=alchemy&logoColor=white)](https://alchemy.run/)
 
 </div>
 
@@ -181,13 +181,13 @@ type: short description
 
 Common types include:
 
-* `feat` — new functionality
-* `fix` — bug fix
-* `refactor` — code restructuring without changing behavior
-* `docs` — documentation changes
-* `chore` — maintenance
-* `test` — tests
-* `perf` — performance improvements
+- `feat` — new functionality
+- `fix` — bug fix
+- `refactor` — code restructuring without changing behavior
+- `docs` — documentation changes
+- `chore` — maintenance
+- `test` — tests
+- `perf` — performance improvements
 
 ## Infrastructure
 
@@ -211,14 +211,14 @@ Infrastructure changes should be reviewed carefully because they may modify Clou
 
 When opening a pull request:
 
-* Explain what changed.
-* Explain why the change was needed.
-* Keep the PR focused.
-* Include relevant testing information.
-* Make sure all typechecks pass.
-* Make sure formatting passes.
-* Do not include secrets or local `.env` files.
-* Do not include unrelated changes.
+- Explain what changed.
+- Explain why the change was needed.
+- Keep the PR focused.
+- Include relevant testing information.
+- Make sure all typechecks pass.
+- Make sure formatting passes.
+- Do not include secrets or local `.env` files.
+- Do not include unrelated changes.
 
 Before requesting review, verify:
 
@@ -257,12 +257,12 @@ If you find a bug or have an idea for an improvement, open an issue with enough 
 
 Include, where applicable:
 
-* What you expected to happen
-* What actually happened
-* Steps to reproduce the issue
-* Relevant error messages
-* Environment information
-* A minimal reproduction
+- What you expected to happen
+- What actually happened
+- Steps to reproduce the issue
+- Relevant error messages
+- Environment information
+- A minimal reproduction
 
 ## License
 

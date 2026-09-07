@@ -21,7 +21,7 @@ route.get("/", (c) => {
 
 		id_token_signing_alg_values_supported: ["ES256"],
 
-		acr_values_supported: ["urn:maze-id:password", "urn:maze-id:passkey"],
+		acr_values_supported: ["urn:Muljax-id:password", "urn:Muljax-id:passkey"],
 
 		scopes_supported: ["openid", "profile", "email"],
 
