@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.14.3](https://github.com/Muljax/id/compare/v0.14.2...v0.14.3) (2026-09-07)
+
+
+### Bug Fixes
+
+* **dashboard:** correct root error component typing ([13e20b7](https://github.com/Muljax/id/commit/13e20b71f8d023b6032dab067570879440a47f41))
+* **deps:** update tanstack-router monorepo ([8ed8f50](https://github.com/Muljax/id/commit/8ed8f50bf9ae3b0452098848cf62cd00687c6b0c))
+* you can pass forceDestroy to the R2 stack to empty the bucket ([71df8b6](https://github.com/Muljax/id/commit/71df8b685aed33ca120a401b5cab84c72a38b6df))
+
 ## [0.14.2](https://github.com/thehazell/id/compare/v0.14.1...v0.14.2) (2026-09-06)
 
 
