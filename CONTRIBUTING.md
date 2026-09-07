@@ -1,8 +1,8 @@
 <div align="center">
 
-# Contributing to Maze ID
+# Contributing to Muljax ID
 
-Thanks for contributing to Maze ID!
+Thanks for contributing to Muljax ID!
 
 An open-source identity platform built on Cloudflare Workers.
 
@@ -22,7 +22,7 @@ An open-source identity platform built on Cloudflare Workers.
 
 ## Getting Started
 
-Maze ID is a TypeScript monorepo managed with Bun.
+Muljax ID is a TypeScript monorepo managed with Bun.
 
 For installation, environment configuration, local development, and deployment instructions, see the [setup guide](./SETUP.md).
 
@@ -159,7 +159,7 @@ Husky will automatically run the pre-commit checks.
 
 ## Commit Messages
 
-Maze ID uses [Conventional Commits](https://www.conventionalcommits.org/) for commit messages.
+Muljax ID uses [Conventional Commits](https://www.conventionalcommits.org/) for commit messages.
 
 Use concise commit messages that describe the change.
 
@@ -191,7 +191,7 @@ Common types include:
 
 ## Infrastructure
 
-Maze ID uses Alchemy to manage its Cloudflare infrastructure.
+Muljax ID uses Alchemy to manage its Cloudflare infrastructure.
 
 To preview infrastructure changes:
 
@@ -266,6 +266,6 @@ Include, where applicable:
 
 ## License
 
-Maze ID is licensed under the GNU General Public License v3.0.
+Muljax ID is licensed under the GNU General Public License v3.0.
 
 See [`LICENSE`](./LICENSE) for the complete license.
