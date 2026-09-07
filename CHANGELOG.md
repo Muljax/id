@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.15.0](https://github.com/Muljax/id/compare/v0.14.3...v0.15.0) (2026-09-07)
+
+
+### Features
+
+* better profile page ([39f1de1](https://github.com/Muljax/id/commit/39f1de1f36fc4d429eab5c63fae18e77eca47a33))
+
 ## [0.14.3](https://github.com/Muljax/id/compare/v0.14.2...v0.14.3) (2026-09-07)
 
 
