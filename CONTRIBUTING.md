@@ -1,6 +1,6 @@
 <div align="center">
 
-# Contributing to Muljaxax ID
+# Contributing to Muljax ID
 
 Thanks for contributing to Muljax ID!
 
