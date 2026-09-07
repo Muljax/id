@@ -1,6 +1,6 @@
 # Security Policy
 
-Muljaxax ID takes security seriously. If you believe you have found a security vulnerability, please report it responsibly through GitHub's private vulnerability reporting.
+Muljax ID takes security seriously. If you believe you have found a security vulnerability, please report it responsibly through GitHub's private vulnerability reporting.
 
 ## Supported Versions
 
