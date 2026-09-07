@@ -1,6 +1,6 @@
 <div align="center">
 
-# Maze Identity Platform
+# Muljax Identity Platform
 
 An open-source identity platform built on Cloudflare Workers.
 
@@ -21,7 +21,7 @@ An open-source identity platform built on Cloudflare Workers.
 ---
 
 > [!WARNING]
-> Maze Identity Platform is pre-1.0 and, as such, may ship breaking releases without a major semver bump.
+> Muljax Identity Platform is pre-1.0 and, as such, may ship breaking releases without a major semver bump.
 
 ## Overview
 
@@ -29,7 +29,7 @@ The project consists of two main applications, the [API](./apps/api) and the [da
 
 ## API
 
-The Maze ID API is a [Hono](https://hono.dev/) application running on [Cloudflare Workers](https://workers.cloudflare.com/).
+The Muljax ID API is a [Hono](https://hono.dev/) application running on [Cloudflare Workers](https://workers.cloudflare.com/).
 
 The API uses [Cloudflare D1](https://developers.cloudflare.com/d1/) as its database, with [Drizzle ORM](https://orm.drizzle.team/) for database access.
 
@@ -47,7 +47,7 @@ apps/api/
 
 ## Dashboard
 
-The Maze ID dashboard is a [React](https://react.dev/) app built with [Vite](https://vite.dev).
+The Muljax ID dashboard is a [React](https://react.dev/) app built with [Vite](https://vite.dev).
 
 ### Dashboard Structure
 
@@ -93,7 +93,7 @@ bun run dev
 
 ## Deployment
 
-Maze Identity Platform is deployed using [Alchemy](https://alchemy.run/) and runs on [Cloudflare Workers](https://workers.cloudflare.com/).
+Muljax Identity Platform is deployed using [Alchemy](https://alchemy.run/) and runs on [Cloudflare Workers](https://workers.cloudflare.com/).
 
 The API uses [Cloudflare D1](https://developers.cloudflare.com/d1/) for persistent storage.
 
