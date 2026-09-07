@@ -1,6 +1,6 @@
 <div align="center">
 
-# Muljax Identity Platform Setup
+# Muljaxax Identity Platform Setup
 
 An open-source identity platform built on Cloudflare Workers.
 
