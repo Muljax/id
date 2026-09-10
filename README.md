@@ -1,10 +1,14 @@
-<div align="center">
+
+<div align="center"> 
+	<img width="170" alt="Muljax Logo" src="https://github.com/user-attachments/assets/e9d50a92-6993-48e7-871e-d3b497cf721f" />
+</div>
+<br />
+
+---
 
 # Muljax Identity Platform
 
 An open-source identity platform built on Cloudflare Workers.
-
-<br />
 
 [![Bun](https://img.shields.io/badge/Bun-000000?logo=bun&logoColor=white)](https://bun.sh/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -93,9 +97,11 @@ bun run dev
 
 ## Deployment
 
-Muljax Identity Platform is deployed using [Alchemy](https://alchemy.run/) and runs on [Cloudflare Workers](https://workers.cloudflare.com/).
+Deploy the platform with:
 
-The API uses [Cloudflare D1](https://developers.cloudflare.com/d1/) for persistent storage.
+```sh
+bun run deploy
+```
 
 ## License
 
