@@ -1,4 +1,5 @@
 {
+ "name": "muljax-id",
  "version": "0.15.0",
  "private": true,
  "workspaces": [
