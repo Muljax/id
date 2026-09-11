@@ -4,3 +4,7 @@ tsconfig.*tsbuildinfo
 wrangler.jsonc
 generated.json
 .alchemy
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
