@@ -1,5 +1,4 @@
 {
- "name": "muljax-id",
  "version": "0.15.0",
  "private": true,
  "workspaces": [
@@ -35,9 +34,6 @@
   "@effect/platform-node": "4.0.0-rc.112",
   "@noble/curves": "^2.4.0",
   "@simplewebauthn/browser": "14.0.0",
-  "@simplewebauthn/server": "14.0.1",
-  "alchemy": "2.0.0-beta.76",
-  "effect": "4.0.0-rc.112",
-  "wrangler": "4.129.0"
+  "@simplewebauthn/server": "14.0.1"
  }
 }
