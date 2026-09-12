@@ -1,3 +1,2 @@
-bun run typecheck
 bun run typecheck:api
 bun run typecheck:dashboard
