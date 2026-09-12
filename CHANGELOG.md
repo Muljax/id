@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.0](https://github.com/Muljax/id/compare/v0.15.0...v0.16.0) (2026-09-12)
+
+
+### Features
+
+* also mobile sidebar ([93ed9d6](https://github.com/Muljax/id/commit/93ed9d680a07973396c165b7bd7a25fe4748d8dd))
+
 ## [0.15.0](https://github.com/Muljax/id/compare/v0.14.3...v0.15.0) (2026-09-07)
 
 
