@@ -1,6 +1,3 @@
 node_modules/
 .env
 tsconfig.*tsbuildinfo
-wrangler.jsonc
-generated.json
-.alchemy

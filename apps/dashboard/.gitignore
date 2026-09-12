@@ -1,8 +1,6 @@
 dist/
 .wrangler/
 node_modules/
-wrangler.jsonc
-worker-configuration.d.ts
 *.tsbuildinfo*
 routeTree.gen.ts
 .tanstack
