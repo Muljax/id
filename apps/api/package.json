@@ -12,8 +12,7 @@
  "devDependencies": {
   "@cloudflare/workers-types": "5.20260906.1",
   "@types/bun": "1.4.1",
-  "drizzle-kit": "1.0.0-rc.5-ab785fc",
-  "wrangler": "4.129.0"
+  "drizzle-kit": "1.0.0-rc.5-ab785fc"
  },
  "peerDependencies": {
   "typescript": "^7.0.2"

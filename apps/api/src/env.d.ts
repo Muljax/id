@@ -1,5 +1,3 @@
-import type { ApiEnv } from "../../../alchemy/api";
+import type * as Env from "../worker-configuration";
 
-declare global {
-	type Env = ApiEnv;
-}
+export type { Env };
