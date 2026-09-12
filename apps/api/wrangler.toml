@@ -30,3 +30,6 @@ simple = { limit = 10, period = 60 }
 name = "lifecycle"
 binding = "LIFECYCLE_WORKFLOW"
 class_name = "LifecycleWorkflow"
+
+[secrets]
+required = ["OIDC_PRIVATE_KEY", "ADMIN_BOOTSTRAP_SECRET"]
