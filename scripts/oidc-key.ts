@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 
-const ENV_FILE = ".env";
+const TFVARS_FILE = "terraform/terraform.tfvars";
 
 const keyPair = await crypto.subtle.generateKey(
 	{
@@ -21,22 +21,23 @@ const jwk = JSON.stringify({
 	d: privateKey.d,
 });
 
-let env = "";
+// JSON.stringify again so the JWK is correctly escaped as an HCL string.
+const line = `oidc_private_key = ${JSON.stringify(jwk)}`;
+
+let tfvars = "";
 
 try {
-	env = await readFile(ENV_FILE, "utf8");
+	tfvars = await readFile(TFVARS_FILE, "utf8");
 } catch {
-	// .env doesn't exist yet.
+	// terraform.tfvars doesn't exist yet.
 }
 
-const line = `OIDC_PRIVATE_KEY='${jwk}'`;
-
-if (/^OIDC_PRIVATE_KEY=.*$/m.test(env)) {
-	env = env.replace(/^OIDC_PRIVATE_KEY=.*$/m, line);
+if (/^oidc_private_key\s*=.*$/m.test(tfvars)) {
+	tfvars = tfvars.replace(/^oidc_private_key\s*=.*$/m, line);
 } else {
-	env = `${env.trimEnd()}\n${line}\n`;
+	tfvars = `${tfvars.trimEnd()}\n${line}\n`;
 }
 
-await writeFile(ENV_FILE, env);
+await writeFile(TFVARS_FILE, tfvars);
 
-console.log("Generated OIDC private key and updated .env");
+console.log("Generated OIDC private key and updated terraform.tfvars");

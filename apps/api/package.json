@@ -5,6 +5,7 @@
  "private": true,
  "scripts": {
   "dev": "wrangler dev",
+  "build": "bun build.ts",
   "deploy": "wrangler deploy",
   "db:generate": "drizzle-kit generate",
   "db:migrate": "wrangler d1 migrations apply DB --remote"

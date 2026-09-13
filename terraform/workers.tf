@@ -1,116 +1,128 @@
 resource "cloudflare_workers_script" "api" {
-	account_id = var.cloudflare_account_id
+  account_id = var.cloudflare_account_id
 
-	script_name = local.api_worker_name
+  depends_on = [
+    terraform_data.d1_migrations,
+  ]
 
-	content_file   = var.api_worker_file
-	content_sha256 = filesha256(var.api_worker_file)
+  script_name = local.api_worker_name
 
-	main_module = basename(var.api_worker_file)
+  content_file   = var.api_worker_file
+  content_sha256 = filesha256(var.api_worker_file)
 
-	compatibility_date = "2026-07-11"
+  main_module = basename(var.api_worker_file)
 
-	bindings = [
-		{
-			name        = "DB"
-			type        = "d1"
-			database_id = cloudflare_d1_database.api.id
-		},
+  compatibility_date = "2026-07-11"
 
-		{
-			name        = "PROFILE_BUCKET"
-			type        = "r2_bucket"
-			bucket_name = cloudflare_r2_bucket.profile.name
-		},
+  bindings = [
+    {
+      name        = "DB"
+      type        = "d1"
+      database_id = cloudflare_d1_database.api.id
+    },
 
-		{
-			name         = "AUTH_RATE_LIMITER"
-			type         = "ratelimit"
-			namespace_id = 80085
+    {
+      name        = "PROFILE_BUCKET"
+      type        = "r2_bucket"
+      bucket_name = cloudflare_r2_bucket.profile.name
+    },
 
-			simple = {
-				limit  = 10
-				period = 60
-			}
-		},
+    {
+      name         = "AUTH_RATE_LIMITER"
+      type         = "ratelimit"
+      namespace_id = 80085
 
-		{
-			name          = "LIFECYCLE_WORKFLOW"
-			type          = "workflow"
-			workflow_name = cloudflare_workflow.lifecycle.workflow_name
-		},
+      simple = {
+        limit  = 10
+        period = 60
+      }
+    },
 
-		{
-			name = "INSTANCE_NAME"
-			type = "plain_text"
-			text = var.instance_name
-		},
+    {
+      name          = "LIFECYCLE_WORKFLOW"
+      type          = "workflow"
+      workflow_name = "Lifecycle"
+      class_name    = "LifecycleWorkflow"
+    },
 
-		{
-			name = "DASHBOARD_DOMAIN"
-			type = "plain_text"
-			text = var.dashboard_domain
-		},
+    {
+      name = "INSTANCE_NAME"
+      type = "plain_text"
+      text = var.instance_name
+    },
 
-		{
-			name = "RP_NAME"
-			type = "plain_text"
-			text = "Muljax ID"
-		},
+    {
+      name = "DASHBOARD_DOMAIN"
+      type = "plain_text"
+      text = var.dashboard_domain
+    },
 
-		{
-			name = "RP_ID"
-			type = "plain_text"
-			text = local.dashboard_hostname
-		},
+    {
+      name = "RP_NAME"
+      type = "plain_text"
+      text = "Muljax ID"
+    },
 
-		{
-			name = "ORIGIN"
-			type = "plain_text"
-			text = var.api_url
-		},
+    {
+      name = "RP_ID"
+      type = "plain_text"
+      text = local.dashboard_hostname
+    },
 
-		{
-			name = "OIDC_ISSUER"
-			type = "plain_text"
-			text = var.oidc_issuer
-		},
+    {
+      name = "ORIGIN"
+      type = "plain_text"
+      text = var.api_url
+    },
 
-		{
-			name = "LOCALHOST"
-			type = "plain_text"
-			text = tostring(var.localhost)
-		},
+    {
+      name = "OIDC_ISSUER"
+      type = "plain_text"
+      text = var.oidc_issuer
+    },
 
-		{
-			name = "ADMIN_BOOTSTRAP_SECRET"
-			type = "secret_text"
-			text = var.admin_bootstrap_secret
-		},
+    {
+      name = "LOCALHOST"
+      type = "plain_text"
+      text = tostring(var.localhost)
+    },
 
-		{
-			name = "OIDC_PRIVATE_KEY"
-			type = "secret_text"
-			text = var.oidc_private_key
-		},
-	]
+    {
+      name = "ADMIN_BOOTSTRAP_SECRET"
+      type = "secret_text"
+      text = var.admin_bootstrap_secret
+    },
+
+    {
+      name = "OIDC_PRIVATE_KEY"
+      type = "secret_text"
+      text = var.oidc_private_key
+    },
+  ]
 }
 
 resource "cloudflare_workers_script" "dashboard" {
-	account_id = var.cloudflare_account_id
+  account_id = var.cloudflare_account_id
 
-	script_name = local.dashboard_worker_name
+  script_name = local.dashboard_worker_name
 
-	content_file   = var.dashboard_worker_file
-	content_sha256 = filesha256(var.dashboard_worker_file)
+  content_file   = var.dashboard_worker_file
+  content_sha256 = filesha256(var.dashboard_worker_file)
 
-	main_module = basename(var.dashboard_worker_file)
+  main_module = basename(var.dashboard_worker_file)
 
-	assets = {
-		directory = var.dashboard_assets_directory
+  assets = {
+    directory = var.dashboard_assets_directory
 
-		config = {
-			not_found_handling = "single-page-application"
-		}
-	}
+    config = {
+      not_found_handling = "single-page-application"
+    }
+  }
+
+  bindings = [
+    {
+      name = "ASSETS"
+      type = "assets"
+    },
+  ]
 }

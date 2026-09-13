@@ -1,15 +1,21 @@
-resource "cloudflare_workers_domain" "api" {
-	account_id = var.cloudflare_account_id
-	zone_id    = var.cloudflare_zone_id
+resource "cloudflare_workers_custom_domain" "api" {
+  account_id = var.cloudflare_account_id
+  zone_id    = var.cloudflare_zone_id
+  hostname   = local.api_hostname
+  service    = local.api_worker_name
 
-	hostname = local.api_hostname
-	service  = cloudflare_workers_script.api.script_name
+  depends_on = [
+    cloudflare_workers_script.api,
+  ]
 }
 
-resource "cloudflare_workers_domain" "dashboard" {
-	account_id = var.cloudflare_account_id
-	zone_id    = var.cloudflare_zone_id
+resource "cloudflare_workers_custom_domain" "dashboard" {
+  account_id = var.cloudflare_account_id
+  zone_id    = var.cloudflare_zone_id
+  hostname   = local.dashboard_hostname
+  service    = local.dashboard_worker_name
 
-	hostname = local.dashboard_hostname
-	service  = cloudflare_workers_script.dashboard.script_name
+  depends_on = [
+    cloudflare_workers_script.dashboard,
+  ]
 }

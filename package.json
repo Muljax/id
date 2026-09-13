@@ -10,6 +10,7 @@
   "check": "bunx biome check .",
   "check:fix": "bunx biome check . --fix",
   "build:dashboard": "bun --cwd=apps/dashboard run build",
+  "build:api": "bun --cwd=apps/api run build",
   "typecheck": "bunx tsc --build",
   "typecheck:dashboard": "bunx tsc -p apps/dashboard/tsconfig.json --noEmit",
   "typecheck:api": "bunx tsc -p apps/api/tsconfig.json --noEmit",
