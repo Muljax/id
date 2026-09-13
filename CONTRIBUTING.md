@@ -16,7 +16,7 @@ An open-source identity platform built on Cloudflare Workers.
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 [![Cloudflare D1](https://img.shields.io/badge/Cloudflare%20D1-F38020?logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/d1/)
 [![Drizzle ORM](https://img.shields.io/badge/Drizzle%20ORM-C5F74F?logo=drizzle&logoColor=black)](https://orm.drizzle.team/)
-[![Alchemy](https://img.shields.io/badge/Alchemy-5A45FF?logo=alchemy&logoColor=white)](https://alchemy.run/)
+[![Terraform](https://img.shields.io/badge/Terraform-844FBA?logo=terraform&logoColor=white)](https://developer.hashicorp.com/terraform)
 
 </div>
 
@@ -30,13 +30,13 @@ For installation, environment configuration, local development, and deployment i
 
 ```text
 .
-├── alchemy/          # Infrastructure configuration
 ├── apps/
 │   ├── api/          # API Worker
 │   └── dashboard/    # Dashboard application
+├── scripts/          # Project scripts
+├── terraform/        # Infrastructure configuration
 ├── .github/          # GitHub configuration
 ├── .vscode/          # VS Code configuration
-├── alchemy.run.ts    # Alchemy entry point
 ├── biome.json        # Biome configuration
 ├── package.json
 ├── tsconfig.json
@@ -61,6 +61,8 @@ The API application lives in:
 apps/api
 ```
 
+It is a Hono application running on Cloudflare Workers with Cloudflare D1 and Drizzle ORM.
+
 ### Dashboard
 
 The dashboard application lives in:
@@ -68,6 +70,8 @@ The dashboard application lives in:
 ```text
 apps/dashboard
 ```
+
+It is a React application built with Vite and served through a Cloudflare Worker.
 
 ## Code Quality
 
@@ -100,7 +104,7 @@ bun run typecheck:dashboard
 bunx --no -- commitlint --edit "$1"
 ```
 
-If a typecheck fails or your commit does not use conventional commit style, the commit will be blocked.
+If a typecheck fails or your commit does not use Conventional Commit style, the commit will be blocked.
 
 ### Bun and Husky
 
@@ -123,7 +127,7 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 
 This file is local to your machine and should **not** be committed to the repository.
 
-The repository's Husky hook intentionally does not contain machine-specific Bun paths so that it remains portable across Windows, macOS, and Linux.
+The repository's Husky hook intentionally does not contain machine-specific Bun paths so that it remains portable across environments.
 
 ## Making Changes
 
@@ -186,86 +190,3 @@ Common types include:
 - `refactor` — code restructuring without changing behavior
 - `docs` — documentation changes
 - `chore` — maintenance
-- `test` — tests
-- `perf` — performance improvements
-
-## Infrastructure
-
-Muljax ID uses Alchemy to manage its Cloudflare infrastructure.
-
-To preview infrastructure changes:
-
-```bash
-bun run plan
-```
-
-To deploy:
-
-```bash
-bun run deploy
-```
-
-Infrastructure changes should be reviewed carefully because they may modify Cloudflare resources.
-
-## Pull Requests
-
-When opening a pull request:
-
-- Explain what changed.
-- Explain why the change was needed.
-- Keep the PR focused.
-- Include relevant testing information.
-- Make sure all typechecks pass.
-- Make sure formatting passes.
-- Do not include secrets or local `.env` files.
-- Do not include unrelated changes.
-
-Before requesting review, verify:
-
-```bash
-bun run typecheck
-bun run typecheck:api
-bun run typecheck:dashboard
-bun run format
-```
-
-## Environment Variables
-
-Never commit secrets or credentials.
-
-Use:
-
-```text
-.env
-```
-
-for local configuration and:
-
-```text
-.env.example
-```
-
-to document required environment variables.
-
-If you add a new required environment variable, update `.env.example` with a safe placeholder.
-
-For environment setup instructions, see [`SETUP.md`](./SETUP.md).
-
-## Reporting Issues
-
-If you find a bug or have an idea for an improvement, open an issue with enough information for someone else to reproduce or understand the problem.
-
-Include, where applicable:
-
-- What you expected to happen
-- What actually happened
-- Steps to reproduce the issue
-- Relevant error messages
-- Environment information
-- A minimal reproduction
-
-## License
-
-Muljax ID is licensed under the GNU General Public License v3.0.
-
-See [`LICENSE`](./LICENSE) for the complete license.
