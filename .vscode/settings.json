@@ -1,10 +1,6 @@
- {
+{
   "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-   "source.fixAll.biome": "explicit",
-   "source.organizeImports.biome": "always"
-  },
-  "biome.suggestInstallingGlobally": true,
+
   "[javascript]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
@@ -20,8 +16,11 @@
   "[json]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
+
+  "biome.suggestInstallingGlobally": true,
+
   "json.schemaDownload.trustedDomains": {
-   "https://docs.renovatebot.com": true,
-   "https://biomejs.dev": true
+    "https://docs.renovatebot.com": true,
+    "https://biomejs.dev": true
   }
- }
+}
