@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.0](https://github.com/Muljax/id/compare/v0.16.0...v0.17.0) (2026-09-13)
+
+
+### Features
+
+* migrate to terraform ([5c38823](https://github.com/Muljax/id/commit/5c38823c74ab95d0d9fe8946549fd7206c0e6bc1))
+
 ## [0.16.0](https://github.com/Muljax/id/compare/v0.15.0...v0.16.0) (2026-09-12)
 
 
