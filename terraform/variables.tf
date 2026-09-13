@@ -14,8 +14,8 @@ variable "instance_name" {
   default     = "muljax-id"
 }
 
-variable "api_url" {
-  description = "Public URL of the API."
+variable "api_domain" {
+  description = "Public hostname of the API."
   type        = string
 }
 
@@ -24,13 +24,8 @@ variable "dashboard_domain" {
   type        = string
 }
 
-variable "oidc_issuer" {
-  description = "OIDC issuer URL."
-  type        = string
-}
-
 variable "localhost" {
-  description = "Whether the API is running in localhost mode."
+  description = "Use HTTP instead of HTTPS for local development."
   type        = bool
   default     = false
 }

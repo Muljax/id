@@ -1,19 +1,16 @@
 locals {
-	api_hostname = replace(
-		replace(var.api_url, "https://", ""),
-		"http://",
-		"",
-	)
+  protocol = var.localhost ? "http" : "https"
 
-	dashboard_hostname = replace(
-		replace(var.dashboard_domain, "https://", ""),
-		"http://",
-		"",
-	)
+  api_hostname       = var.api_domain
+  dashboard_hostname = var.dashboard_domain
 
-	api_worker_name       = "${var.instance_name}-api"
-	dashboard_worker_name = "${var.instance_name}-dashboard"
+  api_url       = "${local.protocol}://${local.api_hostname}"
+  dashboard_url = "${local.protocol}://${local.dashboard_hostname}"
+  oidc_issuer   = local.api_url
 
-	profile_bucket_name = "${var.instance_name}-profiles"
-	database_name       = "${var.instance_name}-api"
+  api_worker_name       = "${var.instance_name}-api"
+  dashboard_worker_name = "${var.instance_name}-dashboard"
+
+  profile_bucket_name = "${var.instance_name}-profiles"
+  database_name       = "${var.instance_name}-api"
 }

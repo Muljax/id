@@ -72,13 +72,13 @@ resource "cloudflare_workers_script" "api" {
     {
       name = "ORIGIN"
       type = "plain_text"
-      text = var.api_url
+      text = local.api_url
     },
 
     {
       name = "OIDC_ISSUER"
       type = "plain_text"
-      text = var.oidc_issuer
+      text = local.oidc_issuer
     },
 
     {
