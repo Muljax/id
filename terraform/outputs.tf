@@ -35,7 +35,7 @@ output "dashboard_hostname" {
 
 output "api_url" {
   description = "Public API URL."
-  value       = var.api_url
+  value       = local.api_url
 }
 
 output "dashboard_url" {
@@ -45,7 +45,7 @@ output "dashboard_url" {
 
 output "oidc_issuer" {
   description = "OIDC issuer URL."
-  value       = var.oidc_issuer
+  value       = local.oidc_issuer
 }
 
 output "instance_name" {
