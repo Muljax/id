@@ -88,26 +88,78 @@ The infrastructure includes:
 - Custom domains
 - Worker bindings
 - Static dashboard assets
+- D1 database migrations
 
-Initialize Terraform:
+### Build the application
+
+Terraform deploys the built Worker files, so build the application before running Terraform:
+
+```sh
+bun run build
+```
+
+### Initialize Terraform
+
+Initialize Terraform from the repository root:
 
 ```sh
 terraform -chdir=terraform init
 ```
 
-Review the infrastructure changes:
+### Review the infrastructure changes
 
 ```sh
 terraform -chdir=terraform plan
 ```
 
-Apply the infrastructure:
+### Apply the infrastructure
 
 ```sh
 terraform -chdir=terraform apply
 ```
 
 Terraform will provision and configure the required Cloudflare infrastructure.
+
+D1 migrations are automatically applied to the remote database during deployment. The migration system uses the Drizzle 1.0 migration layout under:
+
+```text
+apps/api/drizzle/migrations/
+```
+
+Each migration is stored in its own directory containing a `migration.sql` file.
+
+## D1 migrations
+
+D1 migrations are managed by Drizzle and applied to the remote Cloudflare D1 database during Terraform deployment.
+
+The migration directory uses the Drizzle 1.0 structure:
+
+```text
+apps/api/drizzle/migrations/
+├── 20260830233203_migration_name/
+│   └── migration.sql
+├── 20260905225516_another_migration/
+│   └── migration.sql
+└── ...
+```
+
+Terraform detects changes to the migration files and runs:
+
+```sh
+bunx wrangler d1 migrations apply <database> --remote
+```
+
+You normally do not need to apply migrations manually.
+
+If you add or modify a migration, rebuild and run Terraform:
+
+```sh
+bun run build
+terraform -chdir=terraform plan
+terraform -chdir=terraform apply
+```
+
+The Terraform configuration generates a temporary Wrangler configuration containing the D1 migration settings required to locate the Drizzle migrations.
 
 ## Local development
 
@@ -124,14 +176,36 @@ Refer to the application's development output for the URLs of the dashboard and 
 ```text
 .
 ├── apps/
-│   ├── api/             # Hono API Worker
-│   └── dashboard/       # React + Vite dashboard
+│   ├── api/                 # Hono API Worker
+│   │   └── drizzle/
+│   │       └── migrations/  # Drizzle D1 migrations
+│   └── dashboard/           # React + Vite dashboard
 ├── scripts/
-│   └── oidc-key.ts      # OIDC signing key generator
-├── terraform/           # Cloudflare infrastructure
-├── biome.json           # Biome configuration
+│   └── oidc-key.ts          # OIDC signing key generator
+├── terraform/               # Cloudflare infrastructure
+├── biome.json               # Biome configuration
 ├── package.json
 └── .env.example
+```
+
+## Terraform outputs
+
+After applying the infrastructure, Terraform provides useful deployment information, including:
+
+- API Worker name
+- Dashboard Worker name
+- D1 database name and ID
+- R2 profile bucket name
+- API hostname and URL
+- Dashboard hostname and URL
+- OIDC issuer
+- Instance name
+- Cloudflare account and zone IDs
+
+View the outputs with:
+
+```sh
+terraform -chdir=terraform output
 ```
 
 ## Troubleshooting
@@ -157,40 +231,4 @@ Verify that:
 - The token belongs to the correct Cloudflare account.
 - Your Cloudflare account ID is configured correctly.
 
-### Terraform variables are missing
-
-Make sure you have created the Terraform variables file:
-
-```sh
-cp terraform/terraform.tfvars.example terraform/terraform.tfvars
-```
-
-Then verify that the required values are configured.
-
-Terraform does not automatically read `.env` files.
-
-### Deployment issues
-
-If deployment fails, verify that:
-
-- All required Terraform variables are populated.
-- The `OIDC_PRIVATE_KEY` has been generated.
-- The OIDC private key has been provided to Terraform.
-- Terraform has been initialized with `terraform -chdir=terraform init`.
-- You are running commands from the repository root.
-- Your Cloudflare credentials have the required permissions.
-
-## Updating an existing deployment
-
-To update an existing installation, pull the latest changes and run:
-
-```sh
-git pull
-
-bun install
-
-terraform -chdir=terraform plan
-terraform -chdir=terraform apply
-```
-
-Terraform will re
+###
