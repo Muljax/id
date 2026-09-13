@@ -1,0 +1,35 @@
+name = "maze-id-api"
+main = "src/index.ts"
+compatibility_date = "2026-07-11"
+
+[vars]
+INSTANCE_NAME = ""
+DASHBOARD_DOMAIN = ""
+RP_NAME = ""
+RP_ID = ""
+ORIGIN = ""
+OIDC_ISSUER = ""
+LOCALHOST = ""
+
+[[d1_databases]]
+binding = "DB"
+database_name = "maze-id-api"
+database_id = "database"
+
+[[r2_buckets]]
+binding = "PROFILE_BUCKET"
+bucket_name = "bucket"
+
+[[ratelimits]]
+name = "AUTH_RATE_LIMITER"
+namespace_id = "80085"
+
+simple = { limit = 10, period = 60 }
+
+[[workflows]]
+name = "lifecycle"
+binding = "LIFECYCLE_WORKFLOW"
+class_name = "LifecycleWorkflow"
+
+[secrets]
+required = ["OIDC_PRIVATE_KEY", "ADMIN_BOOTSTRAP_SECRET"]

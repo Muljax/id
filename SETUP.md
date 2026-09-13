@@ -14,7 +14,7 @@ An open-source identity platform built on Cloudflare Workers.
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 [![Cloudflare D1](https://img.shields.io/badge/Cloudflare%20D1-F38020?logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/d1/)
 [![Drizzle ORM](https://img.shields.io/badge/Drizzle%20ORM-C5F74F?logo=drizzle&logoColor=black)](https://orm.drizzle.team/)
-[![Alchemy](https://img.shields.io/badge/Alchemy-5A45FF?logo=alchemy&logoColor=white)](https://alchemy.run/)
+[![Terraform](https://img.shields.io/badge/Terraform-844FBA?logo=terraform&logoColor=white)](https://developer.hashicorp.com/terraform)
 
 </div>
 
@@ -23,20 +23,32 @@ An open-source identity platform built on Cloudflare Workers.
 Before getting started, make sure you have:
 
 - [Bun](https://bun.sh/) installed
+- [Terraform](https://developer.hashicorp.com/terraform/install) installed
 - A [Cloudflare](https://www.cloudflare.com/) account
-- A Cloudflare API token with the permissions required by Alchemy
+- A Cloudflare API token with the permissions required by the Terraform configuration
 - The repository cloned locally
 
-## Configure `.env`
+## Configure the environment
 
-Copy the values from `.env.example` to `.env` and fill out the required values.
+Copy the example environment file:
 
 ```sh
 cp .env.example .env
 ```
 
-> [!WARNING]
-> If you have issues with Alchemy reporting that configuration values are not set, copy the values directly from the [raw `.env.example`](https://raw.githubusercontent.com/thehazell/id/refs/heads/main/.env.example) to rule out encoding issues, especially on Windows.
+Then fill out the required values.
+
+The `.env` file is used by the application and local development environment. Terraform configuration is provided separately through Terraform variables.
+
+For Terraform, copy the example variables file:
+
+```sh
+cp terraform/terraform.tfvars.example terraform/terraform.tfvars
+```
+
+Then configure the Cloudflare account, domain, and other deployment values.
+
+> **Important:** `terraform.tfvars` may contain sensitive values. It is ignored by Git and should never be committed.
 
 ## Install dependencies
 
@@ -48,30 +60,106 @@ bun install
 
 ## Generate the OIDC private key
 
-Muljax Identity Platform requires an OIDC private key for signing tokens. You do not need to generate this key manually.
+Muljax Identity Platform requires an OIDC private key for signing tokens.
 
-Run:
+Generate the key with:
 
 ```sh
-bun alchemy/oidc-key.ts
+bun scripts/oidc-key.ts
 ```
 
-This will generate the `OIDC_PRIVATE_KEY` secret for you.
+This generates an ES256 private key and writes it to `.env` as `OIDC_PRIVATE_KEY`.
+
+The generated private key should never be committed to the repository.
+
+When deploying with Terraform, provide the generated key to Terraform through the `oidc_private_key` variable.
 
 ## Deploy
 
-Muljax Identity Platform uses [Alchemy](https://alchemy.run/) as its infrastructure-as-code layer. The complete infrastructure is managed by Alchemy, including the Cloudflare Workers, D1 database, profile storage, database migrations, and other required resources.
+Muljax Identity Platform uses [Terraform](https://developer.hashicorp.com/terraform) as its infrastructure-as-code layer.
 
-Once your `.env` is configured and the OIDC private key has been generated, the entire platform can be provisioned and deployed with a single command:
+The infrastructure includes:
+
+- Cloudflare Workers
+- Cloudflare D1
+- Cloudflare R2
+- Rate limiting
+- Cloudflare Workflows
+- Custom domains
+- Worker bindings
+- Static dashboard assets
+- D1 database migrations
+
+### Build the application
+
+Terraform deploys the built Worker files, so build the application before running Terraform:
 
 ```sh
-bun run deploy
+bun run build
 ```
 
-You do not need to manually create Cloudflare resources, configure Workers, or run database migrations.
+### Initialize Terraform
 
-> [!NOTE]
-> When redeploying an existing installation, you may see an error indicating that the previous profile bucket could not be deleted. **This is expected and normal.** The deployment can continue despite this error.
+Initialize Terraform from the repository root:
+
+```sh
+terraform -chdir=terraform init
+```
+
+### Review the infrastructure changes
+
+```sh
+terraform -chdir=terraform plan
+```
+
+### Apply the infrastructure
+
+```sh
+terraform -chdir=terraform apply
+```
+
+Terraform will provision and configure the required Cloudflare infrastructure.
+
+D1 migrations are automatically applied to the remote database during deployment. The migration system uses the Drizzle 1.0 migration layout under:
+
+```text
+apps/api/drizzle/migrations/
+```
+
+Each migration is stored in its own directory containing a `migration.sql` file.
+
+## D1 migrations
+
+D1 migrations are managed by Drizzle and applied to the remote Cloudflare D1 database during Terraform deployment.
+
+The migration directory uses the Drizzle 1.0 structure:
+
+```text
+apps/api/drizzle/migrations/
+├── 20260830233203_migration_name/
+│   └── migration.sql
+├── 20260905225516_another_migration/
+│   └── migration.sql
+└── ...
+```
+
+Terraform detects changes to the migration files and runs:
+
+```sh
+bunx wrangler d1 migrations apply <database> --remote
+```
+
+You normally do not need to apply migrations manually.
+
+If you add or modify a migration, rebuild and run Terraform:
+
+```sh
+bun run build
+terraform -chdir=terraform plan
+terraform -chdir=terraform apply
+```
+
+The Terraform configuration generates a temporary Wrangler configuration containing the D1 migration settings required to locate the Drizzle migrations.
 
 ## Local development
 
@@ -88,65 +176,59 @@ Refer to the application's development output for the URLs of the dashboard and 
 ```text
 .
 ├── apps/
-│   ├── api/          # Hono API Worker
-│   └── dashboard/    # React + Vite dashboard
-├── alchemy.run.ts    # Cloudflare infrastructure definition
-├── biome.json        # Biome configuration
+│   ├── api/                 # Hono API Worker
+│   │   └── drizzle/
+│   │       └── migrations/  # Drizzle D1 migrations
+│   └── dashboard/           # React + Vite dashboard
+├── scripts/
+│   └── oidc-key.ts          # OIDC signing key generator
+├── terraform/               # Cloudflare infrastructure
+├── biome.json               # Biome configuration
 ├── package.json
 └── .env.example
 ```
 
+## Terraform outputs
+
+After applying the infrastructure, Terraform provides useful deployment information, including:
+
+- API Worker name
+- Dashboard Worker name
+- D1 database name and ID
+- R2 profile bucket name
+- API hostname and URL
+- Dashboard hostname and URL
+- OIDC issuer
+- Instance name
+- Cloudflare account and zone IDs
+
+View the outputs with:
+
+```sh
+terraform -chdir=terraform output
+```
+
 ## Troubleshooting
 
-### Alchemy cannot find environment variables
+### Terraform is not installed
 
-If Alchemy reports that a configuration value is missing even though it exists in `.env`:
+If Terraform cannot be found, install it using the official Terraform installation instructions:
 
-1. Verify that the variable name exactly matches `.env.example`.
-2. Make sure the `.env` file is located at the repository root.
-3. Check for unexpected quotes or whitespace.
-4. On Windows, try copying the values directly from the [raw `.env.example`](https://raw.githubusercontent.com/thehazell/id/refs/heads/main/.env.example).
+https://developer.hashicorp.com/terraform/install
 
-### Profile bucket deletion error
-
-When redeploying, Alchemy may report that the previous profile bucket cannot be deleted.
-
-This is expected behavior and does not indicate that the deployment has failed. No manual intervention is required.
-
-### Deployment issues
-
-If deployment fails for another reason, verify that:
-
-- Your Cloudflare credentials have the required permissions.
-- All required `.env` values are populated.
-- The `OIDC_PRIVATE_KEY` has been generated.
-- You are running `bun run deploy` from the repository root.
-
-Because infrastructure and database setup are handled by Alchemy, manual Cloudflare or D1 configuration should generally not be necessary.
-
-## Updating an existing deployment
-
-To update an existing installation, pull the latest changes and run:
+Then verify the installation:
 
 ```sh
-bun install
-bun run deploy
+terraform version
 ```
 
-Alchemy will reconcile the deployed infrastructure with the current configuration.
+### Terraform cannot authenticate with Cloudflare
 
-## That's it
+Verify that:
 
-The platform is designed so that deployment is intentionally simple:
+- Your Cloudflare API token is valid.
+- The token has the required permissions.
+- The token belongs to the correct Cloudflare account.
+- Your Cloudflare account ID is configured correctly.
 
-```sh
-git clone https://github.com/thehazell/id
-cd id
-bun install
-cp .env.example .env
-# Configure .env
-bun alchemy/oidc-key.ts
-bun run deploy
-```
-
-Alchemy handles the infrastructure from there.
+###

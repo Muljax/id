@@ -1,5 +1,4 @@
 {
- "include": ["./alchemy"],
  "compilerOptions": {
   "types": ["bun"],
   "target": "ESNext",

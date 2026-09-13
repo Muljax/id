@@ -1,5 +1,4 @@
-
-<div align="center"> 
+<div align="center">
 	<img width="170" alt="Muljax Logo" src="https://github.com/user-attachments/assets/e9d50a92-6993-48e7-871e-d3b497cf721f" />
 </div>
 <br />
@@ -18,7 +17,7 @@ An open-source identity platform built on Cloudflare Workers.
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 [![Cloudflare D1](https://img.shields.io/badge/Cloudflare%20D1-F38020?logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/d1/)
 [![Drizzle ORM](https://img.shields.io/badge/Drizzle%20ORM-C5F74F?logo=drizzle&logoColor=black)](https://orm.drizzle.team/)
-[![Alchemy](https://img.shields.io/badge/Alchemy-5A45FF?logo=alchemy&logoColor=white)](https://alchemy.run/)
+[![Terraform](https://img.shields.io/badge/Terraform-844FBA?logo=terraform&logoColor=white)](https://developer.hashicorp.com/terraform)
 
 </div>
 
@@ -30,6 +29,8 @@ An open-source identity platform built on Cloudflare Workers.
 ## Overview
 
 The project consists of two main applications, the [API](./apps/api) and the [dashboard](./apps/dashboard).
+
+Infrastructure is managed with [Terraform](https://developer.hashicorp.com/terraform), while application code is built with Bun.
 
 ## API
 
@@ -46,12 +47,16 @@ apps/api/
 │   ├── middleware/   # API middleware
 │   ├── routes/       # API routes
 │   └── index.ts      # Worker entrypoint
-└── wrangler.jsonc
+├── drizzle/
+│   └── migrations/   # D1 database migrations
+└── build.ts          # API Worker build script
 ```
 
 ## Dashboard
 
-The Muljax ID dashboard is a [React](https://react.dev/) app built with [Vite](https://vite.dev).
+The Muljax ID dashboard is a [React](https://react.dev/) app built with [Vite](https://vite.dev/).
+
+The dashboard is compiled into a Cloudflare Worker with its static assets managed through the Worker Assets binding.
 
 ### Dashboard Structure
 
@@ -61,6 +66,7 @@ apps/dashboard/
 │   ├── components/   # Reusable UI components
 │   ├── lib/          # Client-side utilities
 │   └── routes/       # Dashboard routes
+├── worker.ts         # Dashboard Worker entrypoint
 └── vite.config.ts
 ```
 
@@ -71,7 +77,11 @@ apps/dashboard/
 ├── apps/
 │   ├── api/          # Hono API
 │   └── dashboard/    # React + Vite dashboard
-└── README.md
+├── scripts/
+│   └── oidc-key.ts   # OIDC signing key generator
+├── terraform/        # Cloudflare infrastructure
+├── README.md
+└── SETUP.md          # Setup and deployment instructions
 ```
 
 ## Development
@@ -80,28 +90,19 @@ apps/dashboard/
 
 - [Bun](https://bun.sh/)
 - [Cloudflare](https://www.cloudflare.com/)
+- [Terraform](https://developer.hashicorp.com/terraform)
 
 ### Install
+
+Install the project dependencies with:
 
 ```sh
 bun install
 ```
 
-### Development
+## Setup and Deployment
 
-Start the development environment with:
-
-```sh
-bun run dev
-```
-
-## Deployment
-
-Deploy the platform with:
-
-```sh
-bun run deploy
-```
+For environment configuration, OIDC key generation, Terraform configuration, Cloudflare setup, database migrations, and deployment instructions, see the [setup guide](./SETUP.md).
 
 ## License
 

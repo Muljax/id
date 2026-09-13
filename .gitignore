@@ -1,3 +1,8 @@
 node_modules/
 .env
 tsconfig.*tsbuildinfo
+terraform.tfvars
+*plan
+.terraform
+*.tfstate*
+.wrangler-d1-migrations.toml

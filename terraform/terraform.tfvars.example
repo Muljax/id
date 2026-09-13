@@ -1,0 +1,13 @@
+cloudflare_account_id = "your-account-id"
+cloudflare_zone_id    = "your-zone-id"
+
+instance_name     = "muljax-id"
+api_url           = "https://id-api.example.com"
+dashboard_domain  = "https://id.example.com"
+oidc_issuer       = "https://id-api.example.com"
+
+localhost = false
+
+admin_bootstrap_secret = "replace-me"
+
+oidc_private_key = "replace-me"
