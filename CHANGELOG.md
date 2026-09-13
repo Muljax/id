@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.1](https://github.com/Muljax/id/compare/v0.17.0...v0.17.1) (2026-09-13)
+
+
+### Bug Fixes
+
+* **deps:** update tanstack-router monorepo ([2947c26](https://github.com/Muljax/id/commit/2947c264eea4d11e9caef54d2667b3c5496ff209))
+
 ## [0.17.0](https://github.com/Muljax/id/compare/v0.16.0...v0.17.0) (2026-09-13)
 
 
