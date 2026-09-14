@@ -64,10 +64,14 @@ export function deleteOAuthClient(clientId: string) {
 export interface OAuthClientDetails {
 	client_id: string;
 	name: string;
+	redirect_uri_valid?: boolean;
 }
 
-export function getOAuthClientDetails(clientId: string) {
-	return api<OAuthClientDetails>(
-		`/oauth/details?client_id=${encodeURIComponent(clientId)}`,
-	);
+export function getOAuthClientDetails(clientId: string, redirectUri?: string) {
+	const params = new URLSearchParams({ client_id: clientId });
+	if (redirectUri) {
+		params.set("redirect_uri", redirectUri);
+	}
+
+	return api<OAuthClientDetails>(`/oauth/details?${params.toString()}`);
 }

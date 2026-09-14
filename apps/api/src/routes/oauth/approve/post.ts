@@ -6,6 +6,7 @@ import {
 	createAuthorizationCode,
 	validateAuthorizationRequest,
 } from "@/lib/oauth/authorization";
+import { grantOAuthAccess } from "@/lib/oauth/grant";
 import { getSessionUserWithSession } from "@/lib/session";
 
 const route = new Hono<{ Bindings: Env }>();
@@ -57,6 +58,12 @@ route.post("/", async (c) => {
 	}
 
 	const { user, session } = sessionRecord;
+
+	await grantOAuthAccess(db, {
+		userId: user.id,
+		clientId: client.id,
+		scopes,
+	});
 
 	const code = await createAuthorizationCode(
 		db,

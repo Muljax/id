@@ -12,7 +12,6 @@ import users from "./routes/users";
 const app = new Hono<{ Bindings: Env }>();
 
 app.use("/api/*", dashboardCors());
-app.use("/oauth/*", dashboardCors());
 
 app.get("/api/health", (c) => {
 	return c.json({

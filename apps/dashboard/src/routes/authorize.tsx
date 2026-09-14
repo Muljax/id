@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import Button from "@/components/ui/Button";
-import { api, getOAuthClientDetails } from "@/lib/api";
+import { api, getOAuthClientDetails, type OAuthClientDetails } from "@/lib/api";
 
 export interface AuthorizeSearch {
 	client_id?: string;
@@ -17,11 +17,6 @@ export interface AuthorizeSearch {
 	max_age?: string;
 	acr_values?: string;
 	claims?: string;
-}
-
-interface OAuthClientDetails {
-	client_id: string;
-	name: string;
 }
 
 interface GrantResponse {
@@ -90,7 +85,7 @@ function AuthorizePage() {
 			return;
 		}
 
-		void getOAuthClientDetails(search.client_id)
+		void getOAuthClientDetails(search.client_id, search.redirect_uri)
 			.then(setClient)
 			.catch((error) => {
 				setError(
@@ -102,7 +97,7 @@ function AuthorizePage() {
 			.finally(() => {
 				setLoadingClient(false);
 			});
-	}, [search.client_id]);
+	}, [search.client_id, search.redirect_uri]);
 
 	useEffect(() => {
 		if (missing || loadingClient || !client || search.prompt !== "login") {
@@ -180,6 +175,8 @@ function AuthorizePage() {
 			missing ||
 			loadingClient ||
 			!client ||
+			!client.redirect_uri_valid ||
+			!search.redirect_uri ||
 			checkingGrant ||
 			promptNoneHandled.current
 		) {
@@ -192,15 +189,22 @@ function AuthorizePage() {
 
 		promptNoneHandled.current = true;
 
-		const url = new URL(search.redirect_uri!);
+		try {
+			const url = new URL(search.redirect_uri);
+			if (url.protocol !== "https:" && url.protocol !== "http:") {
+				return;
+			}
 
-		url.searchParams.set("error", "login_required");
+			url.searchParams.set("error", "login_required");
 
-		if (search.state) {
-			url.searchParams.set("state", search.state);
+			if (search.state) {
+				url.searchParams.set("state", search.state);
+			}
+
+			window.location.href = url.toString();
+		} catch {
+			// Invalid redirect_uri, do not redirect
 		}
-
-		window.location.href = url.toString();
 	}, [
 		isSilent,
 		missing,
@@ -289,20 +293,28 @@ function AuthorizePage() {
 	]);
 
 	function handleDeny() {
-		if (!search.redirect_uri) {
+		if (!search.redirect_uri || !client?.redirect_uri_valid) {
 			window.location.href = "/";
 			return;
 		}
 
-		const url = new URL(search.redirect_uri);
+		try {
+			const url = new URL(search.redirect_uri);
+			if (url.protocol !== "https:" && url.protocol !== "http:") {
+				window.location.href = "/";
+				return;
+			}
 
-		url.searchParams.set("error", "access_denied");
+			url.searchParams.set("error", "access_denied");
 
-		if (search.state) {
-			url.searchParams.set("state", search.state);
+			if (search.state) {
+				url.searchParams.set("state", search.state);
+			}
+
+			window.location.href = url.toString();
+		} catch {
+			window.location.href = "/";
 		}
-
-		window.location.href = url.toString();
 	}
 
 	if (missing) {
