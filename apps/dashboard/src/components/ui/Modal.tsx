@@ -1,123 +1,111 @@
+import { X } from "lucide-react";
+import { type ReactNode, useEffect } from "react";
 import { createPortal } from "react-dom";
-import type { ReactNode } from "react";
 
-/**
- * Props for the {@link Modal} component.
- */
-interface ModalProps {
-	/**
-	 * Whether the modal is visible.
-	 */
+export interface ModalProps {
 	open: boolean;
-
-	/**
-	 * Title displayed at the top of the modal.
-	 */
 	title: string;
-
-	/**
-	 * Optional description displayed below the title.
-	 */
 	description?: string;
-
-	/**
-	 * Callback invoked when the modal is closed.
-	 */
 	onClose: () => void;
-
-	/**
-	 * Content rendered inside the modal.
-	 */
+	size?: "sm" | "md" | "lg" | "xl";
 	children: ReactNode;
 }
 
-/**
- * A reusable modal dialog rendered into `document.body` using a React portal.
- *
- * The modal is portaled outside the component's normal DOM hierarchy so its
- * backdrop can cover the entire application viewport. This allows the modal
- * to apply effects such as a full-screen blur or backdrop overlay without
- * being constrained by parent elements, stacking contexts, or overflow rules.
- *
- * The modal is only rendered when `open` is `true`. Clicking the backdrop
- * invokes the `onClose` callback.
- *
- * @param props - Modal configuration and content.
- * @returns The modal dialog when open, otherwise `null`.
- *
- * @example
- * <Modal
- *     open={isOpen}
- *     title="Confirm deletion"
- *     description="This action cannot be undone."
- *     onClose={() => setIsOpen(false)}
- * >
- *     <Button variant="danger">Delete</Button>
- * </Modal>
- *
- * @example
- * <Modal
- *     open={isOpen}
- *     title="Settings"
- *     onClose={() => setIsOpen(false)}
- * >
- *     <SettingsForm />
- * </Modal>
- */
+const sizeClasses = {
+	sm: "max-w-sm",
+	md: "max-w-md",
+	lg: "max-w-lg",
+	xl: "max-w-xl",
+};
+
 export default function Modal({
 	open,
 	title,
 	description,
 	onClose,
+	size = "md",
 	children,
 }: ModalProps) {
-	if (!open) {
+	// Close on Escape key
+	useEffect(() => {
+		if (!open) {
+			return;
+		}
+
+		function handleKeyDown(event: KeyboardEvent) {
+			if (event.key === "Escape") {
+				onClose();
+			}
+		}
+
+		window.addEventListener("keydown", handleKeyDown);
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [open, onClose]);
+
+	// Lock body scroll
+	useEffect(() => {
+		if (!open) {
+			return;
+		}
+
+		const previousOverflow = document.body.style.overflow;
+		document.body.style.overflow = "hidden";
+
+		return () => {
+			document.body.style.overflow = previousOverflow;
+		};
+	}, [open]);
+
+	if (!open || typeof document === "undefined") {
 		return null;
 	}
 
 	return createPortal(
-		<div className="fixed inset-0 z-100 flex items-center justify-center px-4">
+		<div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+			{/* Backdrop */}
 			<button
 				type="button"
 				aria-label="Close modal"
-				className="absolute inset-0 bg-black/35 backdrop-blur-[2px]"
 				onClick={onClose}
+				className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
 			/>
 
+			{/* Modal Dialog */}
 			<div
 				role="dialog"
 				aria-modal="true"
 				aria-labelledby="modal-title"
-				className="
-                    relative
-                    z-10
-                    w-full
-                    max-w-md
-                    rounded-2xl
-                    border
-                    border-white/10
-                    bg-zinc-950/95
-                    p-7
-                    text-white
-                    shadow-2xl
-                    shadow-black/50
-                    ring-1
-                    ring-violet-500/5
-                "
+				className={`relative z-10 w-full ${sizeClasses[size]} max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-zinc-950/95 p-6 sm:p-7 text-white shadow-2xl shadow-black/80 backdrop-blur-xl ring-1 ring-white/5 transition-all`}
 			>
-				<div className="mb-7">
-					<h2 id="modal-title" className="text-xl font-semibold tracking-tight">
-						{title}
-					</h2>
+				<div className="flex items-start justify-between gap-4 mb-6">
+					<div className="min-w-0 flex-1">
+						<h2
+							id="modal-title"
+							className="text-lg font-semibold tracking-tight text-white"
+						>
+							{title}
+						</h2>
 
-					{description && (
-						<p className="mt-2 text-sm leading-6 text-zinc-500">
-							{description}
-						</p>
-					)}
+						{description && (
+							<p className="mt-1 text-sm leading-relaxed text-zinc-400">
+								{description}
+							</p>
+						)}
+					</div>
+
+					<button
+						type="button"
+						onClick={onClose}
+						className="shrink-0 rounded-lg p-1.5 text-zinc-500 hover:bg-white/5 hover:text-zinc-200 transition-colors"
+						aria-label="Close modal"
+					>
+						<X size={16} />
+					</button>
 				</div>
 
-				{children}
+				<div>{children}</div>
 			</div>
 		</div>,
 		document.body,

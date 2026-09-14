@@ -1,9 +1,11 @@
+import { Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { useToast } from "@/components/toast/ToastProvider";
+import { useToast } from "@/components/Toast";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
+import Textarea from "@/components/ui/Textarea";
 import {
 	createOAuthClient,
 	type OAuthClient,
@@ -56,7 +58,6 @@ export default function ClientModal({
 		event.preventDefault();
 
 		const normalizedName = name.trim();
-
 		const normalizedRedirectUris = redirectUris
 			.split("\n")
 			.map((uri) => uri.trim())
@@ -96,7 +97,6 @@ export default function ClientModal({
 
 			setCreatedClientId(response.client_id);
 			setSecret(response.client_secret ?? null);
-
 			toast.success("OAuth client created.");
 		} catch (error) {
 			toast.error(
@@ -124,73 +124,69 @@ export default function ClientModal({
 			open={open}
 			title={
 				createdClientId
-					? "OAuth client created"
+					? "OAuth client credentials"
 					: editing
 						? "Edit OAuth client"
 						: "Create OAuth client"
 			}
 			description={
 				createdClientId
-					? "Save these credentials now. The client secret will not be shown again."
+					? "Save these credentials securely. The client secret will not be displayed again."
 					: editing
-						? "Update this application's OAuth configuration."
-						: "Register an application that will use Muljax ID for authentication."
+						? "Update your application's OAuth 2.0 / OIDC configuration."
+						: "Register a new application to authenticate users with Muljax ID."
 			}
 			onClose={onClose}
+			size="lg"
 		>
 			{createdClientId ? (
-				<div className="space-y-5">
-					<div className="rounded-md border border-amber-900/50 bg-amber-950/20 p-4">
-						<p className="text-sm font-medium text-amber-300">
-							Save your client credentials
-						</p>
-
-						<p className="mt-2 text-xs text-amber-200/70">
-							Save these credentials now. The client secret will not be shown
-							again.
-						</p>
-
-						<div className="mt-4">
-							<p className="text-xs font-medium text-amber-300">Client ID</p>
-
-							<div className="mt-2 break-all rounded-md bg-zinc-950 p-3 font-mono text-sm text-zinc-200">
-								{createdClientId}
+				<div className="space-y-6">
+					<div className="rounded-2xl border border-amber-500/20 bg-amber-950/20 p-5 space-y-4">
+						<div>
+							<span className="text-xs font-medium text-amber-400">
+								Client ID
+							</span>
+							<div className="mt-1.5 flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-zinc-950/80 px-3 py-2">
+								<code className="font-mono text-xs text-zinc-200 break-all">
+									{createdClientId}
+								</code>
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									icon={<Copy size={13} />}
+									onClick={() => {
+										void navigator.clipboard.writeText(createdClientId);
+										toast.success("Client ID copied to clipboard.");
+									}}
+								>
+									Copy
+								</Button>
 							</div>
-
-							<Button
-								type="button"
-								variant="secondary"
-								className="mt-3 w-full"
-								onClick={() => {
-									void navigator.clipboard.writeText(createdClientId);
-									toast.success("Client ID copied.");
-								}}
-							>
-								Copy client ID
-							</Button>
 						</div>
 
 						{secret && (
-							<div className="mt-4">
-								<p className="text-xs font-medium text-amber-300">
-									Client secret
-								</p>
-
-								<div className="mt-2 break-all rounded-md bg-zinc-950 p-3 font-mono text-sm text-zinc-200">
-									{secret}
+							<div>
+								<span className="text-xs font-medium text-amber-400">
+									Client Secret
+								</span>
+								<div className="mt-1.5 flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-zinc-950/80 px-3 py-2">
+									<code className="font-mono text-xs text-zinc-200 break-all">
+										{secret}
+									</code>
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										icon={<Copy size={13} />}
+										onClick={() => {
+											void navigator.clipboard.writeText(secret);
+											toast.success("Client secret copied to clipboard.");
+										}}
+									>
+										Copy
+									</Button>
 								</div>
-
-								<Button
-									type="button"
-									variant="secondary"
-									className="mt-3 w-full"
-									onClick={() => {
-										void navigator.clipboard.writeText(secret);
-										toast.success("Client secret copied.");
-									}}
-								>
-									Copy client secret
-								</Button>
 							</div>
 						)}
 					</div>
@@ -198,9 +194,7 @@ export default function ClientModal({
 					<Button
 						type="button"
 						className="w-full"
-						onClick={() => {
-							void onSaved();
-						}}
+						onClick={() => void onSaved()}
 					>
 						Done
 					</Button>
@@ -212,38 +206,60 @@ export default function ClientModal({
 							htmlFor="client-name"
 							className="mb-2 block text-sm font-medium text-zinc-300"
 						>
-							Name
+							Client name
 						</label>
-
 						<Input
 							id="client-name"
 							value={name}
 							onChange={(event) => setName(event.target.value)}
+							placeholder="e.g. My Web App"
 							disabled={saving}
+							required
 						/>
 					</div>
 
 					{!editing && (
-						<div className="grid grid-cols-2 gap-2">
-							<Button
-								type="button"
-								variant={
-									clientType === "confidential" ? "primary" : "secondary"
-								}
-								onClick={() => setClientType("confidential")}
-								disabled={saving}
-							>
-								Confidential
-							</Button>
+						<div>
+							<p className="mb-2 block text-sm font-medium text-zinc-300">
+								Client type
+							</p>
+							<div className="grid grid-cols-2 gap-3">
+								<button
+									type="button"
+									onClick={() => setClientType("confidential")}
+									disabled={saving}
+									className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all cursor-pointer ${
+										clientType === "confidential"
+											? "border-violet-500/50 bg-violet-500/10 text-white"
+											: "border-white/8 bg-zinc-900/40 text-zinc-400 hover:bg-white/[0.04]"
+									}`}
+								>
+									<span className="text-xs font-semibold text-white">
+										Confidential
+									</span>
+									<span className="text-[11px] text-zinc-400 mt-0.5">
+										Server-side apps with secrets
+									</span>
+								</button>
 
-							<Button
-								type="button"
-								variant={clientType === "public" ? "primary" : "secondary"}
-								onClick={() => setClientType("public")}
-								disabled={saving}
-							>
-								Public
-							</Button>
+								<button
+									type="button"
+									onClick={() => setClientType("public")}
+									disabled={saving}
+									className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all cursor-pointer ${
+										clientType === "public"
+											? "border-violet-500/50 bg-violet-500/10 text-white"
+											: "border-white/8 bg-zinc-900/40 text-zinc-400 hover:bg-white/[0.04]"
+									}`}
+								>
+									<span className="text-xs font-semibold text-white">
+										Public (SPA / Native)
+									</span>
+									<span className="text-[11px] text-zinc-400 mt-0.5">
+										Requires PKCE flow
+									</span>
+								</button>
+							</div>
 						</div>
 					)}
 
@@ -254,36 +270,43 @@ export default function ClientModal({
 						>
 							Redirect URIs
 						</label>
-
-						<textarea
+						<Textarea
 							id="redirect-uris"
 							value={redirectUris}
 							onChange={(event) => setRedirectUris(event.target.value)}
 							disabled={saving}
-							rows={4}
-							className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-zinc-500 disabled:opacity-50"
+							rows={3}
+							placeholder="https://app.example.com/oauth/callback"
+							required
 						/>
+						<p className="mt-1.5 text-xs text-zinc-500">
+							Enter one redirect URI per line.
+						</p>
 					</div>
 
 					<div>
-						<p className="mb-2 text-sm font-medium text-zinc-300">Scopes</p>
-
-						<div className="space-y-2">
+						<p className="mb-2 block text-sm font-medium text-zinc-300">
+							Allowed scopes
+						</p>
+						<div className="grid grid-cols-3 gap-2">
 							{AVAILABLE_SCOPES.map((scope) => {
 								const selected = scopes.includes(scope);
-
 								return (
 									<label
 										key={scope}
-										className="flex cursor-pointer items-center justify-between rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2.5"
+										className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all ${
+											selected
+												? "border-violet-500/40 bg-violet-500/10 text-violet-200"
+												: "border-white/8 bg-zinc-900/40 text-zinc-400"
+										}`}
 									>
-										<span className="text-sm text-zinc-300">{scope}</span>
-
+										<span className="text-xs font-medium">{scope}</span>
 										<input
 											type="checkbox"
 											checked={selected}
 											disabled={scope === "openid" || saving}
 											onChange={() => toggleScope(scope)}
+											className="rounded border-white/10 bg-zinc-800 accent-violet-500"
 										/>
 									</label>
 								);
@@ -291,7 +314,7 @@ export default function ClientModal({
 						</div>
 					</div>
 
-					<div className="flex justify-end gap-2">
+					<div className="flex justify-end gap-3 pt-3">
 						<Button
 							type="button"
 							variant="ghost"
@@ -301,12 +324,8 @@ export default function ClientModal({
 							Cancel
 						</Button>
 
-						<Button type="submit" disabled={saving}>
-							{saving
-								? "Saving..."
-								: editing
-									? "Save changes"
-									: "Create client"}
+						<Button type="submit" loading={saving}>
+							{editing ? "Save changes" : "Create client"}
 						</Button>
 					</div>
 				</form>

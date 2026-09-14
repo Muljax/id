@@ -1,6 +1,6 @@
 import { createRouter } from "@tanstack/react-router";
 
-import type { AuthContextValue } from "@/components/auth/AuthProvider";
+import type { AuthContextValue } from "@/context/AuthContext";
 import type { NavigationData } from "@/lib/navigation";
 
 // biome-ignore lint/suspicious/noTsIgnore: TanStack Router generates the route type.

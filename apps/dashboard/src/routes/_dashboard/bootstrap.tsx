@@ -1,7 +1,17 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { KeyRound } from "lucide-react";
 import { useState } from "react";
 
-import { createFileRoute } from "@tanstack/react-router";
-
+import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
+import Card, {
+	CardContent,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/Card";
+import Input from "@/components/ui/Input";
+import PageHeader from "@/components/ui/PageHeader";
 import { bootstrapAdmin } from "@/lib/api";
 
 export const Route = createFileRoute("/_dashboard/bootstrap")({
@@ -18,49 +28,100 @@ export const Route = createFileRoute("/_dashboard/bootstrap")({
 function BootstrapPage() {
 	const [secret, setSecret] = useState("");
 	const [loading, setLoading] = useState(false);
-	const [message, setMessage] = useState<string | null>(null);
+	const [status, setStatus] = useState<{
+		type: "success" | "error";
+		message: string;
+	} | null>(null);
 
 	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
-
 		setLoading(true);
-		setMessage(null);
+		setStatus(null);
 
 		try {
 			await bootstrapAdmin(secret);
 			setSecret("");
-			setMessage("Admin bootstrap successful.");
+			setStatus({
+				type: "success",
+				message:
+					"Admin bootstrap successful. You now have administrator permissions.",
+			});
 		} catch (error) {
-			setMessage(error instanceof Error ? error.message : "Bootstrap failed.");
+			setStatus({
+				type: "error",
+				message: error instanceof Error ? error.message : "Bootstrap failed.",
+			});
 		} finally {
 			setLoading(false);
 		}
 	}
 
 	return (
-		<div>
-			<h1 className="text-xl font-semibold text-white">Bootstrap</h1>
+		<div className="space-y-8 max-w-xl">
+			<PageHeader
+				title="Bootstrap administrator"
+				description="Elevate your current account to super-administrator using the server environment bootstrap secret."
+				badge={<Badge variant="warning">Setup Utility</Badge>}
+			/>
 
-			<form onSubmit={handleSubmit} className="mt-6 max-w-md space-y-4">
-				<input
-					type="password"
-					value={secret}
-					onChange={(event) => setSecret(event.target.value)}
-					placeholder="Bootstrap secret"
-					required
-					className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-zinc-600"
-				/>
+			<Card>
+				<form onSubmit={handleSubmit}>
+					<CardHeader>
+						<div className="flex items-center gap-3">
+							<div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-amber-400">
+								<KeyRound size={18} />
+							</div>
+							<div>
+								<CardTitle className="text-sm font-semibold">
+									Master Secret
+								</CardTitle>
+								<p className="text-xs text-zinc-400">
+									Configured in your Cloudflare Worker environment secrets.
+								</p>
+							</div>
+						</div>
+					</CardHeader>
 
-				<button
-					type="submit"
-					disabled={loading}
-					className="rounded-md bg-white px-4 py-2 text-sm font-medium text-zinc-900 disabled:opacity-50"
-				>
-					{loading ? "Sending..." : "Bootstrap"}
-				</button>
+					<CardContent className="space-y-4">
+						<div>
+							<label
+								htmlFor="bootstrap-secret"
+								className="mb-2 block text-sm font-medium text-zinc-300"
+							>
+								Bootstrap Secret
+							</label>
 
-				{message && <p className="text-sm text-zinc-400">{message}</p>}
-			</form>
+							<Input
+								id="bootstrap-secret"
+								type="password"
+								value={secret}
+								onChange={(event) => setSecret(event.target.value)}
+								placeholder="Enter bootstrap secret"
+								required
+								disabled={loading}
+							/>
+						</div>
+
+						{status && (
+							<div
+								className={`rounded-xl border p-3.5 text-xs ${
+									status.type === "success"
+										? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+										: "border-red-500/20 bg-red-500/10 text-red-400"
+								}`}
+							>
+								{status.message}
+							</div>
+						)}
+					</CardContent>
+
+					<CardFooter>
+						<Button type="submit" loading={loading} disabled={!secret.trim()}>
+							Claim Administrator
+						</Button>
+					</CardFooter>
+				</form>
+			</Card>
 		</div>
 	);
 }

@@ -1,12 +1,14 @@
+import type { ComponentProps } from "react";
 import Input from "@/components/ui/Input";
 
-type FieldProps = {
+export type FieldProps = {
 	id: string;
 	label: string;
 	value: string;
 	onChange: (value: string) => void;
 	description?: string;
-} & Omit<React.ComponentProps<typeof Input>, "value" | "onChange">;
+	error?: string;
+} & Omit<ComponentProps<typeof Input>, "id" | "value" | "onChange">;
 
 export default function Field({
 	id,
@@ -14,14 +16,12 @@ export default function Field({
 	value,
 	onChange,
 	description,
+	error,
 	...props
 }: FieldProps) {
 	return (
-		<div>
-			<label
-				htmlFor={id}
-				className="mb-2 block text-sm font-medium text-zinc-300"
-			>
+		<div className="space-y-2">
+			<label htmlFor={id} className="block text-sm font-medium text-zinc-300">
 				{label}
 			</label>
 
@@ -29,12 +29,15 @@ export default function Field({
 				{...props}
 				id={id}
 				value={value}
+				hasError={Boolean(error)}
 				onChange={(event) => onChange(event.target.value)}
 			/>
 
-			{description && (
-				<p className="mt-2 text-xs text-zinc-600">{description}</p>
-			)}
+			{error ? (
+				<p className="text-xs text-red-400">{error}</p>
+			) : description ? (
+				<p className="text-xs text-zinc-500">{description}</p>
+			) : null}
 		</div>
 	);
 }

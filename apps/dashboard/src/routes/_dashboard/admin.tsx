@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
-import AdminGuard from "@/components/auth/AdminGuard";
+import { AdminGuard } from "@/context/AuthContext";
 
 export const Route = createFileRoute("/_dashboard/admin")({
 	staticData: {

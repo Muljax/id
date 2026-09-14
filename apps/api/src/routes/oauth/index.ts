@@ -1,15 +1,15 @@
 import { Hono } from "hono";
 
+import approve from "./approve";
 import authorize from "./authorize";
+import avatar from "./avatar";
 import clients from "./clients";
+import details from "./details";
+import grant from "./grant";
 import introspect from "./introspect";
 import revoke from "./revoke";
 import token from "./token";
 import userinfo from "./userinfo";
-import approve from "./approve";
-import avatar from "./avatar";
-import details from "./details";
-import grant from "./grant";
 
 import { dashboardCors, publicCors } from "@/middleware/cors";
 import { rateLimit } from "@/middleware/rateLimiter";
@@ -19,23 +19,32 @@ const oauthRoute = new Hono<{
 }>();
 
 // Public OAuth & OIDC endpoints (RFC 6749, RFC 7009, RFC 7662, OIDC Core)
-token.use(
-	"*",
+oauthRoute.use(
+	"/token",
 	publicCors(),
 	rateLimit(
 		(c) => `oauth_token:${c.req.header("CF-Connecting-IP") ?? "unknown"}`,
 	),
 );
-userinfo.use("*", publicCors());
-revoke.use("*", publicCors());
-introspect.use("*", publicCors());
-avatar.use("*", publicCors());
+oauthRoute.use("/token/*", publicCors());
+oauthRoute.use("/userinfo", publicCors());
+oauthRoute.use("/userinfo/*", publicCors());
+oauthRoute.use("/revoke", publicCors());
+oauthRoute.use("/revoke/*", publicCors());
+oauthRoute.use("/introspect", publicCors());
+oauthRoute.use("/introspect/*", publicCors());
+oauthRoute.use("/avatar", publicCors());
+oauthRoute.use("/avatar/*", publicCors());
 
 // Dashboard-internal endpoints
-approve.use("*", dashboardCors());
-details.use("*", dashboardCors());
-grant.use("*", dashboardCors());
-clients.use("*", dashboardCors());
+oauthRoute.use("/approve", dashboardCors());
+oauthRoute.use("/approve/*", dashboardCors());
+oauthRoute.use("/details", dashboardCors());
+oauthRoute.use("/details/*", dashboardCors());
+oauthRoute.use("/grant", dashboardCors());
+oauthRoute.use("/grant/*", dashboardCors());
+oauthRoute.use("/clients", dashboardCors());
+oauthRoute.use("/clients/*", dashboardCors());
 
 oauthRoute.route("/authorize", authorize);
 oauthRoute.route("/clients", clients);
@@ -47,4 +56,5 @@ oauthRoute.route("/approve", approve);
 oauthRoute.route("/avatar", avatar);
 oauthRoute.route("/details", details);
 oauthRoute.route("/grant", grant);
+
 export default oauthRoute;

@@ -10,7 +10,6 @@ type AvatarCropperProps = {
 };
 
 const OUTPUT_SIZE = 512;
-const VIEWPORT_SIZE = 360;
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.1;
@@ -37,6 +36,19 @@ export default function AvatarCropper({
 	const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
 	const [dragging, setDragging] = useState(false);
 	const [applying, setApplying] = useState(false);
+	const [viewportSize, setViewportSize] = useState(320);
+
+	// Adaptive viewport size for mobile
+	useEffect(() => {
+		function updateSize() {
+			const available = Math.min(320, window.innerWidth - 80);
+			setViewportSize(Math.max(220, available));
+		}
+
+		updateSize();
+		window.addEventListener("resize", updateSize);
+		return () => window.removeEventListener("resize", updateSize);
+	}, []);
 
 	useEffect(() => {
 		if (!file || !open) {
@@ -80,7 +92,6 @@ export default function AvatarCropper({
 		}
 
 		const previousOverflow = document.body.style.overflow;
-
 		document.body.style.overflow = "hidden";
 
 		return () => {
@@ -92,15 +103,12 @@ export default function AvatarCropper({
 		return null;
 	}
 
-	function getBaseScale() {
+	function getBaseScale(size: number = viewportSize) {
 		if (!imageSize.width || !imageSize.height) {
 			return 1;
 		}
 
-		return Math.max(
-			VIEWPORT_SIZE / imageSize.width,
-			VIEWPORT_SIZE / imageSize.height,
-		);
+		return Math.max(size / imageSize.width, size / imageSize.height);
 	}
 
 	function getScaledSize() {
@@ -112,18 +120,21 @@ export default function AvatarCropper({
 		};
 	}
 
-	function clampPosition(nextPosition: Point, nextZoom = zoom) {
+	function clampPosition(
+		nextPosition: Point,
+		nextZoom = zoom,
+		size = viewportSize,
+	) {
 		if (!imageSize.width || !imageSize.height) {
 			return nextPosition;
 		}
 
-		const scale = getBaseScale() * nextZoom;
-
+		const scale = getBaseScale(size) * nextZoom;
 		const width = imageSize.width * scale;
 		const height = imageSize.height * scale;
 
-		const maxX = Math.max(0, (width - VIEWPORT_SIZE) / 2);
-		const maxY = Math.max(0, (height - VIEWPORT_SIZE) / 2);
+		const maxX = Math.max(0, (width - size) / 2);
+		const maxY = Math.max(0, (height - size) / 2);
 
 		return {
 			x: Math.min(maxX, Math.max(-maxX, nextPosition.x)),
@@ -133,7 +144,6 @@ export default function AvatarCropper({
 
 	function handleImageLoad(event: React.SyntheticEvent<HTMLImageElement>) {
 		const image = event.currentTarget;
-
 		imageRef.current = image;
 
 		setImageSize({
@@ -231,17 +241,15 @@ export default function AvatarCropper({
 			throw new Error("Unable to create image canvas.");
 		}
 
-		const baseScale = getBaseScale();
+		const baseScale = getBaseScale(viewportSize);
 		const displayScale = baseScale * zoom;
-
-		const sourceScale = OUTPUT_SIZE / VIEWPORT_SIZE;
+		const sourceScale = OUTPUT_SIZE / viewportSize;
 
 		const imageWidth = image.naturalWidth * displayScale;
 		const imageHeight = image.naturalHeight * displayScale;
 
-		const drawX = (VIEWPORT_SIZE - imageWidth) / 2 + position.x;
-
-		const drawY = (VIEWPORT_SIZE - imageHeight) / 2 + position.y;
+		const drawX = (viewportSize - imageWidth) / 2 + position.x;
+		const drawY = (viewportSize - imageHeight) / 2 + position.y;
 
 		context.clearRect(0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
 
@@ -285,15 +293,16 @@ export default function AvatarCropper({
 	}
 
 	const scaledSize = getScaledSize();
+	const cutoutSize = Math.max(180, viewportSize - 40);
 
 	return (
 		<div
-			className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm"
+			className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 px-4 backdrop-blur-md"
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="avatar-cropper-title"
 		>
-			<div className="w-full max-w-lg rounded-2xl border border-white/10 bg-zinc-950 shadow-2xl">
+			<div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-950/95 shadow-2xl backdrop-blur-xl">
 				<div className="border-b border-white/8 px-6 py-5">
 					<h2
 						id="avatar-cropper-title"
@@ -302,15 +311,16 @@ export default function AvatarCropper({
 						Adjust profile picture
 					</h2>
 
-					<p className="mt-1 text-sm text-zinc-500">
-						Drag the image to position it within the circle.
+					<p className="mt-1 text-sm text-zinc-400">
+						Drag to position within the circle, and adjust zoom.
 					</p>
 				</div>
 
 				<div className="px-6 py-6">
 					<div
 						ref={viewportRef}
-						className={`relative mx-auto h-90 w-90 max-w-full touch-none select-none overflow-hidden rounded-xl bg-zinc-900 ${
+						style={{ width: viewportSize, height: viewportSize }}
+						className={`relative mx-auto touch-none select-none overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 ${
 							dragging ? "cursor-grabbing" : "cursor-grab"
 						}`}
 						onPointerDown={handlePointerDown}
@@ -333,9 +343,12 @@ export default function AvatarCropper({
 						/>
 
 						<div className="pointer-events-none absolute inset-0">
-							<div className="absolute inset-0 bg-black/45" />
+							<div className="absolute inset-0 bg-black/40" />
 
-							<div className="absolute left-1/2 top-1/2 h-70 w-70 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]" />
+							<div
+								style={{ width: cutoutSize, height: cutoutSize }}
+								className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]"
+							/>
 						</div>
 					</div>
 
@@ -348,7 +361,7 @@ export default function AvatarCropper({
 								Zoom
 							</label>
 
-							<span className="text-xs tabular-nums text-zinc-600">
+							<span className="text-xs tabular-nums text-zinc-500">
 								{Math.round(zoom * 100)}%
 							</span>
 						</div>
@@ -362,12 +375,8 @@ export default function AvatarCropper({
 							value={zoom}
 							onChange={handleZoomChange}
 							disabled={applying}
-							className="w-full accent-violet-400"
+							className="w-full accent-violet-400 cursor-pointer"
 						/>
-
-						<p className="mt-2 text-xs text-zinc-600">
-							You can also use your mouse wheel to zoom.
-						</p>
 					</div>
 				</div>
 
@@ -384,9 +393,10 @@ export default function AvatarCropper({
 					<Button
 						type="button"
 						onClick={() => void handleApply()}
+						loading={applying}
 						disabled={applying || !imageRef.current}
 					>
-						{applying ? "Applying..." : "Apply"}
+						Apply
 					</Button>
 				</div>
 			</div>

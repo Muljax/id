@@ -1,13 +1,13 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { startAuthentication } from "@simplewebauthn/browser";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Fingerprint } from "lucide-react";
 import { useState } from "react";
-import { useAuth } from "@/components/auth/AuthProvider";
-import { useToast } from "@/components/toast/ToastProvider";
+
+import PreAuthLayout from "@/components/PreAuthLayout";
+import { useToast } from "@/components/Toast";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import Spinner from "@/components/ui/Spinner";
-import PreAuthLayout from "@/layouts/PreAuthLayout";
+import { useAuth } from "@/context/AuthContext";
 import { getPasskeyLoginOptions, login, verifyPasskeyLogin } from "@/lib/api";
 
 export interface LoginSearch {
@@ -101,6 +101,14 @@ function LoginPage() {
 			await loginWithPasskey();
 			await finishLogin();
 		} catch (error) {
+			if (
+				error instanceof Error &&
+				(error.name === "NotAllowedError" ||
+					error.message.toLowerCase().includes("not allowed"))
+			) {
+				return;
+			}
+
 			toast.error(
 				error instanceof Error
 					? error.message
@@ -113,26 +121,28 @@ function LoginPage() {
 
 	return (
 		<PreAuthLayout>
-			<div>
-				<div className="mb-8">
-					<h1 className="text-3xl font-semibold tracking-[-0.04em] text-white">
-						{forceLogin ? "Confirm your identity" : "Welcome back"}
+			<div className="space-y-6">
+				{/* Heading */}
+				<div>
+					<h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+						{forceLogin ? "Confirm your identity" : "Sign in to Muljax ID"}
 					</h1>
 
-					<p className="mt-2 text-sm leading-6 text-zinc-500">
+					<p className="mt-1.5 text-sm text-zinc-400">
 						{forceLogin
-							? "Sign in again to continue to this application."
-							: "Sign in to continue to your Muljax account."}
+							? "Re-authenticate to continue to the requested application."
+							: "Enter your credentials or use your passkey."}
 					</p>
 				</div>
 
-				<form onSubmit={handleLogin} className="space-y-5">
+				{/* Primary Form */}
+				<form onSubmit={handleLogin} className="space-y-4">
 					<div>
 						<label
 							htmlFor="email"
-							className="mb-2 block text-sm font-medium text-zinc-300"
+							className="mb-1.5 block text-xs font-medium text-zinc-300"
 						>
-							Email
+							Email address
 						</label>
 
 						<Input
@@ -148,10 +158,10 @@ function LoginPage() {
 					</div>
 
 					<div>
-						<div className="mb-2 flex items-center justify-between">
+						<div className="mb-1.5 flex items-center justify-between">
 							<label
 								htmlFor="password"
-								className="text-sm font-medium text-zinc-300"
+								className="text-xs font-medium text-zinc-300"
 							>
 								Password
 							</label>
@@ -170,67 +180,68 @@ function LoginPage() {
 							autoComplete="current-password"
 							value={password}
 							onChange={(event) => setPassword(event.target.value)}
-							placeholder="Enter your password"
+							placeholder="Enter password"
 							required
 							disabled={submitting || passkeySubmitting}
 						/>
 					</div>
 
-					<label className="flex cursor-pointer items-center gap-3 text-sm text-zinc-500">
-						<input
-							type="checkbox"
-							checked={rememberMe}
-							onChange={(event) => setRememberMe(event.target.checked)}
-							disabled={submitting || passkeySubmitting}
-							className="h-4 w-4 rounded border-white/10 bg-zinc-900 accent-violet-500"
-						/>
-						Remember me
-					</label>
+					<div className="pt-1">
+						<label className="flex cursor-pointer items-center gap-2.5 text-xs text-zinc-400 select-none">
+							<input
+								type="checkbox"
+								checked={rememberMe}
+								onChange={(event) => setRememberMe(event.target.checked)}
+								disabled={submitting || passkeySubmitting}
+								className="h-4 w-4 rounded border-white/10 bg-zinc-900 accent-violet-500"
+							/>
+							Remember this device
+						</label>
+					</div>
 
 					<Button
 						type="submit"
-						disabled={submitting || passkeySubmitting}
-						className="w-full"
+						loading={submitting}
+						disabled={passkeySubmitting}
+						className="w-full mt-2"
+						size="lg"
 					>
-						{submitting ? <Spinner /> : "Sign in"}
+						Sign in
 					</Button>
 				</form>
 
-				<div className="my-7 flex items-center gap-4">
-					<div className="h-px flex-1 bg-white/8" />
-
-					<span className="text-xs text-zinc-600">OR</span>
-
-					<div className="h-px flex-1 bg-white/8" />
+				{/* Centered OR Divider */}
+				<div className="flex items-center gap-3 py-1">
+					<div className="h-px flex-1 bg-white/10" />
+					<span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 select-none">
+						or
+					</span>
+					<div className="h-px flex-1 bg-white/10" />
 				</div>
 
-				<button
+				{/* Passkey Button */}
+				<Button
 					type="button"
-					onClick={handlePasskeyLogin}
-					disabled={submitting || passkeySubmitting}
-					className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-white/10 bg-white/3 text-sm font-medium text-zinc-300 transition-all hover:border-violet-400/30 hover:bg-white/6 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+					variant="secondary"
+					size="lg"
+					loading={passkeySubmitting}
+					disabled={submitting}
+					onClick={() => void handlePasskeyLogin()}
+					icon={<Fingerprint size={18} className="text-violet-400" />}
+					className="w-full"
 				>
-					{passkeySubmitting ? (
-						<Spinner />
-					) : (
-						<>
-							<Fingerprint
-								className="h-4 w-4 text-violet-400"
-								strokeWidth={1.8}
-							/>
-							<span>Sign in with passkey</span>
-						</>
-					)}
-				</button>
+					Sign in with Passkey
+				</Button>
 
-				<p className="mt-8 text-center text-sm text-zinc-500">
+				{/* Register Link */}
+				<p className="pt-2 text-center text-xs text-zinc-400">
 					Don't have an account?{" "}
 					<Link
 						to="/register"
 						search={return_to ? { return_to } : undefined}
-						className="font-medium text-violet-400 transition-colors hover:text-violet-300"
+						className="font-medium text-violet-400 hover:text-violet-300 transition-colors"
 					>
-						Create one
+						Create account
 					</Link>
 				</p>
 			</div>
