@@ -5,7 +5,7 @@ import { getCookie } from "hono/cookie";
 import { createDb } from "@/db";
 import { users } from "@/db/schema";
 import { setSessionCookie } from "@/lib/cookie";
-import { verifyPassword } from "@/lib/password";
+import { DUMMY_PASSWORD_HASH, verifyPassword } from "@/lib/password";
 import { createSession, deleteSession, getSession } from "@/lib/session";
 
 interface CloudflareRequestProperties {
@@ -48,18 +48,11 @@ route.post("/", async (c) => {
 
 	const user = result[0];
 
-	if (!user) {
-		return c.json(
-			{
-				error: "Invalid email or password",
-			},
-			401,
-		);
-	}
+	// Mitigate timing-based user enumeration by always running Argon2id verification
+	const passwordHash = user?.passwordHash ?? DUMMY_PASSWORD_HASH;
+	const validPassword = await verifyPassword(password, passwordHash);
 
-	const validPassword = await verifyPassword(password, user.passwordHash);
-
-	if (!validPassword) {
+	if (!user || !validPassword) {
 		return c.json(
 			{
 				error: "Invalid email or password",

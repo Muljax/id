@@ -1,4 +1,5 @@
 import { base64UrlEncode } from "../base64";
+import { timingSafeEqual } from "../crypto";
 
 const encoder = new TextEncoder();
 
@@ -32,5 +33,5 @@ export async function verifyCodeChallenge(
 ) {
 	const expected = await createCodeChallenge(codeVerifier);
 
-	return expected === codeChallenge;
+	return timingSafeEqual(expected, codeChallenge);
 }

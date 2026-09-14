@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 
 import type { Database } from "../../db";
 import { oauthClients } from "../../db/schema";
+import { timingSafeEqual } from "../crypto";
 import { hashToken } from "../token";
 
 /**
@@ -188,7 +189,7 @@ export async function verifyClientSecret(
 
 	const hash = await hashToken(clientSecret);
 
-	return hash === client.clientSecretHash;
+	return timingSafeEqual(hash, client.clientSecretHash);
 }
 
 /**

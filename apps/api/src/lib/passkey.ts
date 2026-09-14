@@ -132,64 +132,58 @@ export async function getChallengeById(
 }
 
 /**
- * Consumes a passkey registration challenge for a user.
+ * Consumes a passkey registration challenge for a user atomically.
  *
- * The challenge is deleted after retrieval so it cannot be reused.
+ * The challenge is deleted in a single roundtrip via DELETE ... RETURNING *
+ * so it cannot be reused or raced concurrently.
  *
  * @param db The database connection.
  * @param userId The ID of the user who owns the challenge.
- * @returns The consumed challenge, or null if none exists.
+ * @returns The consumed challenge, or null if none exists or has expired.
  */
 export async function consumeChallenge(
 	db: ReturnType<typeof createDb>,
 	userId: string,
 ) {
-	const challenge = await getChallenge(db, userId);
-
-	if (!challenge) {
-		return null;
-	}
-
-	await db
+	const deleted = await db
 		.delete(passkeyChallenges)
 		.where(
 			and(
-				eq(passkeyChallenges.id, challenge.id),
 				eq(passkeyChallenges.userId, userId),
+				gt(passkeyChallenges.expiresAt, Date.now()),
 			),
-		);
+		)
+		.returning();
 
-	return challenge;
+	return deleted[0] ?? null;
 }
 
 /**
- * Consumes a userless passkey authentication challenge by ID.
+ * Consumes a userless passkey authentication challenge by ID atomically.
  *
  * The challenge must not be associated with a user because the user
  * is identified from the credential returned by the authenticator.
+ * The challenge is deleted in a single roundtrip via DELETE ... RETURNING *
+ * so it cannot be reused or raced concurrently.
  *
  * @param db The database connection.
  * @param id The challenge ID.
- * @returns The consumed challenge, or null if none exists.
+ * @returns The consumed challenge, or null if none exists or has expired.
  */
 export async function consumeChallengeById(
 	db: ReturnType<typeof createDb>,
 	id: string,
 ) {
-	const challenge = await getChallengeById(db, id);
-
-	if (!challenge) {
-		return null;
-	}
-
-	await db
+	const deleted = await db
 		.delete(passkeyChallenges)
 		.where(
 			and(
-				eq(passkeyChallenges.id, challenge.id),
+				eq(passkeyChallenges.id, id),
 				isNull(passkeyChallenges.userId),
+				gt(passkeyChallenges.expiresAt, Date.now()),
 			),
-		);
+		)
+		.returning();
 
-	return challenge;
+	return deleted[0] ?? null;
 }
