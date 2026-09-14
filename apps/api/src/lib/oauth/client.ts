@@ -158,6 +158,23 @@ export function isOAuthClientType(value: string): value is OAuthClientType {
 	return OAUTH_CLIENT_TYPES.includes(value as OAuthClientType);
 }
 
+const SCOPE_REGEX = /^[a-zA-Z0-9_:.*-]+$/;
+
+/**
+ * Checks whether a scope string is a valid format.
+ *
+ * @param scope The scope string to validate.
+ * @returns `true` when the scope format is valid; otherwise, `false`.
+ */
+export function isValidScopeString(scope: string): boolean {
+	return (
+		typeof scope === "string" &&
+		scope.length > 0 &&
+		scope.length <= 64 &&
+		SCOPE_REGEX.test(scope)
+	);
+}
+
 function parseStringArray(value: string): string[] {
 	try {
 		const parsed: unknown = JSON.parse(value);

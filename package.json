@@ -15,6 +15,7 @@
   "typecheck": "bun run typecheck:api && bun run typecheck:dashboard",
   "typecheck:dashboard": "bunx tsc -p apps/dashboard/tsconfig.json --noEmit",
   "typecheck:api": "bunx tsc -p apps/api/tsconfig.json --noEmit",
+  "test:m2m": "bun run scripts/test-m2m.ts",
   "prepare": "husky"
  },
  "devDependencies": {

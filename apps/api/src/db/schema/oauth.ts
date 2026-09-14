@@ -89,11 +89,9 @@ export const oauthAccessTokens = sqliteTable("oauth_access_tokens", {
 			onDelete: "cascade",
 		}),
 
-	userId: text("user_id")
-		.notNull()
-		.references(() => users.id, {
-			onDelete: "cascade",
-		}),
+	userId: text("user_id").references(() => users.id, {
+		onDelete: "cascade",
+	}),
 
 	tokenHash: text("token_hash").notNull().unique(),
 

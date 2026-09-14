@@ -162,6 +162,15 @@ export async function userinfo(c: Context<{ Bindings: Env }>) {
 		);
 	}
 
+	if (!accessToken.userId) {
+		return c.json(
+			{
+				error: "invalid_token",
+			},
+			401,
+		);
+	}
+
 	const result = await db
 		.select({
 			id: users.id,

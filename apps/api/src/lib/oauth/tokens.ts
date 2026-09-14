@@ -29,11 +29,12 @@ export const REFRESH_TOKEN_DURATION = 1000 * 60 * 60 * 24 * 30;
 export async function createAccessToken(
 	db: Database,
 	clientId: string,
-	userId: string,
+	userId: string | null,
 	scope: string,
 	authorizationCodeId?: string,
+	tokenString?: string,
 ) {
-	const token = generateToken();
+	const token = tokenString ?? generateToken();
 	const now = Date.now();
 	const expiresAt = now + ACCESS_TOKEN_DURATION;
 

@@ -183,13 +183,19 @@ function ClientsPage() {
 											</h3>
 											<Badge
 												variant={
-													client.clientType === "confidential"
-														? "violet"
-														: "default"
+													client.clientType === "public"
+														? "warning"
+														: client.redirectUris.length === 0
+															? "violet"
+															: "success"
 												}
 												size="sm"
 											>
-												{client.clientType}
+												{client.clientType === "public"
+													? "Public (PKCE)"
+													: client.redirectUris.length === 0
+														? "M2M / Service"
+														: "Web App (Confidential)"}
 											</Badge>
 										</div>
 
@@ -227,14 +233,20 @@ function ClientsPage() {
 											Redirect URIs
 										</p>
 										<div className="space-y-1">
-											{client.redirectUris.map((uri) => (
-												<p
-													key={uri}
-													className="break-all font-mono text-xs text-zinc-400 bg-white/[0.02] border border-white/6 px-2.5 py-1 rounded-lg"
-												>
-													{uri}
+											{client.redirectUris.length === 0 ? (
+												<p className="text-xs text-zinc-500 italic">
+													None (M2M Client Credentials)
 												</p>
-											))}
+											) : (
+												client.redirectUris.map((uri) => (
+													<p
+														key={uri}
+														className="break-all font-mono text-xs text-zinc-400 bg-white/[0.02] border border-white/6 px-2.5 py-1 rounded-lg"
+													>
+														{uri}
+													</p>
+												))
+											)}
 										</div>
 									</div>
 
