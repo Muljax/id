@@ -84,7 +84,7 @@ resource "cloudflare_workers_script" "api" {
     {
       name = "LOCALHOST"
       type = "plain_text"
-      text = tostring(var.localhost)
+      text = var.localhost ? "true" : ""
     },
 
     {
