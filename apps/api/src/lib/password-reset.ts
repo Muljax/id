@@ -162,7 +162,7 @@ export async function consumePasswordResetToken(
 		severity: "info",
 		title: "User Password Reset",
 		message: `Password reset was completed for user "${validRecord.userEmail}".`,
-		actionUrl: "/_dashboard/admin/users",
+		actionUrl: `/admin/users?userId=${validRecord.userId}`,
 	});
 
 	return {
@@ -209,7 +209,7 @@ export async function requestPasswordResetNotification(
 			severity: "warning",
 			title: "Password Reset Requested",
 			message: `User "${user.email}" requested a password reset. An administrator can generate a one-time reset link in User Directory.`,
-			actionUrl: "/_dashboard/admin/users",
+			actionUrl: `/admin/users?userId=${user.id}`,
 			data: {
 				userId: user.id,
 				email: user.email,

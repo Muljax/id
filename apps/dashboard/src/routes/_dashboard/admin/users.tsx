@@ -17,7 +17,14 @@ import {
 	type AdminUser,
 } from "@/lib/api/admin";
 
+export interface UsersSearch {
+	userId?: string;
+}
+
 export const Route = createFileRoute("/_dashboard/admin/users")({
+	validateSearch: (search: Record<string, unknown>): UsersSearch => ({
+		userId: typeof search.userId === "string" ? search.userId : undefined,
+	}),
 	staticData: {
 		navigation: {
 			label: "Users",
@@ -28,10 +35,13 @@ export const Route = createFileRoute("/_dashboard/admin/users")({
 });
 
 function UsersPage() {
+	const { userId } = Route.useSearch();
 	const [users, setUsers] = useState<AdminUser[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
-	const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+	const [expandedUserId, setExpandedUserId] = useState<string | null>(
+		userId ?? null,
+	);
 	const [resetTargetUser, setResetTargetUser] = useState<AdminUser | null>(null);
 
 	const loadUsers = useCallback(() => {
@@ -46,6 +56,21 @@ function UsersPage() {
 	useEffect(() => {
 		void loadUsers();
 	}, [loadUsers]);
+
+	useEffect(() => {
+		if (userId) {
+			setExpandedUserId(userId);
+		}
+	}, [userId]);
+
+	useEffect(() => {
+		if (userId && !loading && users.length > 0) {
+			const element = document.getElementById(`user-row-${userId}`);
+			if (element) {
+				element.scrollIntoView({ behavior: "smooth", block: "center" });
+			}
+		}
+	}, [userId, loading, users]);
 
 	if (loading) {
 		return (
@@ -100,6 +125,7 @@ function UsersPage() {
 								key={user.id}
 								user={user}
 								expanded={expandedUserId === user.id}
+								isTarget={userId === user.id}
 								onToggle={() =>
 									setExpandedUserId((current) =>
 										current === user.id ? null : user.id,
@@ -125,18 +151,25 @@ function UsersPage() {
 function UserRow({
 	user,
 	expanded,
+	isTarget,
 	onToggle,
 	onResetPassword,
 }: {
 	user: AdminUser;
 	expanded: boolean;
+	isTarget: boolean;
 	onToggle: () => void;
 	onResetPassword: (user: AdminUser) => void;
 }) {
 	const name = user.displayName || user.email;
 
 	return (
-		<div>
+		<div
+			id={`user-row-${user.id}`}
+			className={`transition-colors ${
+				isTarget ? "bg-violet-500/[0.05] ring-1 ring-violet-500/30" : ""
+			}`}
+		>
 			<button
 				type="button"
 				onClick={onToggle}

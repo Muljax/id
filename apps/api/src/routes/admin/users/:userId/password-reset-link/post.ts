@@ -58,7 +58,7 @@ route.post("/", requireAdmin, async (c) => {
 		severity: "info",
 		title: "Password Reset Link Generated",
 		message: `Admin ${adminUser.email} generated a password reset link for user ${targetUser.email}.`,
-		actionUrl: "/_dashboard/admin/users",
+		actionUrl: `/admin/users?userId=${targetUser.id}`,
 		data: {
 			adminUserId: adminUser.id,
 			targetUserId: targetUser.id,
