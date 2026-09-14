@@ -11,3 +11,9 @@ export function dashboardCors() {
 		credentials: true,
 	});
 }
+
+export function publicCors() {
+	return cors({
+		origin: "*",
+	});
+}
