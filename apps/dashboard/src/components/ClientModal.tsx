@@ -1,6 +1,8 @@
-import { Copy } from "lucide-react";
+import { Globe, Server, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import ClientCredentialsView from "@/components/clients/ClientCredentialsView";
+import ScopeSelector from "@/components/clients/ScopeSelector";
 import { useToast } from "@/components/Toast";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -12,8 +14,7 @@ import {
 	updateOAuthClient,
 } from "@/lib/api";
 
-const AVAILABLE_SCOPES = ["openid", "profile", "email"] as const;
-
+type ClientProfile = "web_app" | "spa_native" | "m2m_service";
 type ClientType = "public" | "confidential";
 
 interface ClientModalProps {
@@ -33,26 +34,60 @@ export default function ClientModal({
 	const editing = client !== null;
 
 	const [name, setName] = useState("");
-	const [clientType, setClientType] = useState<ClientType>("confidential");
+	const [profile, setProfile] = useState<ClientProfile>("m2m_service");
 	const [redirectUris, setRedirectUris] = useState("");
-	const [scopes, setScopes] = useState<string[]>(["openid"]);
+	const [scopes, setScopes] = useState<string[]>([]);
 	const [saving, setSaving] = useState(false);
 
 	const [createdClientId, setCreatedClientId] = useState<string | null>(null);
 	const [secret, setSecret] = useState<string | null>(null);
 
 	useEffect(() => {
-		if (!open) {
-			return;
+		if (!open) return;
+
+		if (client) {
+			setName(client.name);
+			setRedirectUris(client.redirectUris.join("\n"));
+			setScopes(client.scopes);
+			if (client.clientType === "public") {
+				setProfile("spa_native");
+			} else if (
+				client.redirectUris.length === 0 ||
+				!client.scopes.includes("openid")
+			) {
+				setProfile("m2m_service");
+			} else {
+				setProfile("web_app");
+			}
+		} else {
+			setName("");
+			setProfile("m2m_service");
+			setRedirectUris("");
+			setScopes([]);
 		}
 
-		setName(client?.name ?? "");
-		setClientType(client?.clientType ?? "confidential");
-		setRedirectUris(client?.redirectUris.join("\n") ?? "");
-		setScopes(client?.scopes ?? ["openid"]);
 		setCreatedClientId(null);
 		setSecret(null);
 	}, [open, client]);
+
+	function handleProfileChange(newProfile: ClientProfile) {
+		setProfile(newProfile);
+		if (newProfile === "m2m_service") {
+			// Clear standard OIDC scopes if they were just the defaults
+			if (
+				scopes.length === 3 &&
+				scopes.includes("openid") &&
+				scopes.includes("profile") &&
+				scopes.includes("email")
+			) {
+				setScopes([]);
+			}
+		} else if (newProfile === "web_app" || newProfile === "spa_native") {
+			if (!scopes.includes("openid")) {
+				setScopes(["openid", "profile", "email"]);
+			}
+		}
+	}
 
 	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
@@ -68,8 +103,16 @@ export default function ClientModal({
 			return;
 		}
 
-		if (!normalizedRedirectUris.length) {
-			toast.error("At least one redirect URI is required.");
+		const clientType: ClientType =
+			profile === "spa_native" ? "public" : "confidential";
+
+		if (clientType === "public" && normalizedRedirectUris.length === 0) {
+			toast.error("Public clients require at least one redirect URI.");
+			return;
+		}
+
+		if (scopes.length === 0) {
+			toast.error("At least one scope must be assigned to the client.");
 			return;
 		}
 
@@ -105,98 +148,33 @@ export default function ClientModal({
 		}
 	}
 
-	function toggleScope(scope: string) {
-		if (scope === "openid") {
-			return;
-		}
-
-		setScopes((current) =>
-			current.includes(scope)
-				? current.filter((item) => item !== scope)
-				: [...current, scope],
-		);
-	}
-
 	return (
 		<Modal
 			open={open}
 			title={
 				createdClientId
-					? "OAuth client credentials"
+					? "Client Credentials Generated"
 					: editing
-						? "Edit OAuth client"
-						: "Create OAuth client"
+						? "Edit OAuth Client"
+						: "Register New OAuth / M2M Client"
 			}
 			description={
 				createdClientId
 					? "Save these credentials securely. The client secret will not be displayed again."
 					: editing
-						? "Update your application's OAuth 2.0 / OIDC configuration."
-						: "Register a new application to authenticate users with Muljax ID."
+						? "Update your application's OAuth 2.0 / OIDC & M2M configuration."
+						: "Create an OAuth client for web applications, mobile apps, or Machine-to-Machine service accounts."
 			}
 			onClose={onClose}
 			size="lg"
 		>
 			{createdClientId ? (
-				<div className="space-y-6">
-					<div className="rounded-2xl border border-amber-500/20 bg-amber-950/20 p-5 space-y-4">
-						<div>
-							<span className="text-xs font-medium text-amber-400">
-								Client ID
-							</span>
-							<div className="mt-1.5 flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-zinc-950/80 px-3 py-2">
-								<code className="font-mono text-xs text-zinc-200 break-all">
-									{createdClientId}
-								</code>
-								<Button
-									type="button"
-									variant="ghost"
-									size="sm"
-									icon={<Copy size={13} />}
-									onClick={() => {
-										void navigator.clipboard.writeText(createdClientId);
-										toast.success("Client ID copied to clipboard.");
-									}}
-								>
-									Copy
-								</Button>
-							</div>
-						</div>
-
-						{secret && (
-							<div>
-								<span className="text-xs font-medium text-amber-400">
-									Client Secret
-								</span>
-								<div className="mt-1.5 flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-zinc-950/80 px-3 py-2">
-									<code className="font-mono text-xs text-zinc-200 break-all">
-										{secret}
-									</code>
-									<Button
-										type="button"
-										variant="ghost"
-										size="sm"
-										icon={<Copy size={13} />}
-										onClick={() => {
-											void navigator.clipboard.writeText(secret);
-											toast.success("Client secret copied to clipboard.");
-										}}
-									>
-										Copy
-									</Button>
-								</div>
-							</div>
-						)}
-					</div>
-
-					<Button
-						type="button"
-						className="w-full"
-						onClick={() => void onSaved()}
-					>
-						Done
-					</Button>
-				</div>
+				<ClientCredentialsView
+					clientId={createdClientId}
+					secret={secret}
+					isM2M={profile === "m2m_service"}
+					onDone={() => void onSaved()}
+				/>
 			) : (
 				<form onSubmit={handleSubmit} className="space-y-5">
 					<div>
@@ -204,13 +182,13 @@ export default function ClientModal({
 							htmlFor="client-name"
 							className="mb-2 block text-sm font-medium text-zinc-300"
 						>
-							Client name
+							Client Name
 						</label>
 						<Input
 							id="client-name"
 							value={name}
 							onChange={(event) => setName(event.target.value)}
-							placeholder="e.g. My Web App"
+							placeholder="e.g. Keyzori License Server, Billing Sync Worker"
 							disabled={saving}
 							required
 						/>
@@ -219,42 +197,63 @@ export default function ClientModal({
 					{!editing && (
 						<div>
 							<p className="mb-2 block text-sm font-medium text-zinc-300">
-								Client type
+								Client Type & Use Case
 							</p>
-							<div className="grid grid-cols-2 gap-3">
+							<div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
 								<button
 									type="button"
-									onClick={() => setClientType("confidential")}
+									onClick={() => handleProfileChange("m2m_service")}
 									disabled={saving}
 									className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all cursor-pointer ${
-										clientType === "confidential"
+										profile === "m2m_service"
 											? "border-violet-500/50 bg-violet-500/10 text-white"
 											: "border-white/8 bg-zinc-900/40 text-zinc-400 hover:bg-white/[0.04]"
 									}`}
 								>
-									<span className="text-xs font-semibold text-white">
-										Confidential
-									</span>
-									<span className="text-[11px] text-zinc-400 mt-0.5">
-										Server-side apps with secrets
+									<div className="flex items-center gap-1.5 text-xs font-semibold text-white">
+										<Server size={13} className="text-violet-400" />
+										<span>Machine / M2M</span>
+									</div>
+									<span className="text-[11px] text-zinc-400 mt-1">
+										Keyzori, Daemons, APIs (Client Credentials)
 									</span>
 								</button>
 
 								<button
 									type="button"
-									onClick={() => setClientType("public")}
+									onClick={() => handleProfileChange("web_app")}
 									disabled={saving}
 									className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all cursor-pointer ${
-										clientType === "public"
+										profile === "web_app"
 											? "border-violet-500/50 bg-violet-500/10 text-white"
 											: "border-white/8 bg-zinc-900/40 text-zinc-400 hover:bg-white/[0.04]"
 									}`}
 								>
-									<span className="text-xs font-semibold text-white">
-										Public (SPA / Native)
+									<div className="flex items-center gap-1.5 text-xs font-semibold text-white">
+										<Shield size={13} className="text-emerald-400" />
+										<span>Web App</span>
+									</div>
+									<span className="text-[11px] text-zinc-400 mt-1">
+										Backend server with secret (Auth Code)
 									</span>
-									<span className="text-[11px] text-zinc-400 mt-0.5">
-										Requires PKCE flow
+								</button>
+
+								<button
+									type="button"
+									onClick={() => handleProfileChange("spa_native")}
+									disabled={saving}
+									className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all cursor-pointer ${
+										profile === "spa_native"
+											? "border-violet-500/50 bg-violet-500/10 text-white"
+											: "border-white/8 bg-zinc-900/40 text-zinc-400 hover:bg-white/[0.04]"
+									}`}
+								>
+									<div className="flex items-center gap-1.5 text-xs font-semibold text-white">
+										<Globe size={13} className="text-amber-400" />
+										<span>SPA / Native</span>
+									</div>
+									<span className="text-[11px] text-zinc-400 mt-1">
+										React / Mobile apps (PKCE flow)
 									</span>
 								</button>
 							</div>
@@ -266,51 +265,39 @@ export default function ClientModal({
 							htmlFor="redirect-uris"
 							className="mb-2 block text-sm font-medium text-zinc-300"
 						>
-							Redirect URIs
+							Redirect URIs{" "}
+							{profile === "m2m_service" && (
+								<span className="text-zinc-500 font-normal">
+									(Optional for M2M)
+								</span>
+							)}
 						</label>
 						<Textarea
 							id="redirect-uris"
 							value={redirectUris}
 							onChange={(event) => setRedirectUris(event.target.value)}
 							disabled={saving}
-							rows={3}
-							placeholder="https://app.example.com/oauth/callback"
-							required
+							rows={profile === "m2m_service" ? 2 : 3}
+							placeholder={
+								profile === "m2m_service"
+									? "Not required for Client Credentials grant"
+									: "https://app.example.com/oauth/callback"
+							}
+							required={profile !== "m2m_service"}
 						/>
 						<p className="mt-1.5 text-xs text-zinc-500">
-							Enter one redirect URI per line.
+							{profile === "m2m_service"
+								? "Machine-to-machine clients do not require redirect URIs unless also using user authorization code flow."
+								: "Enter one redirect URI per line."}
 						</p>
 					</div>
 
-					<div>
-						<p className="mb-2 block text-sm font-medium text-zinc-300">
-							Allowed scopes
-						</p>
-						<div className="grid grid-cols-3 gap-2">
-							{AVAILABLE_SCOPES.map((scope) => {
-								const selected = scopes.includes(scope);
-								return (
-									<label
-										key={scope}
-										className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all ${
-											selected
-												? "border-violet-500/40 bg-violet-500/10 text-violet-200"
-												: "border-white/8 bg-zinc-900/40 text-zinc-400"
-										}`}
-									>
-										<span className="text-xs font-medium">{scope}</span>
-										<input
-											type="checkbox"
-											checked={selected}
-											disabled={scope === "openid" || saving}
-											onChange={() => toggleScope(scope)}
-											className="rounded border-white/10 bg-zinc-800 accent-violet-500"
-										/>
-									</label>
-								);
-							})}
-						</div>
-					</div>
+					<ScopeSelector
+						profile={profile}
+						scopes={scopes}
+						onChange={setScopes}
+						disabled={saving}
+					/>
 
 					<div className="flex justify-end gap-3 pt-3">
 						<Button

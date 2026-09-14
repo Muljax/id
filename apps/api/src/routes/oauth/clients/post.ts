@@ -4,7 +4,7 @@ import { createDb } from "@/db";
 import {
 	createOAuthClient,
 	isOAuthClientType,
-	OIDC_SCOPES,
+	isValidScopeString,
 } from "@/lib/oauth/client";
 import { emitNotification } from "@/lib/notifications/emitter";
 import { hashToken } from "@/lib/token";
@@ -24,7 +24,9 @@ route.post("/", requireAdmin, async (c) => {
 		!body.name ||
 		!isOAuthClientType(body.clientType) ||
 		!Array.isArray(body.redirectUris) ||
-		!Array.isArray(body.scopes)
+		!Array.isArray(body.scopes) ||
+		body.scopes.length === 0 ||
+		body.scopes.some((scope) => !isValidScopeString(scope))
 	) {
 		return c.json(
 			{
@@ -34,26 +36,24 @@ route.post("/", requireAdmin, async (c) => {
 		);
 	}
 
-	if (
-		body.scopes.some(
-			(scope) => !OIDC_SCOPES.includes(scope as (typeof OIDC_SCOPES)[number]),
-		)
-	) {
-		return c.json(
-			{
-				error: "invalid_scope",
-			},
-			400,
-		);
-	}
+	if (body.clientType === "public") {
+		if (body.redirectUris.length === 0) {
+			return c.json(
+				{
+					error: "redirect_uri_required",
+				},
+				400,
+			);
+		}
 
-	if (!body.scopes.includes("openid")) {
-		return c.json(
-			{
-				error: "openid_required",
-			},
-			400,
-		);
+		if (!body.scopes.includes("openid")) {
+			return c.json(
+				{
+					error: "openid_required",
+				},
+				400,
+			);
+		}
 	}
 
 	let clientSecret: string | undefined;

@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 
 import { exchangeAuthorizationCode } from "@/lib/oauth/authorization-code";
+import { exchangeClientCredentials } from "@/lib/oauth/client-credentials";
 import { exchangeRefreshToken } from "@/lib/oauth/refresh-token";
 import { unsupportedGrantType } from "@/lib/oauth/responses";
 
@@ -22,6 +23,9 @@ route.post("/", async (c) => {
 
 		case "refresh_token":
 			return exchangeRefreshToken(c, body);
+
+		case "client_credentials":
+			return exchangeClientCredentials(c, body);
 
 		default:
 			return unsupportedGrantType(c);

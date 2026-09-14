@@ -34,6 +34,19 @@ route.post("/", async (c) => {
 	const accessToken = await getAccessToken(db, token);
 
 	if (accessToken && accessToken.clientId === client.id) {
+		if (accessToken.userId === null) {
+			// Machine-to-Machine token
+			return c.json({
+				active: true,
+				client_id: accessToken.clientId,
+				sub: accessToken.clientId,
+				scope: accessToken.scope,
+				token_type: "Bearer",
+				exp: Math.floor(accessToken.expiresAt / 1000),
+				iat: Math.floor(accessToken.createdAt / 1000),
+			});
+		}
+
 		const userResult = await db
 			.select({ id: users.id, disabledAt: users.disabledAt })
 			.from(users)
