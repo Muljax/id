@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.18.3](https://github.com/Muljax/id/compare/v0.18.2...v0.18.3) (2026-09-14)
+
+
+### Bug Fixes
+
+* limit passwords to 128 characters to prevent CPU exhaustion DoS ([#178](https://github.com/Muljax/id/issues/178)) ([ea32aa1](https://github.com/Muljax/id/commit/ea32aa117a008e88b18423fb4b0e585dbcaee3cc))
+* some cleanup ([#181](https://github.com/Muljax/id/issues/181)) ([026cc91](https://github.com/Muljax/id/commit/026cc91edd1781cde58bf133a21dce6d11f13194))
+* validate emails during signup ([#180](https://github.com/Muljax/id/issues/180)) ([65589a0](https://github.com/Muljax/id/commit/65589a0e73889199ad0eb2db371e54e2475b8321))
+
 ## [0.18.2](https://github.com/Muljax/id/compare/v0.18.1...v0.18.2) (2026-09-14)
 
 
