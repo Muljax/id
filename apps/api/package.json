@@ -19,7 +19,7 @@
   "typescript": "^7.0.2"
  },
  "dependencies": {
-  "@types/node": "26.4.1",
+  "@types/node": "26.5.1",
   "argon2-wasm-edge": "1.0.23",
   "drizzle-orm": "1.0.0-rc.5-ab785fc",
   "hono": "4.13.7"
