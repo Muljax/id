@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.21.0](https://github.com/Muljax/id/compare/v0.20.0...v0.21.0) (2026-09-14)
+
+
+### Features
+
+* password reset ([#187](https://github.com/Muljax/id/issues/187)) ([50da541](https://github.com/Muljax/id/commit/50da5411d4e8e2f9d5ad1201996ca2dee2cd11e6))
+
 ## [0.20.0](https://github.com/Muljax/id/compare/v0.19.0...v0.20.0) (2026-09-14)
 
 
