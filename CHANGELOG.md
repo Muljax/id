@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.0](https://github.com/Muljax/id/compare/v0.18.3...v0.19.0) (2026-09-14)
+
+
+### Features
+
+* notification system and migration to new notification system ([#182](https://github.com/Muljax/id/issues/182)) ([a8d0fa8](https://github.com/Muljax/id/commit/a8d0fa828f5888c3466e770f9085797d924382b2))
+
 ## [0.18.3](https://github.com/Muljax/id/compare/v0.18.2...v0.18.3) (2026-09-14)
 
 
