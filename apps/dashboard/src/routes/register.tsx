@@ -45,7 +45,7 @@ function RegisterPage() {
 		normalizedEmail.length > 0 &&
 		/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
 
-	const passwordValid = password.length >= 12;
+	const passwordValid = password.length >= 12 && password.length <= 128;
 
 	const passwordsMatch =
 		confirmPassword.length > 0 && password === confirmPassword;
@@ -154,7 +154,7 @@ function RegisterPage() {
 						>
 							{passwordValid
 								? "Password meets security requirements."
-								: "Must be at least 12 characters long."}
+								: "Must be between 12 and 128 characters long."}
 						</p>
 					</div>
 
