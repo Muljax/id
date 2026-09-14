@@ -1,11 +1,10 @@
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { getCookie } from "hono/cookie";
 
 import { createDb } from "@/db";
 import { users } from "@/db/schema";
 import { hashPassword, verifyPassword } from "@/lib/password";
-import { deleteOtherSessions, getSession } from "@/lib/session";
+import { deleteOtherSessions } from "@/lib/session";
 import { requireAuth } from "@/middleware/auth";
 
 const route = new Hono<{ Bindings: Env }>();
@@ -48,38 +47,21 @@ route.post("/", requireAuth, async (c) => {
 		);
 	}
 
+	const session = c.get("session");
 	const db = createDb(c.env.DB);
 
-	const sessionToken = getCookie(c, "session");
-
-	if (!sessionToken) {
-		return c.json({ error: "Unauthorized" }, 401);
-	}
-
-	const session = await getSession(db, sessionToken);
-
-	if (!session) {
-		return c.json({ error: "Unauthorized" }, 401);
-	}
-
-	const result = await db
-		.select({
-			id: users.id,
-			passwordHash: users.passwordHash,
-		})
-		.from(users)
-		.where(eq(users.id, user.id))
-		.limit(1);
-
-	const account = result[0];
-
-	if (!account) {
-		return c.json({ error: "Unauthorized" }, 401);
+	if (!user.passwordHash) {
+		return c.json(
+			{
+				error: "Current password is incorrect",
+			},
+			400,
+		);
 	}
 
 	const validPassword = await verifyPassword(
 		currentPassword,
-		account.passwordHash,
+		user.passwordHash,
 	);
 
 	if (!validPassword) {

@@ -3,6 +3,7 @@ import { Hono } from "hono";
 
 import { createDb } from "@/db";
 import { users } from "@/db/schema";
+import { getProfileAvatarResponse } from "@/lib/profileAvatar";
 
 const route = new Hono<{ Bindings: Env }>();
 
@@ -25,25 +26,13 @@ route.get("/", async (c) => {
 
 	const user = result[0];
 
-	if (!user?.profileImageKey) {
-		return c.notFound();
-	}
+	const response = await getProfileAvatarResponse(
+		c.env.PROFILE_BUCKET,
+		user?.profileImageKey ?? null,
+		"public",
+	);
 
-	const object = await c.env.PROFILE_BUCKET.get(user.profileImageKey);
-
-	if (!object) {
-		return c.notFound();
-	}
-
-	const headers = new Headers();
-
-	object.writeHttpMetadata(headers);
-	headers.set("ETag", object.httpEtag);
-	headers.set("Cache-Control", "public, max-age=3600");
-
-	return new Response(object.body, {
-		headers,
-	});
+	return response ?? c.notFound();
 });
 
 export default route;

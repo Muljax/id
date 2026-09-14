@@ -147,7 +147,9 @@ route.post("/", async (c) => {
 				email: user.email,
 			},
 		});
-	} catch {
+	} catch (error) {
+		console.error("[Passkey] Authentication verification error:", error);
+
 		return c.json(
 			{
 				error: "Unable to verify passkey authentication.",
