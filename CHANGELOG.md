@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.4](https://github.com/Muljax/id/compare/v0.17.3...v0.17.4) (2026-09-14)
+
+
+### Bug Fixes
+
+* **build:** bundle and upload wasm modules alongside api worker script ([25bc094](https://github.com/Muljax/id/commit/25bc09485cb45ca0b78f74b244c425f5afaaf221))
+
 ## [0.17.3](https://github.com/Muljax/id/compare/v0.17.2...v0.17.3) (2026-09-14)
 
 
