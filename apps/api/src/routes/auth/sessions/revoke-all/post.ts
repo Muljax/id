@@ -2,7 +2,8 @@ import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
 
 import { createDb } from "@/db";
-import { deleteOtherSessions, getSession } from "@/lib/session";
+import { deleteOtherSessions, getSessionUserWithSession } from "@/lib/session";
+import { isUserDisabled } from "@/lib/user";
 
 const route = new Hono<{ Bindings: Env }>();
 
@@ -14,11 +15,13 @@ route.post("/", async (c) => {
 	}
 
 	const db = createDb(c.env.DB);
-	const currentSession = await getSession(db, token);
+	const record = await getSessionUserWithSession(db, token);
 
-	if (!currentSession) {
+	if (!record || isUserDisabled(record.user)) {
 		return c.json({ error: "Unauthorized" }, 401);
 	}
+
+	const currentSession = record.session;
 
 	await deleteOtherSessions(db, currentSession.userId, currentSession.id);
 

@@ -8,6 +8,7 @@ import {
 } from "@/lib/oauth/authorization";
 import { getDashboardOrigin } from "@/lib/env";
 import { getSessionUserWithSession } from "@/lib/session";
+import { isUserDisabled } from "@/lib/user";
 
 interface RequestObjectClaims {
 	client_id?: string;
@@ -231,7 +232,8 @@ export async function handleAuthorizationRequest(
 			maxAge !== undefined &&
 			(authenticationAge === null || authenticationAge >= Number(maxAge));
 
-		const requiresLogin = !sessionRecord || maxAgeExpired;
+		const requiresLogin =
+			!sessionRecord || isUserDisabled(sessionRecord.user) || maxAgeExpired;
 
 		if (requiresLogin && prompt === "none") {
 			return redirectWithError(

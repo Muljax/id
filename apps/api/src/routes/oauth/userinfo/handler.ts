@@ -4,6 +4,7 @@ import type { Context } from "hono";
 import { createDb } from "@/db";
 import { oauthAuthorizationCodes, users } from "@/db/schema";
 import { getAccessToken } from "@/lib/oauth/tokens";
+import { isUserDisabled } from "@/lib/user";
 
 type UserInfoContext = {
 	user: {
@@ -179,6 +180,7 @@ export async function userinfo(c: Context<{ Bindings: Env }>) {
 			zoneinfo: users.zoneinfo,
 			locale: users.locale,
 			emailVerifiedAt: users.emailVerifiedAt,
+			disabledAt: users.disabledAt,
 			updatedAt: users.updatedAt,
 		})
 		.from(users)
@@ -187,7 +189,7 @@ export async function userinfo(c: Context<{ Bindings: Env }>) {
 
 	const user = result[0];
 
-	if (!user) {
+	if (!user || isUserDisabled(user)) {
 		return c.json(
 			{
 				error: "invalid_token",

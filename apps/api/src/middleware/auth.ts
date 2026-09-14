@@ -3,6 +3,7 @@ import type { Context, Next } from "hono";
 
 import { createDb } from "../db";
 import { getSessionUserWithSession } from "../lib/session";
+import { isUserDisabled } from "../lib/user";
 
 export type AuthUser = NonNullable<
 	Awaited<ReturnType<typeof getSessionUserWithSession>>
@@ -46,6 +47,15 @@ export async function requireAuth(c: Context<AppEnv>, next: Next) {
 		);
 	}
 
+	if (isUserDisabled(record.user)) {
+		return c.json(
+			{
+				error: "account_disabled",
+			},
+			403,
+		);
+	}
+
 	c.set("user", record.user);
 	c.set("session", record.session);
 
@@ -68,7 +78,7 @@ export async function requireAdmin(c: Context<AppEnv>, next: Next) {
 
 	const record = await getSessionUserWithSession(db, sessionToken);
 
-	if (!record?.user.isAdmin) {
+	if (!record?.user.isAdmin || isUserDisabled(record.user)) {
 		return c.json(
 			{
 				error: "forbidden",

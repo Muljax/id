@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
 
@@ -72,15 +72,12 @@ route.patch("/", async (c) => {
 		.set({
 			name,
 		})
-		.where(eq(passkeys.id, passkeyId))
+		.where(and(eq(passkeys.id, passkeyId), eq(passkeys.userId, user.id)))
 		.returning({
 			id: passkeys.id,
-			userId: passkeys.userId,
 		});
 
-	const passkey = result[0];
-
-	if (!passkey || passkey.userId !== user.id) {
+	if (result.length === 0) {
 		return c.json(
 			{
 				error: "Passkey not found.",
