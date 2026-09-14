@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { Hono } from "hono";
 
 import { createDb } from "@/db";
@@ -213,7 +213,47 @@ route.patch("/", requireAuth, async (c) => {
 	const user = c.get("user");
 	const db = createDb(c.env.DB);
 
-	await db.update(users).set(updates).where(eq(users.id, user.id));
+	if (updates.preferredUsername) {
+		const existingUser = await db
+			.select({ id: users.id })
+			.from(users)
+			.where(
+				and(
+					eq(users.preferredUsername, updates.preferredUsername),
+					ne(users.id, user.id),
+				),
+			)
+			.limit(1);
+
+		if (existingUser.length > 0) {
+			return c.json(
+				{
+					error: "Username is already taken.",
+				},
+				409,
+			);
+		}
+	}
+
+	try {
+		await db.update(users).set(updates).where(eq(users.id, user.id));
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+
+		if (
+			message.toLowerCase().includes("unique") ||
+			message.toLowerCase().includes("constraint")
+		) {
+			return c.json(
+				{
+					error: "Username is already taken.",
+				},
+				409,
+			);
+		}
+
+		throw error;
+	}
 
 	return c.json({
 		success: true,
