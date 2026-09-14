@@ -1,10 +1,10 @@
 {
-  "recommendations": [
-    "biomejs.biome",
-    "bradlc.vscode-tailwindcss",
-    "editorconfig.editorconfig",
-    "hashicorp.terraform",
-    "esbenp.prettier-vscode",
-    "tamasfe.even-better-toml"
-  ]
+ "recommendations": [
+  "biomejs.biome",
+  "bradlc.vscode-tailwindcss",
+  "editorconfig.editorconfig",
+  "hashicorp.terraform",
+  "esbenp.prettier-vscode",
+  "tamasfe.even-better-toml"
+ ]
 }

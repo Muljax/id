@@ -1,5 +1,5 @@
 {
- "$schema": "https://biomejs.dev/schemas/2.5.11/schema.json",
+ "$schema": "https://biomejs.dev/schemas/2.5.13/schema.json",
  "vcs": {
   "enabled": false,
   "clientKind": "git",
@@ -12,6 +12,7 @@
    "!**/worker-configuration.d.ts",
    "!./bun.lock",
    "!./biome.json",
+   "!apps/api/dist",
    "!apps/api/drizzle",
    "!apps/dashboard/dist",
    "!apps/dashboard/src/routeTree.gen.ts",

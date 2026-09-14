@@ -1,26 +1,26 @@
 {
-  "editor.formatOnSave": true,
+ "editor.formatOnSave": true,
 
-  "[javascript]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[javascriptreact]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[json]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
+ "[javascript]": {
+  "editor.defaultFormatter": "biomejs.biome"
+ },
+ "[typescript]": {
+  "editor.defaultFormatter": "biomejs.biome"
+ },
+ "[javascriptreact]": {
+  "editor.defaultFormatter": "biomejs.biome"
+ },
+ "[typescriptreact]": {
+  "editor.defaultFormatter": "biomejs.biome"
+ },
+ "[json]": {
+  "editor.defaultFormatter": "biomejs.biome"
+ },
 
-  "biome.suggestInstallingGlobally": true,
+ "biome.suggestInstallingGlobally": true,
 
-  "json.schemaDownload.trustedDomains": {
-    "https://docs.renovatebot.com": true,
-    "https://biomejs.dev": true
-  }
+ "json.schemaDownload.trustedDomains": {
+  "https://docs.renovatebot.com": true,
+  "https://biomejs.dev": true
+ }
 }
