@@ -32,7 +32,7 @@
  "dependencies": {
   "@noble/curves": "^2.4.0",
   "@simplewebauthn/browser": "14.0.0",
-  "@simplewebauthn/server": "14.0.1",
+  "@simplewebauthn/server": "14.0.2",
   "wrangler": "4.131.1"
  }
 }
