@@ -1,13 +1,9 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import type { Context } from "hono";
 
 import { createDb } from "../../db";
-import { oauthAuthorizationCodes } from "../../db/schema";
-import {
-	getOAuthClient,
-	validateRedirectUri,
-	verifyClientSecret,
-} from "../../lib/oauth/client";
+import { oauthAccessTokens, oauthAuthorizationCodes } from "../../db/schema";
+import { validateRedirectUri } from "../../lib/oauth/client";
 import { createIdToken } from "../../lib/oauth/id-token";
 import { verifyCodeChallenge } from "../../lib/oauth/pkce";
 import {
@@ -16,8 +12,8 @@ import {
 	createRefreshToken,
 } from "../../lib/oauth/tokens";
 import { hashToken } from "../../lib/token";
-import { getBasicClientCredentials } from "./client-auth";
-import { invalidClient, invalidGrant, invalidRequest } from "./responses";
+import { authenticateClient } from "./client-auth";
+import { invalidGrant, invalidRequest } from "./responses";
 
 type TokenRequestBody = Record<string, string | File>;
 
@@ -27,51 +23,21 @@ export async function exchangeAuthorizationCode(
 ) {
 	const code = body.code;
 	const redirectUri = body.redirect_uri;
-	const bodyClientId = body.client_id;
 	const codeVerifier = body.code_verifier;
-	const bodyClientSecret = body.client_secret;
 
-	const basicCredentials = getBasicClientCredentials(
-		c.req.header("Authorization"),
-	);
-
-	const clientId =
-		basicCredentials?.clientId ??
-		(typeof bodyClientId === "string" ? bodyClientId : undefined);
-
-	const clientSecret =
-		basicCredentials?.clientSecret ??
-		(typeof bodyClientSecret === "string" ? bodyClientSecret : undefined);
-
-	if (
-		typeof code !== "string" ||
-		typeof redirectUri !== "string" ||
-		typeof clientId !== "string"
-	) {
+	if (typeof code !== "string" || typeof redirectUri !== "string") {
 		return invalidRequest(c, "Missing required parameters.");
 	}
 
 	const db = createDb(c.env.DB);
 
-	const client = await getOAuthClient(db, clientId);
+	const authResult = await authenticateClient(c, body, db);
 
-	if (!client) {
-		return invalidClient(c);
+	if ("errorResponse" in authResult) {
+		return authResult.errorResponse;
 	}
 
-	if (client.clientType === "confidential") {
-		if (
-			typeof clientSecret !== "string" ||
-			!(await verifyClientSecret(client, clientSecret))
-		) {
-			return invalidClient(c);
-		}
-	} else if (basicCredentials) {
-		return invalidRequest(
-			c,
-			"Public clients must not use client authentication.",
-		);
-	}
+	const { client } = authResult;
 
 	if (!validateRedirectUri(client, redirectUri)) {
 		return invalidGrant(c);
@@ -93,7 +59,19 @@ export async function exchangeAuthorizationCode(
 
 	const now = Date.now();
 
-	if (authorizationCode.expiresAt <= now || authorizationCode.usedAt !== null) {
+	if (authorizationCode.usedAt !== null) {
+		// RFC 6749 Section 4.1.2: Code reuse detected. Revoke previously issued tokens.
+		await db
+			.update(oauthAccessTokens)
+			.set({
+				revokedAt: now,
+			})
+			.where(eq(oauthAccessTokens.authorizationCodeId, authorizationCode.id));
+
+		return invalidGrant(c);
+	}
+
+	if (authorizationCode.expiresAt <= now) {
 		return invalidGrant(c);
 	}
 
@@ -106,8 +84,9 @@ export async function exchangeAuthorizationCode(
 
 	const codeChallenge = authorizationCode.codeChallenge;
 
-	if (codeChallenge !== null) {
-		if (typeof codeVerifier !== "string") {
+	// PKCE is mandatory for public clients (OAuth 2.1) or when code_challenge was provided
+	if (client.clientType === "public" || codeChallenge !== null) {
+		if (typeof codeVerifier !== "string" || !codeChallenge) {
 			return invalidRequest(c, "The code_verifier parameter is required.");
 		}
 
@@ -126,7 +105,12 @@ export async function exchangeAuthorizationCode(
 		.set({
 			usedAt: now,
 		})
-		.where(eq(oauthAuthorizationCodes.id, authorizationCode.id))
+		.where(
+			and(
+				eq(oauthAuthorizationCodes.id, authorizationCode.id),
+				isNull(oauthAuthorizationCodes.usedAt),
+			),
+		)
 		.returning({
 			id: oauthAuthorizationCodes.id,
 		});

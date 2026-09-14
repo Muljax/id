@@ -46,11 +46,35 @@ export async function validateAuthorizationRequest(
 		};
 	}
 
-	if (request.code_challenge || request.code_challenge_method) {
+	const client = await getOAuthClient(db, request.client_id);
+
+	if (!client) {
+		return {
+			error: "invalid_request" as const,
+			error_description: "Unknown client.",
+		};
+	}
+
+	if (!validateRedirectUri(client, request.redirect_uri)) {
+		return {
+			error: "invalid_request" as const,
+			error_description: "Invalid redirect URI.",
+		};
+	}
+
+	// PKCE is mandatory for public clients (OAuth 2.1) or if code_challenge is provided
+	if (
+		client.clientType === "public" ||
+		request.code_challenge ||
+		request.code_challenge_method
+	) {
 		if (!request.code_challenge) {
 			return {
 				error: "invalid_request" as const,
-				error_description: "The code_challenge parameter is required.",
+				error_description:
+					client.clientType === "public"
+						? "Public clients must use PKCE (code_challenge is required)."
+						: "The code_challenge parameter is required.",
 			};
 		}
 
@@ -74,22 +98,6 @@ export async function validateAuthorizationRequest(
 				error_description: "Invalid PKCE code challenge.",
 			};
 		}
-	}
-
-	const client = await getOAuthClient(db, request.client_id);
-
-	if (!client) {
-		return {
-			error: "invalid_request" as const,
-			error_description: "Unknown client.",
-		};
-	}
-
-	if (!validateRedirectUri(client, request.redirect_uri)) {
-		return {
-			error: "invalid_request" as const,
-			error_description: "Invalid redirect URI.",
-		};
 	}
 
 	const scopes = [...new Set(request.scope.split(" ").filter(Boolean))];
