@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { startAuthentication } from "@simplewebauthn/browser";
 import { Fingerprint } from "lucide-react";
 import { useState } from "react";
@@ -225,12 +225,13 @@ function LoginPage() {
 
 				<p className="mt-8 text-center text-sm text-zinc-500">
 					Don't have an account?{" "}
-					<a
-						href="/register"
+					<Link
+						to="/register"
+						search={return_to ? { return_to } : undefined}
 						className="font-medium text-violet-400 transition-colors hover:text-violet-300"
 					>
 						Create one
-					</a>
+					</Link>
 				</p>
 			</div>
 		</PreAuthLayout>

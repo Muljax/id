@@ -9,14 +9,31 @@ import Spinner from "@/components/ui/Spinner";
 import PreAuthLayout from "@/layouts/PreAuthLayout";
 import { register } from "@/lib/api";
 
+export interface RegisterSearch {
+	return_to?: string;
+}
+
 export const Route = createFileRoute("/register")({
+	validateSearch: (search: Record<string, unknown>): RegisterSearch => ({
+		return_to:
+			typeof search.return_to === "string" ? search.return_to : undefined,
+	}),
 	component: RegisterPage,
 });
+
+function getSafeReturnTo(value: string | undefined) {
+	if (!value?.startsWith("/") || value.startsWith("//")) {
+		return null;
+	}
+
+	return value;
+}
 
 function RegisterPage() {
 	const navigate = useNavigate();
 	const { refresh } = useAuth();
 	const toast = useToast();
+	const { return_to } = Route.useSearch();
 
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -52,6 +69,14 @@ function RegisterPage() {
 			await refresh();
 
 			toast.success("Account created.");
+
+			const destination = getSafeReturnTo(return_to);
+
+			if (destination) {
+				const url = new URL(destination, window.location.origin);
+				window.location.href = url.toString();
+				return;
+			}
 
 			await navigate({
 				to: "/",
@@ -188,6 +213,7 @@ function RegisterPage() {
 					Already have an account?{" "}
 					<Link
 						to="/login"
+						search={return_to ? { return_to } : undefined}
 						className="font-medium text-violet-400 transition-colors hover:text-violet-300"
 					>
 						Sign in

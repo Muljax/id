@@ -12,13 +12,20 @@ import details from "./details";
 import grant from "./grant";
 
 import { dashboardCors, publicCors } from "@/middleware/cors";
+import { rateLimit } from "@/middleware/rateLimiter";
 
 const oauthRoute = new Hono<{
 	Bindings: Env;
 }>();
 
 // Public OAuth & OIDC endpoints (RFC 6749, RFC 7009, RFC 7662, OIDC Core)
-token.use("*", publicCors());
+token.use(
+	"*",
+	publicCors(),
+	rateLimit(
+		(c) => `oauth_token:${c.req.header("CF-Connecting-IP") ?? "unknown"}`,
+	),
+);
 userinfo.use("*", publicCors());
 revoke.use("*", publicCors());
 introspect.use("*", publicCors());
