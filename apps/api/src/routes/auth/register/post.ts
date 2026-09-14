@@ -3,7 +3,15 @@ import { Hono } from "hono";
 
 import { createDb } from "@/db";
 import { users } from "@/db/schema";
+import { setSessionCookie } from "@/lib/cookie";
 import { hashPassword } from "@/lib/password";
+import { createSession } from "@/lib/session";
+
+interface CloudflareRequestProperties {
+	country?: string;
+	city?: string;
+	region?: string;
+}
 
 const route = new Hono<{ Bindings: Env }>();
 
@@ -64,6 +72,23 @@ route.post("/", async (c) => {
 		createdAt: now,
 		updatedAt: now,
 	});
+
+	const cf = c.req.raw.cf as CloudflareRequestProperties | undefined;
+
+	const session = await createSession(
+		db,
+		userId,
+		{
+			ipAddress: c.req.header("CF-Connecting-IP"),
+			country: cf?.country,
+			city: cf?.city,
+			region: cf?.region,
+			userAgent: c.req.header("User-Agent"),
+		},
+		true,
+	);
+
+	setSessionCookie(c, session.token);
 
 	return c.json(
 		{
