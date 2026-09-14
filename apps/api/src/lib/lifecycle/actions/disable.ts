@@ -1,20 +1,56 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 import type { Database } from "../../../db";
-import { users } from "../../../db/schema";
+import {
+	oauthAccessTokens,
+	oauthGrants,
+	oauthRefreshTokens,
+	sessions,
+	users,
+} from "../../../db/schema";
 
 /**
- * Disables a user by setting their disabled timestamp.
+ * Disables a user by setting their disabled timestamp and
+ * revoking all active sessions, OAuth tokens, and grants.
  *
  * @param db The database connection.
  * @param userId The ID of the user to disable.
  */
 export async function disableUser(db: Database, userId: string) {
+	const now = Date.now();
+
 	await db
 		.update(users)
 		.set({
-			disabledAt: Date.now(),
-			updatedAt: Date.now(),
+			disabledAt: now,
+			updatedAt: now,
 		})
 		.where(eq(users.id, userId));
+
+	await db.delete(sessions).where(eq(sessions.userId, userId));
+
+	await db
+		.update(oauthAccessTokens)
+		.set({ revokedAt: now })
+		.where(
+			and(
+				eq(oauthAccessTokens.userId, userId),
+				isNull(oauthAccessTokens.revokedAt),
+			),
+		);
+
+	await db
+		.update(oauthRefreshTokens)
+		.set({ revokedAt: now })
+		.where(
+			and(
+				eq(oauthRefreshTokens.userId, userId),
+				isNull(oauthRefreshTokens.revokedAt),
+			),
+		);
+
+	await db
+		.update(oauthGrants)
+		.set({ revokedAt: now })
+		.where(and(eq(oauthGrants.userId, userId), isNull(oauthGrants.revokedAt)));
 }

@@ -3,6 +3,7 @@ import { and, eq, gt, ne } from "drizzle-orm";
 import type { Database } from "../db";
 import { sessions, users } from "../db/schema";
 import { generateToken, hashToken } from "./token";
+import { isUserDisabled } from "./user";
 import { parseUserAgent } from "./userAgent";
 
 const SESSION_DURATION = 1000 * 60 * 60 * 24 * 30;
@@ -157,7 +158,11 @@ export async function getSessionUserWithSession(db: Database, token: string) {
 export async function getSessionUser(db: Database, token: string) {
 	const record = await getSessionUserWithSession(db, token);
 
-	return record?.user ?? null;
+	if (!record || isUserDisabled(record.user)) {
+		return null;
+	}
+
+	return record.user;
 }
 
 /**

@@ -32,3 +32,19 @@ export async function getUsers(db: Database) {
 		})
 		.from(users);
 }
+
+/**
+ * Checks whether a user account is currently disabled.
+ *
+ * An account is considered disabled only if `disabledAt` is set and has
+ * already elapsed (`disabledAt <= Date.now()`). Future timestamps are treated
+ * as scheduled and do not disable the account yet.
+ *
+ * @param user The user object with an optional `disabledAt` timestamp.
+ * @returns `true` when the account is currently disabled; otherwise, `false`.
+ */
+export function isUserDisabled(
+	user: { disabledAt?: number | null } | null | undefined,
+): boolean {
+	return user?.disabledAt != null && user.disabledAt <= Date.now();
+}

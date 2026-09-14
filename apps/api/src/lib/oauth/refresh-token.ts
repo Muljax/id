@@ -2,13 +2,14 @@ import { and, eq, isNull } from "drizzle-orm";
 import type { Context } from "hono";
 
 import { createDb } from "../../db";
-import { oauthAccessTokens, oauthRefreshTokens } from "../../db/schema";
+import { oauthAccessTokens, oauthRefreshTokens, users } from "../../db/schema";
 import {
 	ACCESS_TOKEN_DURATION,
 	createAccessToken,
 	createRefreshToken,
 } from "../../lib/oauth/tokens";
 import { hashToken } from "../../lib/token";
+import { isUserDisabled } from "../user";
 import { authenticateClient } from "./client-auth";
 import { invalidGrant, invalidRequest } from "./responses";
 
@@ -83,6 +84,21 @@ export async function exchangeRefreshToken(
 	}
 
 	if (storedToken.clientId !== client.id) {
+		return invalidGrant(c);
+	}
+
+	const userResult = await db
+		.select({
+			id: users.id,
+			disabledAt: users.disabledAt,
+		})
+		.from(users)
+		.where(eq(users.id, storedToken.userId))
+		.limit(1);
+
+	const user = userResult[0];
+
+	if (!user || isUserDisabled(user)) {
 		return invalidGrant(c);
 	}
 

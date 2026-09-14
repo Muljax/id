@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
 
@@ -44,17 +44,11 @@ route.delete("/", async (c) => {
 	}
 
 	const result = await db
-		.select({
-			id: passkeys.id,
-			userId: passkeys.userId,
-		})
-		.from(passkeys)
-		.where(eq(passkeys.id, passkeyId))
-		.limit(1);
+		.delete(passkeys)
+		.where(and(eq(passkeys.id, passkeyId), eq(passkeys.userId, user.id)))
+		.returning({ id: passkeys.id });
 
-	const passkey = result[0];
-
-	if (!passkey || passkey.userId !== user.id) {
+	if (result.length === 0) {
 		return c.json(
 			{
 				error: "Passkey not found.",
@@ -62,8 +56,6 @@ route.delete("/", async (c) => {
 			404,
 		);
 	}
-
-	await db.delete(passkeys).where(eq(passkeys.id, passkeyId));
 
 	return c.json({
 		success: true,

@@ -8,6 +8,7 @@ import {
 } from "@/lib/oauth/authorization";
 import { grantOAuthAccess } from "@/lib/oauth/grant";
 import { getSessionUserWithSession } from "@/lib/session";
+import { isUserDisabled } from "@/lib/user";
 
 const route = new Hono<{ Bindings: Env }>();
 
@@ -48,7 +49,7 @@ route.post("/", async (c) => {
 
 	const sessionRecord = await getSessionUserWithSession(db, sessionToken);
 
-	if (!sessionRecord) {
+	if (!sessionRecord || isUserDisabled(sessionRecord.user)) {
 		return c.json(
 			{
 				error: "login_required",

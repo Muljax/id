@@ -11,6 +11,7 @@ import { setSessionCookie } from "@/lib/cookie";
 import { getDashboardOrigin } from "@/lib/env";
 import { base64ToUint8Array, consumeChallengeById } from "@/lib/passkey";
 import { createSession } from "@/lib/session";
+import { isUserDisabled } from "@/lib/user";
 
 interface CloudflareRequestProperties {
 	country?: string;
@@ -108,6 +109,15 @@ route.post("/", async (c) => {
 					error: "Passkey authentication failed.",
 				},
 				401,
+			);
+		}
+
+		if (isUserDisabled(user)) {
+			return c.json(
+				{
+					error: "Your account has been disabled.",
+				},
+				403,
 			);
 		}
 

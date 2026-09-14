@@ -7,6 +7,7 @@ import { users } from "@/db/schema";
 import { setSessionCookie } from "@/lib/cookie";
 import { DUMMY_PASSWORD_HASH, verifyPassword } from "@/lib/password";
 import { createSession, deleteSession, getSession } from "@/lib/session";
+import { isUserDisabled } from "@/lib/user";
 
 interface CloudflareRequestProperties {
 	country?: string;
@@ -58,6 +59,15 @@ route.post("/", async (c) => {
 				error: "Invalid email or password",
 			},
 			401,
+		);
+	}
+
+	if (isUserDisabled(user)) {
+		return c.json(
+			{
+				error: "Your account has been disabled.",
+			},
+			403,
 		);
 	}
 
