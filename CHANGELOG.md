@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.17.2](https://github.com/Muljax/id/compare/v0.17.1...v0.17.2) (2026-09-14)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @simplewebauthn/server to v14.0.2 ([5f1577e](https://github.com/Muljax/id/commit/5f1577e55f3341d277195d552e788d7bed6f4b22))
+* **deps:** update dependency @types/node to v26.5.1 ([fca1ca7](https://github.com/Muljax/id/commit/fca1ca725cdd2e60b25b833cf74b829d1b843ab3))
+* **deps:** update dependency lucide-react to v1.45.0 ([539c3f8](https://github.com/Muljax/id/commit/539c3f83a80c321aba0ef6efd3fe8e653744439d))
+* **deps:** update react monorepo to v19.3.0 ([9606c72](https://github.com/Muljax/id/commit/9606c7212fc2e23fa7a3dd506698a0552d1b8f45))
+
 ## [0.17.1](https://github.com/Muljax/id/compare/v0.17.0...v0.17.1) (2026-09-13)
 
 
