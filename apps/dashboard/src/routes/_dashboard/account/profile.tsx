@@ -263,7 +263,6 @@ function ProfilePage() {
 			});
 
 			await refresh();
-			toast.success("Profile updated.");
 		} catch (error) {
 			toast.error(
 				error instanceof Error
@@ -311,7 +310,6 @@ function ProfilePage() {
 		try {
 			await uploadProfileAvatar(file);
 			await refresh();
-			toast.success("Profile picture updated.");
 		} catch (error) {
 			toast.error(
 				error instanceof Error
@@ -329,7 +327,6 @@ function ProfilePage() {
 		try {
 			await deleteProfileAvatar();
 			await refresh();
-			toast.success("Profile picture removed.");
 		} catch (error) {
 			toast.error(
 				error instanceof Error

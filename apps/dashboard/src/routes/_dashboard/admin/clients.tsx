@@ -93,7 +93,6 @@ function ClientsPage() {
 			setClients((current) =>
 				current.filter((item) => item.id !== deletingClient.id),
 			);
-			toast.success(`Deleted "${deletingClient.name}".`);
 			setDeletingClient(null);
 		} catch (error) {
 			toast.error(

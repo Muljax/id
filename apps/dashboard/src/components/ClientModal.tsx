@@ -83,7 +83,6 @@ export default function ClientModal({
 					scopes,
 				});
 
-				toast.success("OAuth client updated.");
 				await onSaved();
 				return;
 			}
@@ -97,7 +96,6 @@ export default function ClientModal({
 
 			setCreatedClientId(response.client_id);
 			setSecret(response.client_secret ?? null);
-			toast.success("OAuth client created.");
 		} catch (error) {
 			toast.error(
 				error instanceof Error ? error.message : "Unable to save OAuth client.",

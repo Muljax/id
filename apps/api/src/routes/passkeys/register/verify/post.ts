@@ -9,6 +9,7 @@ import { getCookie } from "hono/cookie";
 import { createDb } from "@/db";
 import { passkeys } from "@/db/schema";
 import { getDashboardOrigin } from "@/lib/env";
+import { emitNotification } from "@/lib/notifications/emitter";
 import { arrayBufferToBase64, consumeChallenge } from "@/lib/passkey";
 import { getSessionUser } from "@/lib/session";
 
@@ -110,6 +111,16 @@ route.post("/", async (c) => {
 			name,
 			createdAt: now,
 			lastUsedAt: null,
+		});
+
+		await emitNotification(db, {
+			userId: user.id,
+			type: "security.passkey_added",
+			category: "security",
+			severity: "success",
+			title: "Passkey Registered",
+			message: `A new passkey (${name ?? "Unnamed"}) was added to your account.`,
+			actionUrl: "/account/passkeys",
 		});
 
 		return c.json({

@@ -6,6 +6,7 @@ import {
 	isOAuthClientType,
 	OIDC_SCOPES,
 } from "@/lib/oauth/client";
+import { emitNotification } from "@/lib/notifications/emitter";
 import { hashToken } from "@/lib/token";
 import { requireAdmin } from "@/middleware/auth";
 
@@ -72,6 +73,18 @@ route.post("/", requireAdmin, async (c) => {
 		redirectUris: body.redirectUris,
 		scopes: body.scopes,
 	});
+
+	if (client) {
+		await emitNotification(db, {
+			target: "admins",
+			type: "admin.client_created",
+			category: "admin",
+			severity: "success",
+			title: "OAuth Client Created",
+			message: `OAuth client "${client.name}" (${client.id}) was created.`,
+			actionUrl: "/admin/clients",
+		});
+	}
 
 	return c.json(
 		{

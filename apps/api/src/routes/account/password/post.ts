@@ -3,6 +3,7 @@ import { Hono } from "hono";
 
 import { createDb } from "@/db";
 import { users } from "@/db/schema";
+import { emitNotification } from "@/lib/notifications/emitter";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { deleteOtherSessions } from "@/lib/session";
 import { requireAuth } from "@/middleware/auth";
@@ -84,6 +85,17 @@ route.post("/", requireAuth, async (c) => {
 		.where(eq(users.id, user.id));
 
 	await deleteOtherSessions(db, user.id, session.id);
+
+	await emitNotification(db, {
+		userId: user.id,
+		type: "security.password_changed",
+		category: "security",
+		severity: "warning",
+		title: "Password Changed",
+		message:
+			"Your password was recently changed. All other active sessions were revoked.",
+		actionUrl: "/account/password",
+	});
 
 	return c.json({
 		success: true,

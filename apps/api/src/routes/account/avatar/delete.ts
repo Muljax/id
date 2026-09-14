@@ -3,6 +3,7 @@ import { Hono } from "hono";
 
 import { createDb } from "@/db";
 import { users } from "@/db/schema";
+import { emitNotification } from "@/lib/notifications/emitter";
 import { requireAuth } from "@/middleware/auth";
 
 const route = new Hono<{ Bindings: Env }>();
@@ -21,6 +22,16 @@ route.delete("/", requireAuth, async (c) => {
 			updatedAt: Date.now(),
 		})
 		.where(eq(users.id, user.id));
+
+	await emitNotification(db, {
+		userId: user.id,
+		type: "account.avatar_removed",
+		category: "general",
+		severity: "info",
+		title: "Profile Picture Removed",
+		message: "Your profile picture was removed.",
+		actionUrl: "/account/profile",
+	});
 
 	return c.json({
 		success: true,

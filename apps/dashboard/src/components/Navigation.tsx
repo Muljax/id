@@ -2,6 +2,7 @@ import { Link, Outlet } from "@tanstack/react-router";
 import { ChevronDown, LogOut, Menu, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+import NotificationBell from "@/components/NotificationBell";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/context/AuthContext";
 import { getNavigationItems } from "@/lib/navigation";
@@ -283,6 +284,8 @@ export default function DashboardLayout() {
 						</div>
 
 						<div className="flex items-center gap-3">
+							<NotificationBell />
+
 							{/* User details chip */}
 							<div className="flex items-center gap-2.5 rounded-full border border-white/8 bg-white/[0.03] py-1 pl-1.5 pr-3">
 								<div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-violet-500/20 text-xs font-semibold text-violet-300 border border-violet-500/30">

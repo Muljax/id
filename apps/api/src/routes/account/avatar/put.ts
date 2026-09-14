@@ -3,6 +3,7 @@ import { Hono } from "hono";
 
 import { createDb } from "@/db";
 import { users } from "@/db/schema";
+import { emitNotification } from "@/lib/notifications/emitter";
 import { requireAuth } from "@/middleware/auth";
 
 const route = new Hono<{ Bindings: Env }>();
@@ -72,6 +73,16 @@ route.put("/", requireAuth, async (c) => {
 	if (oldKey) {
 		await c.env.PROFILE_BUCKET.delete(oldKey);
 	}
+
+	await emitNotification(db, {
+		userId: user.id,
+		type: "account.avatar_updated",
+		category: "general",
+		severity: "success",
+		title: "Profile Picture Updated",
+		message: "Your new profile picture has been uploaded.",
+		actionUrl: "/account/profile",
+	});
 
 	return c.json({
 		success: true,

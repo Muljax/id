@@ -1,4 +1,6 @@
+export * from "./instanceSettings";
 export * from "./lifecycle";
+export * from "./notifications";
 export * from "./oauth";
 export * from "./passkeys";
 export * from "./password-reset";
