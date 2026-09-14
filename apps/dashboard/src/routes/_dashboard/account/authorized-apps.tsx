@@ -1,8 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { AppWindow, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
-import { useToast } from "@/components/toast/ToastProvider";
+import { useToast } from "@/components/Toast";
+import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import Card, { CardHeader, CardTitle } from "@/components/ui/Card";
+import EmptyState from "@/components/ui/EmptyState";
+import PageHeader from "@/components/ui/PageHeader";
 import Spinner from "@/components/ui/Spinner";
 import { getOAuthGrants, revokeOAuthGrant, type OAuthGrant } from "@/lib/api";
 
@@ -47,12 +52,10 @@ function AuthorizedAppsPage() {
 
 		try {
 			await revokeOAuthGrant(clientId);
-
 			setGrants((current) =>
 				current.filter((grant) => grant.clientId !== clientId),
 			);
-
-			toast.success("App access revoked.");
+			toast.success("Application authorization revoked.");
 		} catch (error) {
 			toast.error(
 				error instanceof Error ? error.message : "Unable to revoke app access.",
@@ -71,90 +74,89 @@ function AuthorizedAppsPage() {
 	}
 
 	return (
-		<div className="max-w-2xl">
-			<div className="mb-8">
-				<h1 className="text-3xl font-semibold tracking-[-0.04em] text-white">
-					Authorized apps
-				</h1>
-
-				<p className="mt-2 text-sm leading-6 text-zinc-500">
-					Manage applications that have access to your Muljax ID account.
-				</p>
-			</div>
+		<div className="space-y-8 max-w-4xl">
+			<PageHeader
+				title="Authorized apps"
+				description="Manage applications and services that currently have delegated permissions to your account."
+			/>
 
 			{grants.length === 0 ? (
-				<div className="rounded-2xl border border-white/10 bg-white/2 px-6 py-6">
-					<p className="text-sm text-zinc-500">
-						You have not authorized any applications.
-					</p>
-				</div>
+				<EmptyState
+					icon={<AppWindow size={24} />}
+					title="No authorized applications"
+					description="You have not authorized any third-party applications or services to connect to your Muljax ID account."
+				/>
 			) : (
-				<div className="overflow-hidden rounded-2xl border border-white/10 bg-white/2">
-					<div className="border-b border-white/8 px-6 py-5">
-						<h2 className="text-sm font-medium text-white">
-							Connected applications
-						</h2>
+				<Card>
+					<CardHeader>
+						<div className="flex items-center justify-between">
+							<CardTitle className="text-sm font-semibold">
+								Connected applications
+							</CardTitle>
+							<Badge variant="default">{grants.length} Active</Badge>
+						</div>
+					</CardHeader>
 
-						<p className="mt-1 text-sm text-zinc-500">
-							These applications can access your account with the permissions
-							shown below.
-						</p>
-					</div>
-
-					<div className="divide-y divide-white/8">
+					<div className="divide-y divide-white/6">
 						{grants.map((grant) => (
-							<div key={grant.clientId} className="px-6 py-6">
-								<div className="flex items-start justify-between gap-5">
-									<div className="min-w-0">
-										<h2 className="truncate text-base font-medium text-white">
-											{grant.clientName}
-										</h2>
+							<div
+								key={grant.clientId}
+								className="flex flex-col gap-5 p-6 sm:flex-row sm:items-start sm:justify-between"
+							>
+								<div className="space-y-3 min-w-0 flex-1">
+									<div className="flex items-center gap-3">
+										<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-violet-400">
+											<AppWindow size={18} />
+										</div>
+										<div className="min-w-0">
+											<h4 className="truncate text-base font-medium text-white">
+												{grant.clientName}
+											</h4>
+											<p className="truncate font-mono text-xs text-zinc-500">
+												{grant.clientId}
+											</p>
+										</div>
+									</div>
 
-										<p className="mt-1 break-all font-mono text-xs text-zinc-600">
-											{grant.clientId}
+									<div>
+										<p className="text-xs font-medium uppercase tracking-wider text-zinc-500 mb-2">
+											Granted Scopes
 										</p>
+										<div className="flex flex-wrap gap-1.5">
+											{grant.scopes.map((scope) => (
+												<Badge key={scope} variant="violet" size="sm">
+													{scope}
+												</Badge>
+											))}
+										</div>
 									</div>
 
-									<Button
-										type="button"
-										variant="danger"
-										disabled={revoking === grant.clientId}
-										onClick={() => void handleRevoke(grant.clientId)}
-										className="shrink-0"
-									>
-										{revoking === grant.clientId ? "Revoking..." : "Revoke"}
-									</Button>
-								</div>
-
-								<div className="mt-5">
-									<p className="text-xs font-medium uppercase tracking-wide text-zinc-600">
-										Permissions
+									<p className="text-xs text-zinc-500">
+										Authorized on{" "}
+										{new Date(grant.grantedAt).toLocaleDateString(undefined, {
+											month: "long",
+											day: "numeric",
+											year: "numeric",
+										})}
 									</p>
-
-									<div className="mt-2 flex flex-wrap gap-2">
-										{grant.scopes.map((scope) => (
-											<span
-												key={scope}
-												className="rounded-lg border border-violet-400/10 bg-violet-400/6 px-2.5 py-1 text-xs font-medium text-violet-300"
-											>
-												{scope}
-											</span>
-										))}
-									</div>
 								</div>
 
-								<p className="mt-5 text-xs text-zinc-600">
-									Authorized{" "}
-									{new Date(grant.grantedAt).toLocaleDateString(undefined, {
-										month: "long",
-										day: "numeric",
-										year: "numeric",
-									})}
-								</p>
+								<Button
+									type="button"
+									variant="danger"
+									size="sm"
+									disabled={revoking === grant.clientId}
+									loading={revoking === grant.clientId}
+									onClick={() => void handleRevoke(grant.clientId)}
+									icon={<Trash2 size={14} />}
+									className="self-end sm:self-start shrink-0"
+								>
+									Revoke access
+								</Button>
 							</div>
 						))}
 					</div>
-				</div>
+				</Card>
 			)}
 		</div>
 	);

@@ -1,12 +1,11 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { useAuth } from "@/components/auth/AuthProvider";
-import { useToast } from "@/components/toast/ToastProvider";
+import PreAuthLayout from "@/components/PreAuthLayout";
+import { useToast } from "@/components/Toast";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import Spinner from "@/components/ui/Spinner";
-import PreAuthLayout from "@/layouts/PreAuthLayout";
+import { useAuth } from "@/context/AuthContext";
 import { register } from "@/lib/api";
 
 export interface RegisterSearch {
@@ -53,9 +52,7 @@ function RegisterPage() {
 
 	const canSubmit = emailValid && passwordValid && passwordsMatch && !loading;
 
-	async function handleSubmit(
-		event: Parameters<NonNullable<React.ComponentProps<"form">["onSubmit"]>>[0],
-	) {
+	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 
 		if (!canSubmit) {
@@ -68,7 +65,7 @@ function RegisterPage() {
 			await register(normalizedEmail, password);
 			await refresh();
 
-			toast.success("Account created.");
+			toast.success("Account created successfully.");
 
 			const destination = getSafeReturnTo(return_to);
 
@@ -78,9 +75,7 @@ function RegisterPage() {
 				return;
 			}
 
-			await navigate({
-				to: "/",
-			});
+			await navigate({ to: "/" });
 		} catch (error) {
 			toast.error(
 				error instanceof Error
@@ -92,34 +87,26 @@ function RegisterPage() {
 		}
 	}
 
-	if (loading) {
-		return (
-			<div className="flex min-h-screen items-center justify-center bg-zinc-950">
-				<Spinner size="lg" />
-			</div>
-		);
-	}
-
 	return (
 		<PreAuthLayout>
-			<div>
+			<div className="space-y-6">
 				{/* Heading */}
-				<div className="mb-8">
-					<h1 className="text-3xl font-semibold tracking-[-0.04em] text-white">
+				<div>
+					<h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
 						Create your account
 					</h1>
 
-					<p className="mt-2 text-sm leading-6 text-zinc-500">
-						Create your Muljax ID account to get started.
+					<p className="mt-1.5 text-sm text-zinc-400">
+						Set up your Muljax ID account to authenticate securely.
 					</p>
 				</div>
 
 				{/* Form */}
-				<form onSubmit={handleSubmit} className="space-y-5">
+				<form onSubmit={handleSubmit} className="space-y-4">
 					<div>
 						<label
 							htmlFor="email"
-							className="mb-2 block text-sm font-medium text-zinc-300"
+							className="mb-1.5 block text-xs font-medium text-zinc-300"
 						>
 							Email address
 						</label>
@@ -140,7 +127,7 @@ function RegisterPage() {
 					<div>
 						<label
 							htmlFor="password"
-							className="mb-2 block text-sm font-medium text-zinc-300"
+							className="mb-1.5 block text-xs font-medium text-zinc-300"
 						>
 							Password
 						</label>
@@ -150,31 +137,31 @@ function RegisterPage() {
 							type="password"
 							value={password}
 							onChange={(event) => setPassword(event.target.value)}
-							placeholder="Create a password"
+							placeholder="Create a strong password"
 							autoComplete="new-password"
 							disabled={loading}
 							required
 						/>
 
 						<p
-							className={`mt-2 text-xs ${
+							className={`mt-1.5 text-xs ${
 								password.length === 0
-									? "text-zinc-600"
+									? "text-zinc-500"
 									: passwordValid
 										? "text-emerald-400"
-										: "text-zinc-500"
+										: "text-amber-400"
 							}`}
 						>
 							{passwordValid
-								? "Password meets the minimum requirements."
-								: "Use at least 12 characters."}
+								? "Password meets security requirements."
+								: "Must be at least 12 characters long."}
 						</p>
 					</div>
 
 					<div>
 						<label
 							htmlFor="confirm-password"
-							className="mb-2 block text-sm font-medium text-zinc-300"
+							className="mb-1.5 block text-xs font-medium text-zinc-300"
 						>
 							Confirm password
 						</label>
@@ -184,15 +171,16 @@ function RegisterPage() {
 							type="password"
 							value={confirmPassword}
 							onChange={(event) => setConfirmPassword(event.target.value)}
-							placeholder="Enter your password again"
+							placeholder="Re-enter your password"
 							autoComplete="new-password"
 							disabled={loading}
+							hasError={Boolean(confirmPassword && !passwordsMatch)}
 							required
 						/>
 
 						{confirmPassword.length > 0 && (
 							<p
-								className={`mt-2 text-xs ${
+								className={`mt-1.5 text-xs ${
 									passwordsMatch ? "text-emerald-400" : "text-red-400"
 								}`}
 							>
@@ -203,18 +191,24 @@ function RegisterPage() {
 						)}
 					</div>
 
-					<Button type="submit" className="w-full" disabled={!canSubmit}>
+					<Button
+						type="submit"
+						className="w-full mt-2"
+						size="lg"
+						loading={loading}
+						disabled={!canSubmit}
+					>
 						Create account
 					</Button>
 				</form>
 
-				{/* Login */}
-				<p className="mt-8 text-center text-sm text-zinc-500">
+				{/* Sign in link */}
+				<p className="pt-2 text-center text-xs text-zinc-400">
 					Already have an account?{" "}
 					<Link
 						to="/login"
 						search={return_to ? { return_to } : undefined}
-						className="font-medium text-violet-400 transition-colors hover:text-violet-300"
+						className="font-medium text-violet-400 hover:text-violet-300 transition-colors"
 					>
 						Sign in
 					</Link>

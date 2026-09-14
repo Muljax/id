@@ -1,7 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { AlertTriangle, AppWindow, CheckCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import Button from "@/components/ui/Button";
+import Card, {
+	CardContent,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/Card";
+import Spinner from "@/components/ui/Spinner";
 import { api, getOAuthClientDetails, type OAuthClientDetails } from "@/lib/api";
 
 export interface AuthorizeSearch {
@@ -124,7 +132,6 @@ function AuthorizePage() {
 		}
 
 		let cancelled = false;
-
 		setCheckingGrant(true);
 
 		void api<GrantResponse>(
@@ -280,7 +287,6 @@ function AuthorizePage() {
 		}
 
 		autoApproved.current = true;
-
 		void approve();
 	}, [
 		missing,
@@ -320,105 +326,103 @@ function AuthorizePage() {
 	if (missing) {
 		return (
 			<div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
-				<div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/2 p-6">
-					<h1 className="text-3xl font-semibold tracking-[-0.04em] text-white">
+				<div className="w-full max-w-md rounded-3xl border border-white/10 bg-zinc-900/50 p-8 text-center backdrop-blur-xl">
+					<div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 text-amber-400">
+						<AlertTriangle size={24} />
+					</div>
+					<h1 className="text-xl font-semibold text-white">
 						Invalid authorization request
 					</h1>
-
-					<p className="mt-2 text-sm leading-6 text-zinc-500">
-						The authorization request is missing required parameters.
+					<p className="mt-2 text-sm text-zinc-400">
+						The OAuth authorization request is missing required parameters.
 					</p>
 				</div>
 			</div>
 		);
 	}
 
-	if (isSilent) {
+	if (isSilent || loadingClient || (checkingGrant && !requiresInteraction)) {
 		return (
-			<div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
-				<div className="text-sm text-zinc-500">Checking authentication...</div>
-			</div>
-		);
-	}
-
-	if (loadingClient || (checkingGrant && !requiresInteraction)) {
-		return (
-			<div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
-				<div className="text-sm text-zinc-500">
+			<div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 px-4">
+				<Spinner size="lg" />
+				<p className="mt-4 text-xs font-medium text-zinc-400">
 					{loadingClient
-						? "Loading application..."
-						: "Checking authorization..."}
-				</div>
+						? "Loading application details..."
+						: "Verifying authorization..."}
+				</p>
 			</div>
 		);
 	}
 
 	return (
-		<div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4 py-12">
-			<div className="w-full max-w-2xl">
-				<div className="mb-8 text-center">
-					<p className="text-sm font-medium text-zinc-500">Muljax ID</p>
+		<div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center px-4 py-12">
+			{/* Ambient background illumination */}
+			<div
+				aria-hidden="true"
+				className="pointer-events-none fixed inset-0 overflow-hidden"
+			>
+				<div className="absolute left-1/2 top-[-10%] h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-violet-600/[0.06] blur-[150px]" />
+			</div>
 
-					<h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-white">
+			<div className="relative z-10 w-full max-w-lg space-y-6">
+				{/* Top Branding */}
+				<div className="text-center">
+					<h1 className="text-2xl font-bold tracking-tight text-white">
 						Authorize application
 					</h1>
-
-					<p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-500">
-						Review the permissions requested by this application before
-						continuing.
+					<p className="mt-1 text-sm text-zinc-400">
+						Review permissions requested by this service.
 					</p>
 				</div>
 
-				<div className="overflow-hidden rounded-2xl border border-white/10 bg-white/2">
-					<div className="border-b border-white/8 px-6 py-6">
-						<p className="text-xs font-medium uppercase tracking-wide text-zinc-600">
-							Application
-						</p>
+				<Card>
+					<CardHeader>
+						<div className="flex items-center gap-3.5">
+							<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-violet-400">
+								<AppWindow size={20} />
+							</div>
+							<div className="min-w-0">
+								<CardTitle className="text-base truncate">
+									{client?.name ?? "Unknown application"}
+								</CardTitle>
+								{client?.client_id && (
+									<p className="font-mono text-xs text-zinc-500 truncate">
+										{client.client_id}
+									</p>
+								)}
+							</div>
+						</div>
+					</CardHeader>
 
-						<h2 className="mt-2 text-lg font-medium text-white">
-							{client?.name ?? "Unknown application"}
-						</h2>
-
-						<p className="mt-1 text-sm text-zinc-500">
-							wants to access your Muljax ID account.
-						</p>
-
-						{client?.client_id && (
-							<p className="mt-3 break-all font-mono text-xs text-zinc-600">
-								{client.client_id}
-							</p>
-						)}
-					</div>
-
-					<div className="px-6 py-6">
-						<p className="text-sm font-medium text-white">
-							Requested permissions
-						</p>
-
-						<p className="mt-1 text-sm text-zinc-500">
-							This application is requesting access to the following
-							permissions.
-						</p>
-
-						<div className="mt-4 space-y-2">
-							{scopes.map((scope) => (
-								<div
-									key={scope}
-									className="flex items-center rounded-xl border border-violet-400/10 bg-violet-400/6 px-3.5 py-3 text-sm font-medium text-violet-300"
-								>
-									{scope}
-								</div>
-							))}
+					<CardContent className="space-y-4">
+						<div>
+							<span className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+								Requested Permissions
+							</span>
+							<div className="mt-2 space-y-2">
+								{scopes.map((scope) => (
+									<div
+										key={scope}
+										className="flex items-center gap-2.5 rounded-xl border border-white/6 bg-white/[0.02] p-3 text-xs text-zinc-200"
+									>
+										<CheckCircle
+											size={14}
+											className="text-violet-400 shrink-0"
+										/>
+										<span className="font-mono font-medium">{scope}</span>
+									</div>
+								))}
+							</div>
 						</div>
 
 						{error && (
-							<div className="mt-5 rounded-xl border border-red-400/15 bg-red-400/6 px-4 py-3 text-sm leading-6 text-red-300">
+							<div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-300">
 								{error}
 							</div>
 						)}
-					</div>
+					</CardContent>
 
-					<div className="flex flex-col-reverse gap-3 border-t border-white/8 bg-white/1.5 px-6 py-5 sm:flex-row sm:justify-end">
+					<CardFooter className="flex items-center justify-end gap-3">
 						<Button
 							type="button"
 							variant="secondary"
@@ -430,14 +434,14 @@ function AuthorizePage() {
 
 						<Button
 							type="button"
-							variant="primary"
-							disabled={loading || loadingClient || !client}
+							loading={loading}
+							disabled={loadingClient || !client}
 							onClick={() => void approve()}
 						>
-							{loading ? "Authorizing..." : "Authorize"}
+							Authorize
 						</Button>
-					</div>
-				</div>
+					</CardFooter>
+				</Card>
 			</div>
 		</div>
 	);

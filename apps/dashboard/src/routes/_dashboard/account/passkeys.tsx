@@ -1,11 +1,16 @@
 import { startRegistration } from "@simplewebauthn/browser";
 import { createFileRoute } from "@tanstack/react-router";
+import { Fingerprint, KeyRound, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
-import { useToast } from "@/components/toast/ToastProvider";
+import { useToast } from "@/components/Toast";
+import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import Card, { CardHeader, CardTitle } from "@/components/ui/Card";
+import EmptyState from "@/components/ui/EmptyState";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
+import PageHeader from "@/components/ui/PageHeader";
 import Spinner from "@/components/ui/Spinner";
 import {
 	deletePasskey,
@@ -72,7 +77,6 @@ function PasskeysPage() {
 			setRegisterModalOpen(false);
 
 			await loadPasskeys();
-
 			toast.success("Passkey registered.");
 		} catch (error) {
 			if (
@@ -100,16 +104,12 @@ function PasskeysPage() {
 		}
 
 		const id = passkeyToDelete.id;
-
 		setDeleting(id);
 
 		try {
 			await deletePasskey(id);
-
 			setPasskeys((current) => current.filter((passkey) => passkey.id !== id));
-
 			setPasskeyToDelete(null);
-
 			toast.success("Passkey removed.");
 		} catch (error) {
 			toast.error(
@@ -129,116 +129,116 @@ function PasskeysPage() {
 	}
 
 	return (
-		<div className="max-w-2xl">
-			<div className="mb-8 flex items-start justify-between gap-4">
-				<div>
-					<h1 className="text-3xl font-semibold tracking-[-0.04em] text-white">
-						Passkeys
-					</h1>
-
-					<p className="mt-2 text-sm leading-6 text-zinc-500">
-						Manage the passkeys you use to sign in to your Muljax ID account.
-					</p>
-				</div>
-
-				<Button
-					type="button"
-					disabled={registering}
-					onClick={() => setRegisterModalOpen(true)}
-					className="shrink-0"
-				>
-					Register passkey
-				</Button>
-			</div>
+		<div className="space-y-8 max-w-4xl">
+			<PageHeader
+				title="Passkeys"
+				description="Manage FIDO2/WebAuthn credentials for fast, phishing-resistant passwordless login."
+				actions={
+					<Button
+						type="button"
+						onClick={() => setRegisterModalOpen(true)}
+						icon={<Plus size={16} />}
+					>
+						Register passkey
+					</Button>
+				}
+			/>
 
 			{passkeys.length === 0 ? (
-				<div className="rounded-2xl border border-white/10 bg-white/2 px-6 py-6">
-					<p className="text-sm text-zinc-500">
-						You have not registered any passkeys.
-					</p>
-				</div>
+				<EmptyState
+					icon={<KeyRound size={24} />}
+					title="No passkeys registered"
+					description="Passkeys allow you to sign in safely using your fingerprint, face recognition, or hardware security key."
+					action={
+						<Button
+							type="button"
+							onClick={() => setRegisterModalOpen(true)}
+							icon={<Plus size={16} />}
+						>
+							Register your first passkey
+						</Button>
+					}
+				/>
 			) : (
-				<div className="overflow-hidden rounded-2xl border border-white/10 bg-white/2">
-					<div className="border-b border-white/8 px-6 py-5">
-						<h2 className="text-sm font-medium text-white">Your passkeys</h2>
-
-						<p className="mt-1 text-sm text-zinc-500">
-							Use a passkey for fast and secure sign-in without a password.
-						</p>
-					</div>
-
-					<div className="divide-y divide-white/8">
+				<Card>
+					<CardHeader>
+						<div className="flex items-center justify-between">
+							<CardTitle className="text-sm font-semibold">
+								Your passkeys
+							</CardTitle>
+							<Badge variant="success">{passkeys.length} Registered</Badge>
+						</div>
+					</CardHeader>
+					<div className="divide-y divide-white/6">
 						{passkeys.map((passkey) => (
-							<div key={passkey.id} className="px-6 py-6">
-								<div className="flex items-start justify-between gap-5">
+							<div
+								key={passkey.id}
+								className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between"
+							>
+								<div className="flex items-start gap-3.5 min-w-0">
+									<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-violet-400">
+										<Fingerprint size={20} />
+									</div>
 									<div className="min-w-0">
-										<h2 className="truncate text-base font-medium text-white">
+										<h4 className="truncate text-sm font-medium text-white">
 											{passkey.name ?? "Unnamed passkey"}
-										</h2>
-
-										<p className="mt-1 break-all font-mono text-xs text-zinc-600">
+										</h4>
+										<p className="mt-0.5 truncate font-mono text-xs text-zinc-500 max-w-xs sm:max-w-md">
 											{passkey.id}
 										</p>
-									</div>
-
-									<Button
-										type="button"
-										variant="danger"
-										disabled={deleting === passkey.id}
-										onClick={() => setPasskeyToDelete(passkey)}
-										className="shrink-0"
-									>
-										Remove
-									</Button>
-								</div>
-
-								<div className="mt-5 grid gap-4 sm:grid-cols-2">
-									<div>
-										<p className="text-xs font-medium uppercase tracking-wide text-zinc-600">
-											Created
-										</p>
-
-										<p className="mt-2 text-sm text-zinc-400">
-											{new Date(passkey.createdAt).toLocaleDateString(
-												undefined,
-												{
-													month: "long",
-													day: "numeric",
-													year: "numeric",
-												},
-											)}
-										</p>
-									</div>
-
-									<div>
-										<p className="text-xs font-medium uppercase tracking-wide text-zinc-600">
-											Last used
-										</p>
-
-										<p className="mt-2 text-sm text-zinc-400">
-											{passkey.lastUsedAt
-												? new Date(passkey.lastUsedAt).toLocaleDateString(
-														undefined,
-														{
-															month: "long",
-															day: "numeric",
-															year: "numeric",
-														},
-													)
-												: "Never"}
-										</p>
+										<div className="mt-2 flex flex-wrap gap-4 text-xs text-zinc-400">
+											<span>
+												Created:{" "}
+												{new Date(passkey.createdAt).toLocaleDateString(
+													undefined,
+													{
+														month: "short",
+														day: "numeric",
+														year: "numeric",
+													},
+												)}
+											</span>
+											<span>•</span>
+											<span>
+												Last used:{" "}
+												{passkey.lastUsedAt
+													? new Date(passkey.lastUsedAt).toLocaleDateString(
+															undefined,
+															{
+																month: "short",
+																day: "numeric",
+																year: "numeric",
+															},
+														)
+													: "Never"}
+											</span>
+										</div>
 									</div>
 								</div>
+
+								<Button
+									type="button"
+									variant="danger"
+									size="sm"
+									disabled={deleting === passkey.id}
+									loading={deleting === passkey.id}
+									onClick={() => setPasskeyToDelete(passkey)}
+									icon={<Trash2 size={14} />}
+									className="self-end sm:self-center shrink-0"
+								>
+									Remove
+								</Button>
 							</div>
 						))}
 					</div>
-				</div>
+				</Card>
 			)}
 
+			{/* Register Modal */}
 			<Modal
 				open={registerModalOpen}
-				title="Register passkey"
-				description="Choose a name for this passkey so you can identify it later."
+				title="Register new passkey"
+				description="Choose a friendly name for this credential (e.g. 'MacBook Touch ID' or 'YubiKey 5C')."
 				onClose={() => {
 					if (!registering) {
 						setRegisterModalOpen(false);
@@ -258,14 +258,14 @@ function PasskeysPage() {
 							htmlFor="passkey-name"
 							className="mb-2 block text-sm font-medium text-zinc-300"
 						>
-							Name
+							Passkey name
 						</label>
 
 						<Input
 							id="passkey-name"
 							name="passkey-name"
 							type="text"
-							placeholder="e.g. MacBook Pro"
+							placeholder="e.g. Work MacBook"
 							value={passkeyName}
 							onChange={(event) => setPasskeyName(event.target.value)}
 							maxLength={100}
@@ -274,7 +274,7 @@ function PasskeysPage() {
 						/>
 					</div>
 
-					<div className="flex justify-end gap-3">
+					<div className="flex justify-end gap-3 pt-2">
 						<Button
 							type="button"
 							variant="ghost"
@@ -287,24 +287,25 @@ function PasskeysPage() {
 							Cancel
 						</Button>
 
-						<Button type="submit" disabled={registering}>
-							{registering ? "Registering..." : "Continue"}
+						<Button type="submit" loading={registering}>
+							Continue
 						</Button>
 					</div>
 				</form>
 			</Modal>
 
+			{/* Remove Modal */}
 			<Modal
 				open={passkeyToDelete !== null}
-				title="Remove passkey"
-				description="Are you sure you want to remove this passkey? You will no longer be able to use it to sign in to your Muljax ID account."
+				title="Remove passkey?"
+				description="Are you sure you want to remove this passkey? You will no longer be able to use it to authenticate."
 				onClose={() => {
 					if (!deleting) {
 						setPasskeyToDelete(null);
 					}
 				}}
 			>
-				<div className="flex justify-end gap-3">
+				<div className="flex justify-end gap-3 pt-4">
 					<Button
 						type="button"
 						variant="ghost"
@@ -317,10 +318,10 @@ function PasskeysPage() {
 					<Button
 						type="button"
 						variant="danger"
-						disabled={deleting !== null}
+						loading={deleting !== null}
 						onClick={() => void handleDelete()}
 					>
-						{deleting !== null ? "Removing..." : "Remove passkey"}
+						Remove passkey
 					</Button>
 				</div>
 			</Modal>

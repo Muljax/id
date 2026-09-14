@@ -1,19 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
+	type ChangeEvent,
+	type FormEvent,
 	useEffect,
 	useMemo,
 	useState,
-	type ChangeEvent,
-	type FormEvent,
 } from "react";
 
+import { useToast } from "@/components/Toast";
 import AvatarCropper from "@/components/ui/AvatarCropper";
 import Button from "@/components/ui/Button";
+import Card, { CardContent, CardFooter } from "@/components/ui/Card";
 import Field from "@/components/ui/Field";
 import type Input from "@/components/ui/Input";
+import PageHeader from "@/components/ui/PageHeader";
 import Spinner from "@/components/ui/Spinner";
-import { useAuth } from "@/components/auth/AuthProvider";
-import { useToast } from "@/components/toast/ToastProvider";
+import { useAuth } from "@/context/AuthContext";
 import {
 	deleteProfileAvatar,
 	getProfileAvatarUrl,
@@ -32,7 +34,6 @@ export const Route = createFileRoute("/_dashboard/account/profile")({
 });
 
 const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
-
 const ALLOWED_AVATAR_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 type ProfileForm = {
@@ -110,7 +111,7 @@ const PROFILE_SECTIONS: ProfileSection[] = [
 		],
 	},
 	{
-		title: "Profile",
+		title: "Profile & Links",
 		fields: [
 			{
 				name: "profileUrl",
@@ -136,7 +137,7 @@ const PROFILE_SECTIONS: ProfileSection[] = [
 		],
 	},
 	{
-		title: "Additional information",
+		title: "Regional & Locale",
 		fields: [
 			{
 				name: "zoneinfo",
@@ -228,8 +229,8 @@ function ProfilePage() {
 
 	if (loading || !user) {
 		return (
-			<div className="flex min-h-[60vh] items-center justify-center">
-				<Spinner />
+			<div className="flex min-h-[50vh] items-center justify-center">
+				<Spinner size="lg" />
 			</div>
 		);
 	}
@@ -262,7 +263,6 @@ function ProfilePage() {
 			});
 
 			await refresh();
-
 			toast.success("Profile updated.");
 		} catch (error) {
 			toast.error(
@@ -277,7 +277,6 @@ function ProfilePage() {
 
 	function handleAvatarSelect(event: ChangeEvent<HTMLInputElement>) {
 		const file = event.target.files?.[0];
-
 		event.target.value = "";
 
 		if (!file) {
@@ -312,7 +311,6 @@ function ProfilePage() {
 		try {
 			await uploadProfileAvatar(file);
 			await refresh();
-
 			toast.success("Profile picture updated.");
 		} catch (error) {
 			toast.error(
@@ -331,7 +329,6 @@ function ProfilePage() {
 		try {
 			await deleteProfileAvatar();
 			await refresh();
-
 			toast.success("Profile picture removed.");
 		} catch (error) {
 			toast.error(
@@ -345,122 +342,123 @@ function ProfilePage() {
 	}
 
 	return (
-		<>
-			<div className="mx-auto max-w-5xl px-6 py-8 pb-28">
-				<div className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-2xl">
-					<div className="border-b border-white/8 px-6 py-6">
-						<h1 className="text-lg font-medium text-white">Profile</h1>
+		<div className="space-y-8 max-w-4xl">
+			<PageHeader
+				title="Profile"
+				description="Manage your identity claims and profile picture displayed across connected services."
+			/>
 
-						<p className="mt-1 text-sm text-zinc-500">
-							Manage your profile information.
-						</p>
-					</div>
+			<Card>
+				<form onSubmit={handleSubmit}>
+					<CardContent className="space-y-8">
+						{/* Avatar Section */}
+						<section>
+							<h3 className="text-sm font-medium text-white">
+								Profile picture
+							</h3>
 
-					<form onSubmit={handleSubmit}>
-						<div className="space-y-10 px-6 py-7">
-							<section>
-								<h2 className="text-sm font-medium text-white">
-									Profile picture
-								</h2>
+							<div className="mt-4 flex flex-wrap items-center gap-5">
+								<div className="h-20 w-20 shrink-0 overflow-hidden rounded-full border border-white/10 bg-zinc-900 shadow-md">
+									{user.profileImageKey ? (
+										<img
+											src={`${getProfileAvatarUrl()}?v=${encodeURIComponent(
+												user.profileImageKey,
+											)}`}
+											alt=""
+											className="h-full w-full object-cover"
+										/>
+									) : (
+										<div className="flex h-full w-full items-center justify-center text-lg font-medium text-zinc-400">
+											{initials}
+										</div>
+									)}
+								</div>
 
-								<div className="mt-4 flex items-center gap-5">
-									<div className="h-20 w-20 shrink-0 overflow-hidden rounded-full border border-white/10 bg-zinc-900">
-										{user.profileImageKey ? (
-											<img
-												src={`${getProfileAvatarUrl()}?v=${encodeURIComponent(
-													user.profileImageKey,
-												)}`}
-												alt=""
-												className="h-full w-full object-cover"
+								<div className="space-y-2">
+									<div className="flex items-center gap-3">
+										<label className="inline-flex cursor-pointer">
+											<span className="rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-sm font-medium text-zinc-200 transition hover:bg-white/10">
+												{avatarSaving ? "Saving..." : "Change picture"}
+											</span>
+
+											<input
+												type="file"
+												accept="image/jpeg,image/png,image/webp"
+												className="sr-only"
+												onChange={handleAvatarSelect}
+												disabled={avatarSaving}
 											/>
-										) : (
-											<div className="flex h-full w-full items-center justify-center text-lg font-medium text-zinc-400">
-												{initials}
-											</div>
+										</label>
+
+										{user.profileImageKey && (
+											<Button
+												type="button"
+												variant="ghost"
+												size="sm"
+												onClick={() => void handleAvatarRemove()}
+												disabled={avatarSaving}
+											>
+												Remove
+											</Button>
 										)}
 									</div>
 
-									<div>
-										<div className="flex items-center gap-3">
-											<label className="inline-flex cursor-pointer">
-												<span className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-zinc-200 transition hover:bg-white/10">
-													{avatarSaving ? "Saving..." : "Change picture"}
-												</span>
-
-												<input
-													type="file"
-													accept="image/jpeg,image/png,image/webp"
-													className="sr-only"
-													onChange={handleAvatarSelect}
-													disabled={avatarSaving}
-												/>
-											</label>
-
-											{user.profileImageKey && (
-												<Button
-													type="button"
-													variant="ghost"
-													onClick={handleAvatarRemove}
-													disabled={avatarSaving}
-												>
-													Remove
-												</Button>
-											)}
-										</div>
-
-										<p className="mt-2 text-xs text-zinc-600">
-											JPEG, PNG, or WebP. Maximum file size is 5 MB.
-										</p>
-									</div>
+									<p className="text-xs text-zinc-500">
+										JPEG, PNG, or WebP. Maximum file size is 5 MB.
+									</p>
 								</div>
+							</div>
+						</section>
+
+						{/* Account Section */}
+						<section className="border-t border-white/6 pt-6">
+							<h3 className="text-sm font-medium text-white">
+								Account identifier
+							</h3>
+							<div className="mt-4 max-w-md">
+								<Field
+									id="email"
+									label="Email address"
+									value={user.email ?? ""}
+									onChange={() => {}}
+									disabled
+									description="Your email address is managed at sign-in."
+								/>
+							</div>
+						</section>
+
+						{/* Detail Form Sections */}
+						{PROFILE_SECTIONS.map((section) => (
+							<section
+								key={section.title}
+								className="border-t border-white/6 pt-6"
+							>
+								<h3 className="text-sm font-medium text-white mb-4">
+									{section.title}
+								</h3>
+								<ProfileFields
+									fields={section.fields}
+									form={form}
+									onChange={handleFieldChange}
+								/>
 							</section>
+						))}
+					</CardContent>
 
-							<section>
-								<h2 className="text-sm font-medium text-white">Account</h2>
-
-								<div className="mt-4">
-									<Field
-										id="email"
-										label="Email address"
-										value={user.email ?? ""}
-										onChange={() => {}}
-										disabled
-									/>
-								</div>
-							</section>
-
-							{PROFILE_SECTIONS.map((section) => (
-								<section key={section.title}>
-									<h2 className="text-sm font-medium text-white">
-										{section.title}
-									</h2>
-
-									<div className="mt-4">
-										<ProfileFields
-											fields={section.fields}
-											form={form}
-											onChange={handleFieldChange}
-										/>
-									</div>
-								</section>
-							))}
-						</div>
-
-						<div className="flex items-center justify-end border-t border-white/8 bg-zinc-950/80 px-6 py-4">
-							<Button type="submit" disabled={saving}>
-								{saving ? "Saving..." : "Save changes"}
-							</Button>
-						</div>
-					</form>
-				</div>
-			</div>
+					<CardFooter>
+						<Button type="submit" loading={saving}>
+							Save changes
+						</Button>
+					</CardFooter>
+				</form>
+			</Card>
 
 			<AvatarCropper
 				file={selectedAvatar}
 				open={selectedAvatar !== null}
 				onCancel={handleAvatarCancel}
-				onApply={handleAvatarApply}
+				onApply={(file) => void handleAvatarApply(file)}
 			/>
-		</>
+		</div>
 	);
 }
