@@ -33,6 +33,16 @@ route.post("/", async (c) => {
 		);
 	}
 
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	if (!emailRegex.test(email)) {
+		return c.json(
+			{
+				error: "Invalid email address format",
+			},
+			400,
+		);
+	}
+
 	if (password.length < 8 || password.length > 128) {
 		return c.json(
 			{
