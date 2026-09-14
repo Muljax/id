@@ -55,7 +55,6 @@ function AuthorizedAppsPage() {
 			setGrants((current) =>
 				current.filter((grant) => grant.clientId !== clientId),
 			);
-			toast.success("Application authorization revoked.");
 		} catch (error) {
 			toast.error(
 				error instanceof Error ? error.message : "Unable to revoke app access.",

@@ -6,6 +6,7 @@ import {
 	OIDC_SCOPES,
 	updateOAuthClient,
 } from "@/lib/oauth/client";
+import { emitNotification } from "@/lib/notifications/emitter";
 import { requireAdmin } from "@/middleware/auth";
 
 const route = new Hono<{ Bindings: Env }>();
@@ -80,6 +81,18 @@ route.patch("/", requireAdmin, async (c) => {
 		redirectUris: body.redirectUris,
 		scopes: body.scopes,
 	});
+
+	if (client) {
+		await emitNotification(db, {
+			target: "admins",
+			type: "admin.client_updated",
+			category: "admin",
+			severity: "info",
+			title: "OAuth Client Updated",
+			message: `OAuth client "${client.name}" (${client.id}) was updated.`,
+			actionUrl: "/admin/clients",
+		});
+	}
 
 	return c.json({
 		client_id: client?.id,

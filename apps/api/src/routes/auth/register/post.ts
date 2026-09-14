@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import { createDb } from "@/db";
 import { users } from "@/db/schema";
 import { setSessionCookie } from "@/lib/cookie";
+import { emitNotification } from "@/lib/notifications/emitter";
 import { hashPassword } from "@/lib/password";
 import { createSession } from "@/lib/session";
 
@@ -81,6 +82,25 @@ route.post("/", async (c) => {
 		passwordHash,
 		createdAt: now,
 		updatedAt: now,
+	});
+
+	await emitNotification(db, {
+		userId,
+		type: "auth.welcome",
+		category: "auth",
+		severity: "success",
+		title: "Welcome to Muljax ID",
+		message: "Your account has been created successfully.",
+	});
+
+	await emitNotification(db, {
+		target: "admins",
+		type: "admin.user_registered",
+		category: "admin",
+		severity: "info",
+		title: "New User Registered",
+		message: `${email} has registered an account.`,
+		actionUrl: "/admin/users",
 	});
 
 	const cf = c.req.raw.cf as CloudflareRequestProperties | undefined;

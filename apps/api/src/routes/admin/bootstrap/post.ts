@@ -5,6 +5,7 @@ import { getCookie } from "hono/cookie";
 import { createDb } from "@/db";
 import { users } from "@/db/schema";
 import { timingSafeEqual } from "@/lib/crypto";
+import { emitNotification } from "@/lib/notifications/emitter";
 import { getSessionUser } from "@/lib/session";
 
 const route = new Hono<{ Bindings: Env }>();
@@ -70,6 +71,17 @@ route.post("/", async (c) => {
 			409,
 		);
 	}
+
+	await emitNotification(db, {
+		userId: user.id,
+		type: "admin.bootstrap_claimed",
+		category: "admin",
+		severity: "success",
+		title: "Administrator Privileges Granted",
+		message:
+			"You have successfully claimed super-administrator permissions for this tenant.",
+		actionUrl: "/admin/users",
+	});
 
 	return c.json({
 		success: true,

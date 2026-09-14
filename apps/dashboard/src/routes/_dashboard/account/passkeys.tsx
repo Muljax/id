@@ -77,7 +77,6 @@ function PasskeysPage() {
 			setRegisterModalOpen(false);
 
 			await loadPasskeys();
-			toast.success("Passkey registered.");
 		} catch (error) {
 			if (
 				error instanceof Error &&
@@ -110,7 +109,6 @@ function PasskeysPage() {
 			await deletePasskey(id);
 			setPasskeys((current) => current.filter((passkey) => passkey.id !== id));
 			setPasskeyToDelete(null);
-			toast.success("Passkey removed.");
 		} catch (error) {
 			toast.error(
 				error instanceof Error ? error.message : "Unable to remove passkey.",

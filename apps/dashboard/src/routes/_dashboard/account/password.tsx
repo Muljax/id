@@ -58,8 +58,6 @@ function ChangePasswordPage() {
 			setCurrentPassword("");
 			setNewPassword("");
 			setConfirmPassword("");
-
-			toast.success("Password changed successfully.");
 		} catch (error) {
 			toast.error(
 				error instanceof Error

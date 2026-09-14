@@ -231,6 +231,9 @@ export async function getUserSession(
 		.select({
 			id: sessions.id,
 			userId: sessions.userId,
+			ipAddress: sessions.ipAddress,
+			browser: sessions.browser,
+			os: sessions.os,
 		})
 		.from(sessions)
 		.where(and(eq(sessions.id, sessionId), eq(sessions.userId, userId)))

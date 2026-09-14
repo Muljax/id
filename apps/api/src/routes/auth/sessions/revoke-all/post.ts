@@ -1,29 +1,27 @@
 import { Hono } from "hono";
-import { getCookie } from "hono/cookie";
 
 import { createDb } from "@/db";
-import { deleteOtherSessions, getSessionUserWithSession } from "@/lib/session";
-import { isUserDisabled } from "@/lib/user";
+import { emitNotification } from "@/lib/notifications/emitter";
+import { deleteOtherSessions } from "@/lib/session";
+import { requireAuth } from "@/middleware/auth";
 
 const route = new Hono<{ Bindings: Env }>();
 
-route.post("/", async (c) => {
-	const token = getCookie(c, "session");
-
-	if (!token) {
-		return c.json({ error: "Unauthorized" }, 401);
-	}
-
+route.post("/", requireAuth, async (c) => {
+	const user = c.get("user");
+	const currentSession = c.get("session");
 	const db = createDb(c.env.DB);
-	const record = await getSessionUserWithSession(db, token);
 
-	if (!record || isUserDisabled(record.user)) {
-		return c.json({ error: "Unauthorized" }, 401);
-	}
+	await deleteOtherSessions(db, user.id, currentSession.id);
 
-	const currentSession = record.session;
-
-	await deleteOtherSessions(db, currentSession.userId, currentSession.id);
+	await emitNotification(db, {
+		userId: user.id,
+		type: "security.sessions_revoked",
+		category: "security",
+		severity: "warning",
+		title: "All Other Sessions Terminated",
+		message: "You signed out of all other active sessions.",
+	});
 
 	return c.json({
 		success: true,

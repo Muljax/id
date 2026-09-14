@@ -12,6 +12,7 @@ import Card, {
 } from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import PageHeader from "@/components/ui/PageHeader";
+import { useAuth } from "@/context/AuthContext";
 import { bootstrapAdmin } from "@/lib/api";
 
 export const Route = createFileRoute("/_dashboard/bootstrap")({
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/_dashboard/bootstrap")({
 });
 
 function BootstrapPage() {
+	const { refresh } = useAuth();
 	const [secret, setSecret] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [status, setStatus] = useState<{
@@ -40,6 +42,7 @@ function BootstrapPage() {
 
 		try {
 			await bootstrapAdmin(secret);
+			await refresh();
 			setSecret("");
 			setStatus({
 				type: "success",
