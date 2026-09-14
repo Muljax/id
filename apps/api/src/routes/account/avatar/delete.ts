@@ -10,9 +10,9 @@ const route = new Hono<{ Bindings: Env }>();
 route.delete("/", requireAuth, async (c) => {
 	const user = c.get("user");
 	const db = createDb(c.env.DB);
-	const key = `profiles/${user.id}/avatar`;
-
-	await c.env.PROFILE_BUCKET.delete(key);
+	if (user.profileImageKey) {
+		await c.env.PROFILE_BUCKET.delete(user.profileImageKey);
+	}
 
 	await db
 		.update(users)
