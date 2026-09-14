@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.2](https://github.com/Muljax/id/compare/v0.18.1...v0.18.2) (2026-09-14)
+
+
+### Bug Fixes
+
+* return 409 on username collision ([1121d64](https://github.com/Muljax/id/commit/1121d64d5d3b60537827e11add327f1757214731))
+
 ## [0.18.1](https://github.com/Muljax/id/compare/v0.18.0...v0.18.1) (2026-09-14)
 
 
