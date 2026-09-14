@@ -31,7 +31,7 @@
  },
  "dependencies": {
   "@effect/platform-bun": "4.0.0-rc.112",
-  "@effect/platform-node": "4.0.0-rc.112",
+  "@effect/platform-node": "4.0.0-rc.115",
   "@noble/curves": "^2.4.0",
   "@simplewebauthn/browser": "14.0.0",
   "@simplewebauthn/server": "14.0.1",
