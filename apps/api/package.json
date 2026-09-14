@@ -13,13 +13,14 @@
  "devDependencies": {
   "@cloudflare/workers-types": "5.20260914.1",
   "@types/bun": "1.4.2",
+  "@types/node": "26.5.1",
   "drizzle-kit": "1.0.0-rc.5-ab785fc"
  },
  "peerDependencies": {
   "typescript": "^7.0.2"
  },
  "dependencies": {
-  "@types/node": "26.5.1",
+  "@simplewebauthn/server": "14.0.2",
   "argon2-wasm-edge": "1.0.23",
   "drizzle-orm": "1.0.0-rc.5-ab785fc",
   "hono": "4.13.7"
