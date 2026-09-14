@@ -14,6 +14,17 @@ resource "cloudflare_workers_script" "api" {
 
   compatibility_date = "2026-07-11"
 
+  files = {
+    "argon2.wasm" = {
+      content_file = "${dirname(var.api_worker_file)}/argon2.wasm"
+      content_type = "application/wasm"
+    }
+    "blake2b.wasm" = {
+      content_file = "${dirname(var.api_worker_file)}/blake2b.wasm"
+      content_type = "application/wasm"
+    }
+  }
+
   bindings = [
     {
       name        = "DB"
