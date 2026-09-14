@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.17.3](https://github.com/Muljax/id/compare/v0.17.2...v0.17.3) (2026-09-14)
+
+
+### Bug Fixes
+
+* auth bypass and unauthenticated endpoints ([#157](https://github.com/Muljax/id/issues/157)) ([15ac6dd](https://github.com/Muljax/id/commit/15ac6dd5f220c6051fb7fec28fdc5d6c4a879526))
+* **auth:** tune rate limiter scope and issue session on registration ([5b72d97](https://github.com/Muljax/id/commit/5b72d9757f68f586ae4d1cde264ca536bda8c4e1))
+* **infra:** resolve localhost truthiness bug, align wrangler configs, and wire migration variables ([2e4828e](https://github.com/Muljax/id/commit/2e4828e1dbc0e241dc1840be6fe7b6ee82415156))
+* **oauth:** enable public cors, persist consent grants, and secure authorization redirects ([dacc6d7](https://github.com/Muljax/id/commit/dacc6d7fd91f213c67da33edd2db1aac49b64b41))
+* **oauth:** enforce atomic token exchanges, token reuse detection, and public client pkce ([38b0e3d](https://github.com/Muljax/id/commit/38b0e3d926f0eb89b1d507a5b1d2474ee5f525b8))
+* **security:** constant-time equality, user enumeration mitigation, and atomic passkeys ([5ce97e2](https://github.com/Muljax/id/commit/5ce97e2dd6e476a7dcd801c31b84be0533e2b04c))
+
 ## [0.17.2](https://github.com/Muljax/id/compare/v0.17.1...v0.17.2) (2026-09-14)
 
 
