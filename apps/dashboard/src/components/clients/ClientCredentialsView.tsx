@@ -10,6 +10,9 @@ interface ClientCredentialsViewProps {
 	onDone: () => void;
 }
 
+/**
+ * Post-creation modal view displaying one-time confidential client credentials.
+ */
 export default function ClientCredentialsView({
 	clientId,
 	secret,

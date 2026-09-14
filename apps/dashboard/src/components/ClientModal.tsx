@@ -24,6 +24,9 @@ interface ClientModalProps {
 	onSaved: () => Promise<void>;
 }
 
+/**
+ * Modal for creating and managing OAuth 2.0 / OIDC clients across Web, SPA, and M2M profiles.
+ */
 export default function ClientModal({
 	open,
 	client,

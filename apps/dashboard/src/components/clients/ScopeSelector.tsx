@@ -32,6 +32,9 @@ interface ScopeSelectorProps {
 	disabled?: boolean;
 }
 
+/**
+ * UI selector for choosing standard OIDC scopes or managing custom machine-to-machine scopes.
+ */
 export default function ScopeSelector({
 	profile,
 	scopes,
@@ -116,7 +119,6 @@ export default function ScopeSelector({
 		);
 	}
 
-	// Machine-to-Machine Scope Management (No premade scopes)
 	return (
 		<div className="space-y-3">
 			<div className="flex items-center justify-between">
@@ -126,7 +128,6 @@ export default function ScopeSelector({
 				</span>
 			</div>
 
-			{/* Active Scopes Badges */}
 			<div className="flex flex-wrap gap-1.5 p-3 rounded-xl border border-white/8 bg-zinc-950/60 min-h-[48px]">
 				{scopes.length === 0 ? (
 					<span className="text-xs text-zinc-600 italic">
@@ -153,7 +154,6 @@ export default function ScopeSelector({
 				)}
 			</div>
 
-			{/* Scope Adder */}
 			<div className="flex gap-2">
 				<Input
 					value={customInput}
