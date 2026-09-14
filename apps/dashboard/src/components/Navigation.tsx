@@ -218,10 +218,6 @@ export default function DashboardLayout() {
 					<div className="border-t border-white/6 p-4">
 						<div className="flex items-center justify-between px-2 text-[11px] text-zinc-500 font-mono">
 							<span>v{__APP_VERSION__}</span>
-							<span className="flex items-center gap-1.5 text-emerald-400">
-								<span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-								Online
-							</span>
 						</div>
 					</div>
 				</aside>
