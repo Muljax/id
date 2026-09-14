@@ -1,14 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ChevronDown, RefreshCw, Users } from "lucide-react";
+import { Check, ChevronDown, Copy, KeyRound, RefreshCw, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
+import { useToast } from "@/components/Toast";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card, { CardHeader, CardTitle } from "@/components/ui/Card";
 import EmptyState from "@/components/ui/EmptyState";
+import Modal from "@/components/ui/Modal";
 import PageHeader from "@/components/ui/PageHeader";
 import Spinner from "@/components/ui/Spinner";
-import { getUserAvatarUrl, getUsers, type AdminUser } from "@/lib/api/admin";
+import {
+	generatePasswordResetLink,
+	getUserAvatarUrl,
+	getUsers,
+	type AdminUser,
+} from "@/lib/api/admin";
 
 export const Route = createFileRoute("/_dashboard/admin/users")({
 	staticData: {
@@ -25,6 +32,7 @@ function UsersPage() {
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
 	const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+	const [resetTargetUser, setResetTargetUser] = useState<AdminUser | null>(null);
 
 	const loadUsers = useCallback(() => {
 		return getUsers()
@@ -97,10 +105,18 @@ function UsersPage() {
 										current === user.id ? null : user.id,
 									)
 								}
+								onResetPassword={(target) => setResetTargetUser(target)}
 							/>
 						))}
 					</div>
 				</Card>
+			)}
+
+			{resetTargetUser && (
+				<ResetPasswordModal
+					user={resetTargetUser}
+					onClose={() => setResetTargetUser(null)}
+				/>
 			)}
 		</div>
 	);
@@ -110,10 +126,12 @@ function UserRow({
 	user,
 	expanded,
 	onToggle,
+	onResetPassword,
 }: {
 	user: AdminUser;
 	expanded: boolean;
 	onToggle: () => void;
+	onResetPassword: (user: AdminUser) => void;
 }) {
 	const name = user.displayName || user.email;
 
@@ -165,7 +183,9 @@ function UserRow({
 				</div>
 			</button>
 
-			{expanded && <UserDetails user={user} />}
+			{expanded && (
+				<UserDetails user={user} onResetPassword={onResetPassword} />
+			)}
 		</div>
 	);
 }
@@ -192,7 +212,13 @@ function UserAvatar({ user }: { user: AdminUser }) {
 	);
 }
 
-function UserDetails({ user }: { user: AdminUser }) {
+function UserDetails({
+	user,
+	onResetPassword,
+}: {
+	user: AdminUser;
+	onResetPassword: (user: AdminUser) => void;
+}) {
 	const fields = [
 		["User ID", user.id],
 		["Email", user.email],
@@ -234,6 +260,140 @@ function UserDetails({ user }: { user: AdminUser }) {
 					</div>
 				))}
 			</div>
+
+			<div className="mt-6 flex items-center justify-end border-t border-white/6 pt-4">
+				<Button
+					type="button"
+					variant="secondary"
+					size="sm"
+					icon={<KeyRound size={14} />}
+					onClick={() => onResetPassword(user)}
+				>
+					Generate Password Reset Link
+				</Button>
+			</div>
 		</div>
+	);
+}
+
+function ResetPasswordModal({
+	user,
+	onClose,
+}: {
+	user: AdminUser;
+	onClose: () => void;
+}) {
+	const toast = useToast();
+	const [generating, setGenerating] = useState(false);
+	const [resetData, setResetData] = useState<{
+		resetUrl: string;
+		expiresAt: number;
+	} | null>(null);
+	const [copied, setCopied] = useState(false);
+
+	async function handleGenerate() {
+		setGenerating(true);
+		try {
+			const res = await generatePasswordResetLink(user.id);
+			setResetData({
+				resetUrl: res.resetUrl,
+				expiresAt: res.expiresAt,
+			});
+			toast.success("Password reset link generated");
+		} catch (error) {
+			const message =
+				error instanceof Error
+					? error.message
+					: "Failed to generate password reset link";
+			toast.error(message);
+		} finally {
+			setGenerating(false);
+		}
+	}
+
+	async function handleCopy() {
+		if (!resetData?.resetUrl) return;
+		try {
+			await navigator.clipboard.writeText(resetData.resetUrl);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000);
+			toast.success("Link copied to clipboard");
+		} catch {
+			toast.error("Failed to copy link");
+		}
+	}
+
+	return (
+		<Modal
+			open={true}
+			title="Generate Password Reset Link"
+			description={`Create a single-use reset link for ${user.displayName || user.email}.`}
+			onClose={onClose}
+		>
+			<div className="space-y-5">
+				{!resetData ? (
+					<>
+						<div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-xs text-amber-200/90 leading-relaxed">
+							Generating a new link will automatically invalidate any previous reset
+							tokens issued for this account. The link expires in 24 hours.
+						</div>
+
+						<div className="flex justify-end gap-3 pt-2">
+							<Button type="button" variant="secondary" onClick={onClose}>
+								Cancel
+							</Button>
+							<Button
+								type="button"
+								loading={generating}
+								onClick={() => void handleGenerate()}
+								icon={<KeyRound size={14} />}
+							>
+								Generate Reset Link
+							</Button>
+						</div>
+					</>
+				) : (
+					<>
+						<div className="space-y-2">
+							<label className="text-xs font-medium text-zinc-300">
+								One-time reset URL
+							</label>
+							<div className="flex items-center gap-2">
+								<input
+									type="text"
+									readOnly
+									value={resetData.resetUrl}
+									className="flex-1 rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs font-mono text-zinc-200 focus:outline-none select-all"
+									onClick={(e) => (e.target as HTMLInputElement).select()}
+								/>
+								<Button
+									type="button"
+									variant={copied ? "primary" : "secondary"}
+									size="sm"
+									onClick={() => void handleCopy()}
+									icon={copied ? <Check size={14} /> : <Copy size={14} />}
+								>
+									{copied ? "Copied" : "Copy"}
+								</Button>
+							</div>
+						</div>
+
+						<p className="text-[11px] text-zinc-500">
+							This link is single-use and will expire on{" "}
+							<span className="font-mono text-zinc-300">
+								{new Date(resetData.expiresAt).toLocaleString()}
+							</span>
+							. Send this link directly to the user through a verified channel.
+						</p>
+
+						<div className="flex justify-end pt-2">
+							<Button type="button" variant="secondary" onClick={onClose}>
+								Done
+							</Button>
+						</div>
+					</>
+				)}
+			</div>
+		</Modal>
 	);
 }

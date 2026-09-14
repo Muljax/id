@@ -64,3 +64,26 @@ export function logout() {
 export function getCurrentUser() {
 	return api<AuthResponse>("/api/auth/me");
 }
+
+export function requestPasswordReset(email: string) {
+	return api<{ message: string }>("/api/auth/password-reset/request", {
+		method: "POST",
+		body: JSON.stringify({ email }),
+	});
+}
+
+export function verifyPasswordResetToken(token: string) {
+	return api<{ valid: boolean; email?: string; expiresAt?: number }>(
+		`/api/auth/password-reset/verify?token=${encodeURIComponent(token)}`,
+	);
+}
+
+export function confirmPasswordReset(token: string, newPassword: string) {
+	return api<{ success: boolean; message: string }>(
+		"/api/auth/password-reset/confirm",
+		{
+			method: "POST",
+			body: JSON.stringify({ token, newPassword }),
+		},
+	);
+}

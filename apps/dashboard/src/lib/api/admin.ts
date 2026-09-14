@@ -46,3 +46,18 @@ export function getUsers(): Promise<UsersResponse> {
 export function getUserAvatarUrl(userId: string): string {
 	return `${API_URL}/api/users/${userId}/avatar`;
 }
+
+export interface PasswordResetLinkResponse {
+	token: string;
+	resetUrl: string;
+	expiresAt: number;
+}
+
+export function generatePasswordResetLink(userId: string) {
+	return api<PasswordResetLinkResponse>(
+		`/api/admin/users/${encodeURIComponent(userId)}/password-reset-link`,
+		{
+			method: "POST",
+		},
+	);
+}
