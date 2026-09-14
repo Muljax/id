@@ -37,7 +37,9 @@ function ChangePasswordPage() {
 
 	const isValid =
 		currentPassword.length > 0 &&
+		currentPassword.length <= 128 &&
 		newPassword.length >= 8 &&
+		newPassword.length <= 128 &&
 		passwordsMatch &&
 		passwordIsDifferent;
 
@@ -88,7 +90,7 @@ function ChangePasswordPage() {
 									Change password
 								</CardTitle>
 								<p className="text-xs text-zinc-400">
-									Choose a strong password with at least 8 characters.
+									Choose a strong password between 8 and 128 characters.
 								</p>
 							</div>
 						</div>
@@ -130,7 +132,7 @@ function ChangePasswordPage() {
 								required
 							/>
 							<p className="mt-2 text-xs text-zinc-500">
-								Password must be at least 8 characters long.
+								Password must be between 8 and 128 characters long.
 							</p>
 						</div>
 

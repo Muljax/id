@@ -51,6 +51,16 @@ route.post("/", async (c) => {
 
 	// Mitigate timing-based user enumeration by always running Argon2id verification
 	const passwordHash = user?.passwordHash ?? DUMMY_PASSWORD_HASH;
+
+	if (password.length > 128) {
+		return c.json(
+			{
+				error: "Invalid email or password",
+			},
+			401,
+		);
+	}
+
 	const validPassword = await verifyPassword(password, passwordHash);
 
 	if (!user || !validPassword) {
