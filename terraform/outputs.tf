@@ -40,7 +40,7 @@ output "api_url" {
 
 output "dashboard_url" {
   description = "Public dashboard URL."
-  value       = "https://${local.dashboard_hostname}"
+  value       = local.dashboard_url
 }
 
 output "oidc_issuer" {

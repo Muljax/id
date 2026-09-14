@@ -16,13 +16,13 @@ resource "local_file" "d1_migrations_config" {
 		binding = "DB"
 		database_name = "${local.database_name}"
 		database_id = "${cloudflare_d1_database.api.id}"
-		migrations_dir = "../apps/api/drizzle/migrations"
-		migrations_pattern = "../apps/api/drizzle/migrations/*/migration.sql"
+		migrations_dir = "${var.d1_migrations_directory}"
+		migrations_pattern = "${var.d1_migrations_directory}/*/migration.sql"
 	EOT
 }
 
 locals {
-  d1_migrations_directory = "${path.module}/../apps/api/drizzle/migrations"
+  d1_migrations_directory = "${path.module}/${var.d1_migrations_directory}"
 
   d1_migration_files = fileset(
     local.d1_migrations_directory,

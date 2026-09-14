@@ -6,6 +6,7 @@ import {
 	type AuthorizationRequest,
 	validateAuthorizationRequest,
 } from "@/lib/oauth/authorization";
+import { getDashboardOrigin } from "@/lib/env";
 import { getSessionUserWithSession } from "@/lib/session";
 
 interface RequestObjectClaims {
@@ -240,11 +241,7 @@ export async function handleAuthorizationRequest(
 			);
 		}
 
-		const protocol = c.env.LOCALHOST ? "http" : "https";
-
-		const authorizeUrl = new URL(
-			`${protocol}://${c.env.DASHBOARD_DOMAIN}/authorize`,
-		);
+		const authorizeUrl = new URL(`${getDashboardOrigin(c.env)}/authorize`);
 
 		authorizeUrl.searchParams.set("client_id", request.client_id);
 		authorizeUrl.searchParams.set("redirect_uri", request.redirect_uri);

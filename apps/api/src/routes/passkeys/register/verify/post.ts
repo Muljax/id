@@ -8,6 +8,7 @@ import { getCookie } from "hono/cookie";
 
 import { createDb } from "@/db";
 import { passkeyChallenges, passkeys } from "@/db/schema";
+import { getDashboardOrigin } from "@/lib/env";
 import { arrayBufferToBase64, getChallenge } from "@/lib/passkey";
 import { getSessionUser } from "@/lib/session";
 
@@ -56,9 +57,7 @@ route.post("/", async (c) => {
 	const name = body.name?.trim() || null;
 
 	try {
-		const expectedOrigin = `${
-			c.env.LOCALHOST ? "http" : "https"
-		}://${c.env.DASHBOARD_DOMAIN}`;
+		const expectedOrigin = getDashboardOrigin(c.env);
 
 		const expectedRPID = c.env.RP_ID;
 
