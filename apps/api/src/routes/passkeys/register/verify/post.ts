@@ -2,14 +2,14 @@ import {
 	verifyRegistrationResponse,
 	type RegistrationResponseJSON,
 } from "@simplewebauthn/server";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
 
 import { createDb } from "@/db";
-import { passkeyChallenges, passkeys } from "@/db/schema";
+import { passkeys } from "@/db/schema";
 import { getDashboardOrigin } from "@/lib/env";
-import { arrayBufferToBase64, getChallenge } from "@/lib/passkey";
+import { arrayBufferToBase64, consumeChallenge } from "@/lib/passkey";
 import { getSessionUser } from "@/lib/session";
 
 const route = new Hono<{ Bindings: Env }>();
@@ -38,7 +38,7 @@ route.post("/", async (c) => {
 		);
 	}
 
-	const challenge = await getChallenge(db, user.id);
+	const challenge = await consumeChallenge(db, user.id);
 
 	if (!challenge) {
 		return c.json(
@@ -111,15 +111,6 @@ route.post("/", async (c) => {
 			createdAt: now,
 			lastUsedAt: null,
 		});
-
-		await db
-			.delete(passkeyChallenges)
-			.where(
-				and(
-					eq(passkeyChallenges.id, challenge.id),
-					eq(passkeyChallenges.userId, user.id),
-				),
-			);
 
 		return c.json({
 			success: true,

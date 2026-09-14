@@ -9,11 +9,7 @@ import { createDb } from "@/db";
 import { passkeys, users } from "@/db/schema";
 import { setSessionCookie } from "@/lib/cookie";
 import { getDashboardOrigin } from "@/lib/env";
-import {
-	base64ToUint8Array,
-	consumeChallengeById,
-	getChallengeById,
-} from "@/lib/passkey";
+import { base64ToUint8Array, consumeChallengeById } from "@/lib/passkey";
 import { createSession } from "@/lib/session";
 
 interface CloudflareRequestProperties {
@@ -41,7 +37,7 @@ route.post("/", async (c) => {
 
 	const db = createDb(c.env.DB);
 
-	const challenge = await getChallengeById(db, body.challengeId);
+	const challenge = await consumeChallengeById(db, body.challengeId);
 
 	if (!challenge) {
 		return c.json(
@@ -122,8 +118,6 @@ route.post("/", async (c) => {
 				lastUsedAt: Date.now(),
 			})
 			.where(eq(passkeys.id, passkey.id));
-
-		await consumeChallengeById(db, body.challengeId);
 
 		const cf = c.req.raw.cf as CloudflareRequestProperties | undefined;
 

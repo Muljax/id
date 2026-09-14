@@ -4,6 +4,7 @@ import { getCookie } from "hono/cookie";
 
 import { createDb } from "@/db";
 import { users } from "@/db/schema";
+import { timingSafeEqual } from "@/lib/crypto";
 import { getSessionUser } from "@/lib/session";
 
 const route = new Hono<{ Bindings: Env }>();
@@ -37,7 +38,7 @@ route.post("/", async (c) => {
 		secret?: string;
 	}>();
 
-	if (!body.secret || body.secret !== bootstrapSecret) {
+	if (!body.secret || !(await timingSafeEqual(body.secret, bootstrapSecret))) {
 		return c.json(
 			{
 				error: "Invalid bootstrap secret.",
