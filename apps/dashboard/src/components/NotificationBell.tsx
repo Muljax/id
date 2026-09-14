@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import {
 	AlertTriangle,
 	Bell,
@@ -163,7 +163,28 @@ function NotificationItem({
 	onDismiss: () => void;
 	onCloseMenu: () => void;
 }) {
+	const navigate = useNavigate();
 	const isUnread = !notification.readAt;
+
+	function handleActionClick(event: React.MouseEvent<HTMLAnchorElement>) {
+		if (!notification.actionUrl) return;
+		event.preventDefault();
+		onCloseMenu();
+
+		const [pathname, searchStr] = notification.actionUrl.split("?");
+		const search: Record<string, string> = {};
+		if (searchStr) {
+			const params = new URLSearchParams(searchStr);
+			params.forEach((value, key) => {
+				search[key] = value;
+			});
+		}
+
+		void navigate({
+			to: pathname,
+			search: Object.keys(search).length > 0 ? search : undefined,
+		});
+	}
 
 	return (
 		<div
@@ -196,13 +217,13 @@ function NotificationItem({
 
 				{notification.actionUrl && (
 					<div className="pt-1">
-						<Link
-							to={notification.actionUrl}
-							onClick={onCloseMenu}
-							className="inline-flex items-center gap-1 text-[11px] font-medium text-violet-400 hover:text-violet-300 transition-colors"
+						<a
+							href={notification.actionUrl}
+							onClick={handleActionClick}
+							className="inline-flex items-center gap-1 text-[11px] font-medium text-violet-400 hover:text-violet-300 transition-colors cursor-pointer"
 						>
 							View details <ExternalLink size={12} />
-						</Link>
+						</a>
 					</div>
 				)}
 			</div>
