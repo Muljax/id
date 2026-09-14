@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.0](https://github.com/Muljax/id/compare/v0.17.4...v0.18.0) (2026-09-14)
+
+
+### Features
+
+* major dashboard overhaul ([29789a5](https://github.com/Muljax/id/commit/29789a5756ff3389cf741ac4660f6e9886e38fcc))
+
 ## [0.17.4](https://github.com/Muljax/id/compare/v0.17.3...v0.17.4) (2026-09-14)
 
 
