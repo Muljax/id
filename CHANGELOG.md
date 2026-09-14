@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.18.1](https://github.com/Muljax/id/compare/v0.18.0...v0.18.1) (2026-09-14)
+
+
+### Bug Fixes
+
+* **auth:** prevent passkey idor and enforce user disablement ([4e470cc](https://github.com/Muljax/id/commit/4e470cc0ade35a4c57308602a778dbf1a847f895))
+* **deps:** update dependency lucide-react to v1.46.0 ([89dfd15](https://github.com/Muljax/id/commit/89dfd1561c32d568506eaa9a9d4de748af4c7ea6))
+
 ## [0.18.0](https://github.com/Muljax/id/compare/v0.17.4...v0.18.0) (2026-09-14)
 
 
