@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.20.0](https://github.com/Muljax/id/compare/v0.19.0...v0.20.0) (2026-09-14)
+
+
+### Features
+
+* m2m oidc ([#184](https://github.com/Muljax/id/issues/184)) ([e3541cc](https://github.com/Muljax/id/commit/e3541cc7d350898bcc1765a1f4c2488cd2a21661))
+
 ## [0.19.0](https://github.com/Muljax/id/compare/v0.18.3...v0.19.0) (2026-09-14)
 
 
