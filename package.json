@@ -30,7 +30,7 @@
   "typescript": "7.0.2"
  },
  "dependencies": {
-  "@effect/platform-bun": "4.0.0-rc.112",
+  "@effect/platform-bun": "4.0.0-rc.115",
   "@effect/platform-node": "4.0.0-rc.112",
   "@noble/curves": "^2.4.0",
   "@simplewebauthn/browser": "14.0.0",
