@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.24.0](https://github.com/Muljax/id/compare/v0.23.0...v0.24.0) (2026-09-15)
+
+
+### Features
+
+* dynamic tab titles ([#200](https://github.com/Muljax/id/issues/200)) ([a185401](https://github.com/Muljax/id/commit/a185401b0a935575fc3307761463cc6d49c1e66d))
+
 ## [0.23.0](https://github.com/Muljax/id/compare/v0.22.0...v0.23.0) (2026-09-15)
 
 
