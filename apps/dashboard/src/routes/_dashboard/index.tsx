@@ -15,6 +15,7 @@ import Card, { CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import PageHeader from "@/components/ui/PageHeader";
 import { useAuth } from "@/context/AuthContext";
 import { getProfileAvatarUrl } from "@/lib/api";
+import { INSTANCE_NAME } from "@/lib/config";
 
 export const Route = createFileRoute("/_dashboard/")({
 	staticData: {
@@ -190,8 +191,11 @@ function DashboardPage() {
 					<CardContent>
 						<p className="text-xs text-zinc-400 leading-relaxed">
 							Manage third-party applications and services granted permissions
-							to authenticate with your Muljax ID account. Revoke access at any
-							time.
+							to authenticate with your{" "}
+							<span className="text-violet-400 font-medium">
+								{INSTANCE_NAME}
+							</span>{" "}
+							account. Revoke access at any time.
 						</p>
 					</CardContent>
 				</Card>

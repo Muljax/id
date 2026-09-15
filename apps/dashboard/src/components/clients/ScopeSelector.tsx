@@ -180,7 +180,8 @@ export default function ScopeSelector({
 				</Button>
 			</div>
 			<p className="text-[11px] text-zinc-500">
-				Specify the granular permission scopes this machine client is allowed to request.
+				Specify the granular permission scopes this machine client is allowed to
+				request.
 			</p>
 		</div>
 	);

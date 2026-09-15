@@ -1,11 +1,12 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, CheckCircle2, KeyRound } from "lucide-react";
+import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import PreAuthLayout from "@/components/PreAuthLayout";
 import { useToast } from "@/components/Toast";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import InstanceLogo from "@/components/ui/InstanceLogo";
 import { requestPasswordReset } from "@/lib/api";
 import {
 	type FieldValidators,
@@ -70,9 +71,7 @@ function ForgotPasswordPage() {
 			<div className="space-y-6">
 				{/* Header */}
 				<div className="text-center space-y-2">
-					<div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-violet-500/20 bg-violet-500/10 text-violet-400 shadow-inner">
-						<KeyRound size={22} />
-					</div>
+					<InstanceLogo className="mx-auto h-12 w-12 rounded-2xl mb-3 shadow-lg" />
 
 					<h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
 						Reset password

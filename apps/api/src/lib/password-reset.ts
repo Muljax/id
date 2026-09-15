@@ -60,10 +60,7 @@ export async function createPasswordResetToken(
  * @param token The plaintext token to verify.
  * @returns The matching token record and user ID, or null if invalid or expired.
  */
-export async function verifyPasswordResetToken(
-	db: Database,
-	token: string,
-) {
+export async function verifyPasswordResetToken(db: Database, token: string) {
 	if (!token || typeof token !== "string") {
 		return null;
 	}

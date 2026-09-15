@@ -5,8 +5,10 @@ import PreAuthLayout from "@/components/PreAuthLayout";
 import { useToast } from "@/components/Toast";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import InstanceLogo from "@/components/ui/InstanceLogo";
 import { useAuth } from "@/context/AuthContext";
 import { register } from "@/lib/api";
+import { INSTANCE_NAME } from "@/lib/config";
 import {
 	type FieldValidators,
 	validateForm,
@@ -121,14 +123,22 @@ function RegisterPage() {
 		<PreAuthLayout>
 			<div className="space-y-6">
 				{/* Heading */}
-				<div>
-					<h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-						Create your account
-					</h1>
+				<div className="space-y-3">
+					<InstanceLogo className="h-10 w-10 rounded-xl" />
 
-					<p className="mt-1.5 text-sm text-zinc-400">
-						Set up your Muljax ID account to authenticate securely.
-					</p>
+					<div>
+						<h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+							Create your account
+						</h1>
+
+						<p className="mt-1.5 text-sm text-zinc-400">
+							Set up your{" "}
+							<span className="text-violet-400 font-medium">
+								{INSTANCE_NAME}
+							</span>{" "}
+							account to authenticate securely.
+						</p>
+					</div>
 				</div>
 
 				{/* Form */}

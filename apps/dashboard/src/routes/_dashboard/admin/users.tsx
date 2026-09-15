@@ -13,6 +13,7 @@ import UserLifecycleModal from "@/components/users/UserLifecycleModal";
 import UserRow from "@/components/users/UserRow";
 import { useAuth } from "@/context/AuthContext";
 import { getUsers, type AdminUser } from "@/lib/api/admin";
+import { INSTANCE_NAME } from "@/lib/config";
 
 export interface UsersSearch {
 	userId?: string;
@@ -86,7 +87,13 @@ function UsersPage() {
 		<div className="space-y-8 max-w-4xl">
 			<PageHeader
 				title="User directory"
-				description="Browse and inspect all registered accounts within your Muljax ID identity tenant."
+				description={
+					<>
+						Browse and inspect all registered accounts within your{" "}
+						<span className="text-violet-400 font-medium">{INSTANCE_NAME}</span>{" "}
+						identity tenant.
+					</>
+				}
 				actions={
 					<Button
 						type="button"

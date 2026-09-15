@@ -16,6 +16,7 @@ import {
 	getOAuthClients,
 	type OAuthClient,
 } from "@/lib/api";
+import { INSTANCE_NAME } from "@/lib/config";
 
 export const Route = createFileRoute("/_dashboard/admin/clients")({
 	staticData: {
@@ -150,7 +151,15 @@ function ClientsPage() {
 				<EmptyState
 					icon={<AppWindow size={24} />}
 					title="No OAuth clients"
-					description="Register your first application to allow users to sign in via Muljax ID."
+					description={
+						<>
+							Register your first application to allow users to sign in via{" "}
+							<span className="text-violet-400 font-medium">
+								{INSTANCE_NAME}
+							</span>
+							.
+						</>
+					}
 					action={
 						<Button
 							type="button"
