@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.22.0](https://github.com/Muljax/id/compare/v0.21.1...v0.22.0) (2026-09-15)
+
+
+### Features
+
+* **dashboard:** modularize user directory and support lifecycle scheduling ([#196](https://github.com/Muljax/id/issues/196)) ([9b79503](https://github.com/Muljax/id/commit/9b79503e4ba87462029d8b51af1fccc7eabd3492))
+
 ## [0.21.1](https://github.com/Muljax/id/compare/v0.21.0...v0.21.1) (2026-09-15)
 
 
