@@ -2,6 +2,7 @@ import {
 	createRootRoute,
 	type ErrorComponentProps,
 	Outlet,
+	useMatches,
 } from "@tanstack/react-router";
 import { useEffect } from "react";
 
@@ -15,9 +16,24 @@ export const Route = createRootRoute({
 });
 
 function RootLayout() {
+	const matches = useMatches();
+
 	useEffect(() => {
-		document.title = INSTANCE_NAME;
-	}, []);
+		const currentMatch = [...matches]
+			.reverse()
+			.find(
+				(match) =>
+					match.staticData?.title || match.staticData?.navigation?.label,
+			);
+
+		const pageTitle =
+			currentMatch?.staticData?.title ||
+			currentMatch?.staticData?.navigation?.label;
+
+		document.title = pageTitle
+			? `${pageTitle} - ${INSTANCE_NAME}`
+			: INSTANCE_NAME;
+	}, [matches]);
 
 	return <Outlet />;
 }

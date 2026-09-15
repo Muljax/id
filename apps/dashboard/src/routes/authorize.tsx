@@ -60,6 +60,9 @@ export const Route = createFileRoute("/authorize")({
 			typeof search.acr_values === "string" ? search.acr_values : undefined,
 		claims: typeof search.claims === "string" ? search.claims : undefined,
 	}),
+	staticData: {
+		title: "Authorize Application",
+	},
 	component: AuthorizePage,
 });
 

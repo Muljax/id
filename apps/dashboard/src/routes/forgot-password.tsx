@@ -15,6 +15,9 @@ import {
 } from "@/lib/validation";
 
 export const Route = createFileRoute("/forgot-password")({
+	staticData: {
+		title: "Reset Password",
+	},
 	component: ForgotPasswordPage,
 });
 

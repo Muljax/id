@@ -24,6 +24,9 @@ export const Route = createFileRoute("/register")({
 		return_to:
 			typeof search.return_to === "string" ? search.return_to : undefined,
 	}),
+	staticData: {
+		title: "Create Account",
+	},
 	component: RegisterPage,
 });
 

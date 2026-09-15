@@ -28,6 +28,9 @@ export const Route = createFileRoute("/login")({
 			typeof search.return_to === "string" ? search.return_to : undefined,
 		prompt: typeof search.prompt === "string" ? search.prompt : undefined,
 	}),
+	staticData: {
+		title: "Sign In",
+	},
 	component: LoginPage,
 });
 
