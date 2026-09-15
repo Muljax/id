@@ -1,6 +1,6 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AlertCircle, CheckCircle2, Lock, ShieldCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import PreAuthLayout from "@/components/PreAuthLayout";
 import { useToast } from "@/components/Toast";
@@ -8,6 +8,11 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Spinner from "@/components/ui/Spinner";
 import { confirmPasswordReset, verifyPasswordResetToken } from "@/lib/api";
+import {
+	type FieldValidators,
+	validateForm,
+	validators,
+} from "@/lib/validation";
 
 export interface ResetPasswordSearch {
 	token?: string;
@@ -20,6 +25,26 @@ export const Route = createFileRoute("/reset-password")({
 	component: ResetPasswordPage,
 });
 
+interface ResetPasswordForm {
+	newPassword: string;
+	confirmPassword: string;
+}
+
+const RESET_PASSWORD_VALIDATORS: FieldValidators<ResetPasswordForm> = {
+	newPassword: [
+		validators.required("New password is required."),
+		validators.password({
+			min: 8,
+			max: 128,
+			message: "Password must be between 8 and 128 characters long.",
+		}),
+	],
+	confirmPassword: [
+		validators.required("Confirm password is required."),
+		validators.matches("newPassword", "Passwords do not match."),
+	],
+};
+
 function ResetPasswordPage() {
 	const { token } = Route.useSearch();
 	const toast = useToast();
@@ -29,8 +54,10 @@ function ResetPasswordPage() {
 	const [valid, setValid] = useState(false);
 	const [email, setEmail] = useState<string | null>(null);
 
-	const [newPassword, setNewPassword] = useState("");
-	const [confirmPassword, setConfirmPassword] = useState("");
+	const [form, setForm] = useState<ResetPasswordForm>({
+		newPassword: "",
+		confirmPassword: "",
+	});
 	const [submitting, setSubmitting] = useState(false);
 	const [success, setSuccess] = useState(false);
 
@@ -70,10 +97,15 @@ function ResetPasswordPage() {
 		};
 	}, [token]);
 
-	const passwordValid = newPassword.length >= 8 && newPassword.length <= 128;
-	const passwordsMatch =
-		confirmPassword.length > 0 && newPassword === confirmPassword;
-	const canSubmit = passwordValid && passwordsMatch && !submitting;
+	const { errors, isValid } = useMemo(
+		() => validateForm(form, RESET_PASSWORD_VALIDATORS),
+		[form],
+	);
+
+	const passwordsMatch = Boolean(
+		form.confirmPassword && !errors.confirmPassword,
+	);
+	const canSubmit = isValid && !submitting;
 
 	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
@@ -85,7 +117,7 @@ function ResetPasswordPage() {
 		setSubmitting(true);
 
 		try {
-			await confirmPasswordReset(token, newPassword);
+			await confirmPasswordReset(token, form.newPassword);
 			setSuccess(true);
 			toast.success("Password reset successfully. You may now log in.");
 			setTimeout(() => {
@@ -167,8 +199,8 @@ function ResetPasswordPage() {
 							Password Updated
 						</h1>
 						<p className="text-xs text-zinc-400 sm:text-sm">
-							Your password has been reset successfully. Redirecting you to
-							sign in...
+							Your password has been reset successfully. Redirecting you to sign
+							in...
 						</p>
 					</div>
 
@@ -221,8 +253,13 @@ function ResetPasswordPage() {
 							id="new-password"
 							type="password"
 							autoComplete="new-password"
-							value={newPassword}
-							onChange={(event) => setNewPassword(event.target.value)}
+							value={form.newPassword}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									newPassword: event.target.value,
+								}))
+							}
 							placeholder="At least 8 characters"
 							required
 							disabled={submitting}
@@ -241,15 +278,21 @@ function ResetPasswordPage() {
 							id="confirm-password"
 							type="password"
 							autoComplete="new-password"
-							value={confirmPassword}
-							onChange={(event) => setConfirmPassword(event.target.value)}
+							value={form.confirmPassword}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									confirmPassword: event.target.value,
+								}))
+							}
 							placeholder="Re-enter new password"
+							hasError={Boolean(form.confirmPassword && !passwordsMatch)}
 							required
 							disabled={submitting}
 						/>
 					</div>
 
-					{confirmPassword.length > 0 && !passwordsMatch && (
+					{form.confirmPassword.length > 0 && !passwordsMatch && (
 						<p className="text-[11px] text-red-400">Passwords do not match.</p>
 					)}
 

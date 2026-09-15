@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useMemo, useState } from "react";
 
 import { useToast } from "@/components/Toast";
 import Button from "@/components/ui/Button";
@@ -13,6 +13,11 @@ import Card, {
 import Input from "@/components/ui/Input";
 import PageHeader from "@/components/ui/PageHeader";
 import { changePassword } from "@/lib/api";
+import {
+	type FieldValidators,
+	validateForm,
+	validators,
+} from "@/lib/validation";
 
 export const Route = createFileRoute("/_dashboard/account/password")({
 	staticData: {
@@ -24,40 +29,81 @@ export const Route = createFileRoute("/_dashboard/account/password")({
 	component: ChangePasswordPage,
 });
 
+interface ChangePasswordForm {
+	currentPassword: string;
+	newPassword: string;
+	confirmPassword: string;
+}
+
+const CHANGE_PASSWORD_VALIDATORS: FieldValidators<ChangePasswordForm> = {
+	currentPassword: [
+		validators.required("Current password is required."),
+		validators.maxLength(
+			128,
+			"Current password must be 128 characters or fewer.",
+		),
+	],
+	newPassword: [
+		validators.required("New password is required."),
+		validators.password({
+			min: 8,
+			max: 128,
+			message: "Password must be between 8 and 128 characters long.",
+		}),
+		validators.differentFrom(
+			"currentPassword",
+			"New password must be different from your current password.",
+		),
+	],
+	confirmPassword: [
+		validators.required("Confirm new password is required."),
+		validators.matches("newPassword", "Passwords do not match."),
+	],
+};
+
 function ChangePasswordPage() {
 	const toast = useToast();
 
-	const [currentPassword, setCurrentPassword] = useState("");
-	const [newPassword, setNewPassword] = useState("");
-	const [confirmPassword, setConfirmPassword] = useState("");
+	const [form, setForm] = useState<ChangePasswordForm>({
+		currentPassword: "",
+		newPassword: "",
+		confirmPassword: "",
+	});
 	const [saving, setSaving] = useState(false);
 
-	const passwordsMatch = newPassword === confirmPassword;
-	const passwordIsDifferent = newPassword !== currentPassword;
+	const { errors, isValid } = useMemo(
+		() => validateForm(form, CHANGE_PASSWORD_VALIDATORS),
+		[form],
+	);
 
-	const isValid =
-		currentPassword.length > 0 &&
-		currentPassword.length <= 128 &&
-		newPassword.length >= 8 &&
-		newPassword.length <= 128 &&
-		passwordsMatch &&
-		passwordIsDifferent;
+	const passwordsMatch = Boolean(
+		form.confirmPassword && !errors.confirmPassword,
+	);
+	const isDifferent = Boolean(
+		form.newPassword &&
+			form.currentPassword &&
+			form.newPassword !== form.currentPassword,
+	);
+	const canSubmit = isValid && !saving;
 
 	async function handleSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 
-		if (!isValid) {
+		if (!canSubmit) {
 			return;
 		}
 
 		setSaving(true);
 
 		try {
-			await changePassword(currentPassword, newPassword);
+			await changePassword(form.currentPassword, form.newPassword);
+			toast.success("Password changed successfully.");
 
-			setCurrentPassword("");
-			setNewPassword("");
-			setConfirmPassword("");
+			setForm({
+				currentPassword: "",
+				newPassword: "",
+				confirmPassword: "",
+			});
 		} catch (error) {
 			toast.error(
 				error instanceof Error
@@ -106,8 +152,13 @@ function ChangePasswordPage() {
 								id="current-password"
 								type="password"
 								autoComplete="current-password"
-								value={currentPassword}
-								onChange={(event) => setCurrentPassword(event.target.value)}
+								value={form.currentPassword}
+								onChange={(event) =>
+									setForm((current) => ({
+										...current,
+										currentPassword: event.target.value,
+									}))
+								}
 								disabled={saving}
 								required
 							/>
@@ -124,8 +175,13 @@ function ChangePasswordPage() {
 								id="new-password"
 								type="password"
 								autoComplete="new-password"
-								value={newPassword}
-								onChange={(event) => setNewPassword(event.target.value)}
+								value={form.newPassword}
+								onChange={(event) =>
+									setForm((current) => ({
+										...current,
+										newPassword: event.target.value,
+									}))
+								}
 								disabled={saving}
 								required
 							/>
@@ -145,20 +201,25 @@ function ChangePasswordPage() {
 								id="confirm-password"
 								type="password"
 								autoComplete="new-password"
-								value={confirmPassword}
-								onChange={(event) => setConfirmPassword(event.target.value)}
+								value={form.confirmPassword}
+								onChange={(event) =>
+									setForm((current) => ({
+										...current,
+										confirmPassword: event.target.value,
+									}))
+								}
 								disabled={saving}
-								hasError={Boolean(confirmPassword && !passwordsMatch)}
+								hasError={Boolean(form.confirmPassword && !passwordsMatch)}
 								required
 							/>
 
-							{confirmPassword && !passwordsMatch && (
+							{form.confirmPassword && !passwordsMatch && (
 								<p className="mt-2 text-xs text-red-400">
 									Passwords do not match.
 								</p>
 							)}
 
-							{newPassword && currentPassword && !passwordIsDifferent && (
+							{form.newPassword && form.currentPassword && !isDifferent && (
 								<p className="mt-2 text-xs text-red-400">
 									New password must be different from your current password.
 								</p>
@@ -174,7 +235,7 @@ function ChangePasswordPage() {
 
 						<Button
 							type="submit"
-							disabled={!isValid || saving}
+							disabled={!canSubmit}
 							loading={saving}
 							className="w-full sm:w-auto"
 						>

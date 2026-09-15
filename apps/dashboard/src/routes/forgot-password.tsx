@@ -1,32 +1,51 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ArrowLeft, CheckCircle2, KeyRound } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import PreAuthLayout from "@/components/PreAuthLayout";
 import { useToast } from "@/components/Toast";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { requestPasswordReset } from "@/lib/api";
+import {
+	type FieldValidators,
+	validateForm,
+	validators,
+} from "@/lib/validation";
 
 export const Route = createFileRoute("/forgot-password")({
 	component: ForgotPasswordPage,
 });
 
+interface ForgotPasswordForm {
+	email: string;
+}
+
+const FORGOT_PASSWORD_VALIDATORS: FieldValidators<ForgotPasswordForm> = {
+	email: [
+		validators.required("Email address is required."),
+		validators.email(),
+	],
+};
+
 function ForgotPasswordPage() {
 	const toast = useToast();
-	const [email, setEmail] = useState("");
+	const [form, setForm] = useState<ForgotPasswordForm>({ email: "" });
 	const [submitting, setSubmitting] = useState(false);
 	const [submitted, setSubmitted] = useState(false);
 
-	const normalizedEmail = email.trim();
-	const emailValid =
-		normalizedEmail.length > 0 &&
-		/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
+	const { isValid } = useMemo(
+		() => validateForm(form, FORGOT_PASSWORD_VALIDATORS),
+		[form],
+	);
+
+	const canSubmit = isValid && !submitting;
+	const normalizedEmail = form.email.trim();
 
 	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 
-		if (!emailValid || submitting) {
+		if (!canSubmit) {
 			return;
 		}
 
@@ -110,8 +129,8 @@ function ForgotPasswordPage() {
 								id="email"
 								type="email"
 								autoComplete="email"
-								value={email}
-								onChange={(event) => setEmail(event.target.value)}
+								value={form.email}
+								onChange={(event) => setForm({ email: event.target.value })}
 								placeholder="you@example.com"
 								required
 								disabled={submitting}
@@ -121,7 +140,7 @@ function ForgotPasswordPage() {
 						<Button
 							type="submit"
 							loading={submitting}
-							disabled={!emailValid}
+							disabled={!canSubmit}
 							className="w-full mt-2"
 							size="lg"
 						>

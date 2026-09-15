@@ -1,5 +1,5 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import PreAuthLayout from "@/components/PreAuthLayout";
 import { useToast } from "@/components/Toast";
@@ -7,6 +7,11 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { useAuth } from "@/context/AuthContext";
 import { register } from "@/lib/api";
+import {
+	type FieldValidators,
+	validateForm,
+	validators,
+} from "@/lib/validation";
 
 export interface RegisterSearch {
 	return_to?: string;
@@ -28,29 +33,54 @@ function getSafeReturnTo(value: string | undefined) {
 	return value;
 }
 
+interface RegisterForm {
+	email: string;
+	password: string;
+	confirmPassword: string;
+}
+
+const REGISTER_VALIDATORS: FieldValidators<RegisterForm> = {
+	email: [
+		validators.required("Email address is required."),
+		validators.email(),
+	],
+	password: [
+		validators.required("Password is required."),
+		validators.password({
+			min: 12,
+			max: 128,
+			message: "Must be between 12 and 128 characters long.",
+		}),
+	],
+	confirmPassword: [
+		validators.required("Confirm password is required."),
+		validators.matches("password", "Passwords do not match."),
+	],
+};
+
 function RegisterPage() {
 	const navigate = useNavigate();
 	const { refresh } = useAuth();
 	const toast = useToast();
 	const { return_to } = Route.useSearch();
 
-	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
-	const [confirmPassword, setConfirmPassword] = useState("");
+	const [form, setForm] = useState<RegisterForm>({
+		email: "",
+		password: "",
+		confirmPassword: "",
+	});
 	const [loading, setLoading] = useState(false);
 
-	const normalizedEmail = email.trim();
+	const { errors, isValid } = useMemo(
+		() => validateForm(form, REGISTER_VALIDATORS),
+		[form],
+	);
 
-	const emailValid =
-		normalizedEmail.length > 0 &&
-		/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
-
-	const passwordValid = password.length >= 12 && password.length <= 128;
-
-	const passwordsMatch =
-		confirmPassword.length > 0 && password === confirmPassword;
-
-	const canSubmit = emailValid && passwordValid && passwordsMatch && !loading;
+	const passwordValid = Boolean(form.password && !errors.password);
+	const passwordsMatch = Boolean(
+		form.confirmPassword && !errors.confirmPassword,
+	);
+	const canSubmit = isValid && !loading;
 
 	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
@@ -62,7 +92,7 @@ function RegisterPage() {
 		setLoading(true);
 
 		try {
-			await register(normalizedEmail, password);
+			await register(form.email.trim(), form.password);
 			await refresh();
 
 			toast.success("Account created successfully.");
@@ -114,8 +144,13 @@ function RegisterPage() {
 						<Input
 							id="email"
 							type="email"
-							value={email}
-							onChange={(event) => setEmail(event.target.value)}
+							value={form.email}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									email: event.target.value,
+								}))
+							}
 							placeholder="you@example.com"
 							autoComplete="email"
 							autoFocus
@@ -135,8 +170,13 @@ function RegisterPage() {
 						<Input
 							id="password"
 							type="password"
-							value={password}
-							onChange={(event) => setPassword(event.target.value)}
+							value={form.password}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									password: event.target.value,
+								}))
+							}
 							placeholder="Create a strong password"
 							autoComplete="new-password"
 							disabled={loading}
@@ -145,7 +185,7 @@ function RegisterPage() {
 
 						<p
 							className={`mt-1.5 text-xs ${
-								password.length === 0
+								form.password.length === 0
 									? "text-zinc-500"
 									: passwordValid
 										? "text-emerald-400"
@@ -169,16 +209,21 @@ function RegisterPage() {
 						<Input
 							id="confirm-password"
 							type="password"
-							value={confirmPassword}
-							onChange={(event) => setConfirmPassword(event.target.value)}
+							value={form.confirmPassword}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									confirmPassword: event.target.value,
+								}))
+							}
 							placeholder="Re-enter your password"
 							autoComplete="new-password"
 							disabled={loading}
-							hasError={Boolean(confirmPassword && !passwordsMatch)}
+							hasError={Boolean(form.confirmPassword && !passwordsMatch)}
 							required
 						/>
 
-						{confirmPassword.length > 0 && (
+						{form.confirmPassword.length > 0 && (
 							<p
 								className={`mt-1.5 text-xs ${
 									passwordsMatch ? "text-emerald-400" : "text-red-400"

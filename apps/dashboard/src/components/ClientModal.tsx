@@ -1,5 +1,5 @@
 import { Globe, Server, Shield } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import ClientCredentialsView from "@/components/clients/ClientCredentialsView";
 import ScopeSelector from "@/components/clients/ScopeSelector";
@@ -13,6 +13,11 @@ import {
 	type OAuthClient,
 	updateOAuthClient,
 } from "@/lib/api";
+import {
+	type FieldValidators,
+	validateForm,
+	validators,
+} from "@/lib/validation";
 
 type ClientProfile = "web_app" | "spa_native" | "m2m_service";
 type ClientType = "public" | "confidential";
@@ -23,6 +28,36 @@ interface ClientModalProps {
 	onClose: () => void;
 	onSaved: () => Promise<void>;
 }
+
+interface ClientForm {
+	name: string;
+	redirectUris: string;
+	scopes: string[];
+}
+
+const getClientValidators = (
+	isPublic: boolean,
+): FieldValidators<ClientForm> => ({
+	name: [
+		validators.required("Client name is required."),
+		validators.maxLength(100, "Client name must be 100 characters or fewer."),
+	],
+	redirectUris: [
+		validators.custom((val) => {
+			if (isPublic && !val?.trim()) {
+				return "Public clients require at least one redirect URI.";
+			}
+			return null;
+		}, "Public clients require at least one redirect URI."),
+		validators.urlList("Each line must be a valid HTTP or HTTPS URL."),
+	],
+	scopes: [
+		validators.minItems(
+			1,
+			"At least one scope must be assigned to the client.",
+		),
+	],
+});
 
 /**
  * Modal for creating and managing OAuth 2.0 / OIDC clients across Web, SPA, and M2M profiles.
@@ -44,6 +79,18 @@ export default function ClientModal({
 
 	const [createdClientId, setCreatedClientId] = useState<string | null>(null);
 	const [secret, setSecret] = useState<string | null>(null);
+
+	const clientValidators = useMemo(
+		() => getClientValidators(profile === "spa_native"),
+		[profile],
+	);
+
+	const { errors, isValid } = useMemo(
+		() => validateForm({ name, redirectUris, scopes }, clientValidators),
+		[name, redirectUris, scopes, clientValidators],
+	);
+
+	const canSubmit = isValid && !saving;
 
 	useEffect(() => {
 		if (!open) return;
@@ -95,29 +142,18 @@ export default function ClientModal({
 	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 
+		if (!canSubmit) {
+			return;
+		}
+
 		const normalizedName = name.trim();
 		const normalizedRedirectUris = redirectUris
 			.split("\n")
 			.map((uri) => uri.trim())
 			.filter(Boolean);
 
-		if (!normalizedName) {
-			toast.error("Client name is required.");
-			return;
-		}
-
 		const clientType: ClientType =
 			profile === "spa_native" ? "public" : "confidential";
-
-		if (clientType === "public" && normalizedRedirectUris.length === 0) {
-			toast.error("Public clients require at least one redirect URI.");
-			return;
-		}
-
-		if (scopes.length === 0) {
-			toast.error("At least one scope must be assigned to the client.");
-			return;
-		}
 
 		setSaving(true);
 
@@ -193,8 +229,12 @@ export default function ClientModal({
 							onChange={(event) => setName(event.target.value)}
 							placeholder="e.g. Keyzori License Server, Billing Sync Worker"
 							disabled={saving}
+							hasError={Boolean(errors.name && name)}
 							required
 						/>
+						{errors.name && name && (
+							<p className="mt-1.5 text-xs text-red-400">{errors.name}</p>
+						)}
 					</div>
 
 					{!editing && (
@@ -280,6 +320,7 @@ export default function ClientModal({
 							value={redirectUris}
 							onChange={(event) => setRedirectUris(event.target.value)}
 							disabled={saving}
+							hasError={Boolean(errors.redirectUris && redirectUris)}
 							rows={profile === "m2m_service" ? 2 : 3}
 							placeholder={
 								profile === "m2m_service"
@@ -288,19 +329,30 @@ export default function ClientModal({
 							}
 							required={profile !== "m2m_service"}
 						/>
-						<p className="mt-1.5 text-xs text-zinc-500">
-							{profile === "m2m_service"
-								? "Machine-to-machine clients do not require redirect URIs unless also using user authorization code flow."
-								: "Enter one redirect URI per line."}
-						</p>
+						{errors.redirectUris && redirectUris ? (
+							<p className="mt-1.5 text-xs text-red-400">
+								{errors.redirectUris}
+							</p>
+						) : (
+							<p className="mt-1.5 text-xs text-zinc-500">
+								{profile === "m2m_service"
+									? "Machine-to-machine clients do not require redirect URIs unless also using user authorization code flow."
+									: "Enter one redirect URI per line."}
+							</p>
+						)}
 					</div>
 
-					<ScopeSelector
-						profile={profile}
-						scopes={scopes}
-						onChange={setScopes}
-						disabled={saving}
-					/>
+					<div>
+						<ScopeSelector
+							profile={profile}
+							scopes={scopes}
+							onChange={setScopes}
+							disabled={saving}
+						/>
+						{errors.scopes && (
+							<p className="mt-1.5 text-xs text-red-400">{errors.scopes}</p>
+						)}
+					</div>
 
 					<div className="flex justify-end gap-3 pt-3">
 						<Button
@@ -312,7 +364,7 @@ export default function ClientModal({
 							Cancel
 						</Button>
 
-						<Button type="submit" loading={saving}>
+						<Button type="submit" loading={saving} disabled={!canSubmit}>
 							{editing ? "Save changes" : "Create client"}
 						</Button>
 					</div>

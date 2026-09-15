@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { KeyRound } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -14,6 +14,11 @@ import Input from "@/components/ui/Input";
 import PageHeader from "@/components/ui/PageHeader";
 import { useAuth } from "@/context/AuthContext";
 import { bootstrapAdmin } from "@/lib/api";
+import {
+	type FieldValidators,
+	validateForm,
+	validators,
+} from "@/lib/validation";
 
 export const Route = createFileRoute("/_dashboard/bootstrap")({
 	staticData: {
@@ -26,24 +31,44 @@ export const Route = createFileRoute("/_dashboard/bootstrap")({
 	component: BootstrapPage,
 });
 
+interface BootstrapForm {
+	secret: string;
+}
+
+const BOOTSTRAP_VALIDATORS: FieldValidators<BootstrapForm> = {
+	secret: [validators.required("Bootstrap secret is required.")],
+};
+
 function BootstrapPage() {
 	const { refresh } = useAuth();
-	const [secret, setSecret] = useState("");
+	const [form, setForm] = useState<BootstrapForm>({ secret: "" });
 	const [loading, setLoading] = useState(false);
 	const [status, setStatus] = useState<{
 		type: "success" | "error";
 		message: string;
 	} | null>(null);
 
+	const { isValid } = useMemo(
+		() => validateForm(form, BOOTSTRAP_VALIDATORS),
+		[form],
+	);
+
+	const canSubmit = isValid && !loading;
+
 	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
+
+		if (!canSubmit) {
+			return;
+		}
+
 		setLoading(true);
 		setStatus(null);
 
 		try {
-			await bootstrapAdmin(secret);
+			await bootstrapAdmin(form.secret.trim());
 			await refresh();
-			setSecret("");
+			setForm({ secret: "" });
 			setStatus({
 				type: "success",
 				message:
@@ -97,8 +122,8 @@ function BootstrapPage() {
 							<Input
 								id="bootstrap-secret"
 								type="password"
-								value={secret}
-								onChange={(event) => setSecret(event.target.value)}
+								value={form.secret}
+								onChange={(event) => setForm({ secret: event.target.value })}
 								placeholder="Enter bootstrap secret"
 								required
 								disabled={loading}
@@ -119,7 +144,7 @@ function BootstrapPage() {
 					</CardContent>
 
 					<CardFooter>
-						<Button type="submit" loading={loading} disabled={!secret.trim()}>
+						<Button type="submit" loading={loading} disabled={!canSubmit}>
 							Claim Administrator
 						</Button>
 					</CardFooter>
