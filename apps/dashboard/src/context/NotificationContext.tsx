@@ -13,7 +13,6 @@ import { useAuth } from "@/context/AuthContext";
 import {
 	deleteNotification,
 	getNotifications,
-	getNotificationStreamUrl,
 	markAllNotificationsRead,
 	markNotificationRead,
 	type Notification,
@@ -41,88 +40,102 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 	const [unreadCount, setUnreadCount] = useState(0);
 	const [loading, setLoading] = useState(true);
 
-	const eventSourceRef = useRef<EventSource | null>(null);
+	const knownNotificationIds = useRef<Set<string>>(new Set());
+	const initialLoadDone = useRef(false);
+	const lastFetchTime = useRef(0);
 
-	const loadNotifications = useCallback(async () => {
-		if (!user) {
-			setNotifications([]);
-			setUnreadCount(0);
-			setLoading(false);
-			return;
-		}
+	const loadNotifications = useCallback(
+		async (isBackground = false) => {
+			if (!user) {
+				setNotifications([]);
+				setUnreadCount(0);
+				setLoading(false);
+				knownNotificationIds.current.clear();
+				initialLoadDone.current = false;
+				return;
+			}
 
-		try {
-			const res = await getNotifications();
-			setNotifications(res.notifications);
-			setUnreadCount(res.unreadCount);
-		} catch (error) {
-			console.error("[Notifications] Failed to load:", error);
-		} finally {
-			setLoading(false);
-		}
-	}, [user]);
+			if (!isBackground) {
+				setLoading(true);
+			}
+
+			try {
+				const res = await getNotifications();
+				lastFetchTime.current = Date.now();
+
+				if (initialLoadDone.current) {
+					const newItems = res.notifications.filter(
+						(n) => !knownNotificationIds.current.has(n.id) && !n.readAt,
+					);
+
+					for (const notification of newItems) {
+						if (notification.severity === "danger") {
+							toast.error(`${notification.title}: ${notification.message}`);
+						} else if (notification.severity === "warning") {
+							toast.warning(`${notification.title}: ${notification.message}`);
+						} else if (notification.severity === "success") {
+							toast.success(`${notification.title}: ${notification.message}`);
+						} else {
+							toast.info(`${notification.title}: ${notification.message}`);
+						}
+					}
+				}
+
+				for (const n of res.notifications) {
+					knownNotificationIds.current.add(n.id);
+				}
+
+				setNotifications(res.notifications);
+				setUnreadCount(res.unreadCount);
+				initialLoadDone.current = true;
+			} catch (error) {
+				console.error("[Notifications] Failed to load:", error);
+			} finally {
+				if (!isBackground) {
+					setLoading(false);
+				}
+			}
+		},
+		[user, toast],
+	);
 
 	useEffect(() => {
-		void loadNotifications();
+		void loadNotifications(false);
 	}, [loadNotifications]);
 
-	// Connect to Server-Sent Events stream for real-time live notifications
 	useEffect(() => {
-		if (!user) {
-			if (eventSourceRef.current) {
-				eventSourceRef.current.close();
-				eventSourceRef.current = null;
+		if (!user) return;
+
+		const POLL_INTERVAL = 10000; // 10 seconds
+
+		const interval = setInterval(() => {
+			if (
+				typeof document !== "undefined" &&
+				document.visibilityState === "visible"
+			) {
+				void loadNotifications(true);
 			}
-			return;
+		}, POLL_INTERVAL);
+
+		function handleVisibilityOrFocus() {
+			if (
+				typeof document !== "undefined" &&
+				document.visibilityState === "visible" &&
+				Date.now() - lastFetchTime.current > 3000
+			) {
+				void loadNotifications(true);
+			}
 		}
 
-		let active = true;
-		const streamUrl = getNotificationStreamUrl();
-
-		const es = new EventSource(streamUrl, {
-			withCredentials: true,
-		});
-
-		eventSourceRef.current = es;
-
-		es.addEventListener("notification", (event) => {
-			if (!active) return;
-			try {
-				const notification = JSON.parse(event.data) as Notification;
-
-				setNotifications((prev) => [notification, ...prev]);
-				setUnreadCount((prev) => prev + 1);
-
-				// Show real-time notification toast
-				if (notification.severity === "danger") {
-					toast.error(`${notification.title}: ${notification.message}`);
-				} else if (notification.severity === "warning") {
-					toast.warning(`${notification.title}: ${notification.message}`);
-				} else if (notification.severity === "success") {
-					toast.success(`${notification.title}: ${notification.message}`);
-				} else {
-					toast.info(`${notification.title}: ${notification.message}`);
-				}
-			} catch (e) {
-				console.error(
-					"[Notifications] Error parsing SSE notification event:",
-					e,
-				);
-			}
-		});
-
-		es.onerror = () => {
-			// Browser automatically attempts reconnect for EventSource
-		};
+		window.addEventListener("focus", handleVisibilityOrFocus);
+		document.addEventListener("visibilitychange", handleVisibilityOrFocus);
 
 		return () => {
-			active = false;
-			es.close();
-			if (eventSourceRef.current === es) {
-				eventSourceRef.current = null;
-			}
+			clearInterval(interval);
+			window.removeEventListener("focus", handleVisibilityOrFocus);
+			document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
 		};
-	}, [user, toast]);
+	}, [user, loadNotifications]);
 
 	const markAsRead = useCallback(async (id: string) => {
 		try {
