@@ -11,7 +11,7 @@
   "db:migrate": "wrangler d1 migrations apply DB --remote"
  },
  "devDependencies": {
-  "@cloudflare/workers-types": "5.20260914.1",
+  "@cloudflare/workers-types": "5.20260915.1",
   "@types/bun": "1.4.2",
   "@types/node": "26.5.1",
   "drizzle-kit": "1.0.0-rc.5-ab785fc"
