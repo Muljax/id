@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.21.1](https://github.com/Muljax/id/compare/v0.21.0...v0.21.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* **deps:** update dependency hono to v4.13.8 ([#189](https://github.com/Muljax/id/issues/189)) ([14a11b5](https://github.com/Muljax/id/commit/14a11b53d515898bbbba82ac924936e0d1d04df8))
+* poll http notifications endpoint ([#191](https://github.com/Muljax/id/issues/191)) ([cf6d3ca](https://github.com/Muljax/id/commit/cf6d3ca91eb628b8ebe5f8c45c032d3bc12dc36d))
+
 ## [0.21.0](https://github.com/Muljax/id/compare/v0.20.0...v0.21.0) (2026-09-14)
 
 
