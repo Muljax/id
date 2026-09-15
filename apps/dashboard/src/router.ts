@@ -23,5 +23,6 @@ declare module "@tanstack/react-router" {
 
 	interface StaticDataRouteOption {
 		navigation?: NavigationData;
+		title?: string;
 	}
 }
