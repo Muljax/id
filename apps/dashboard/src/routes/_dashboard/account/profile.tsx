@@ -22,6 +22,12 @@ import {
 	updateProfile,
 	uploadProfileAvatar,
 } from "@/lib/api";
+import {
+	type FieldValidators,
+	type ValidationErrors,
+	validateForm,
+	validators,
+} from "@/lib/validation";
 
 export const Route = createFileRoute("/_dashboard/account/profile")({
 	staticData: {
@@ -153,13 +159,59 @@ const PROFILE_SECTIONS: ProfileSection[] = [
 	},
 ];
 
+const FIELD_VALIDATORS: FieldValidators<ProfileForm> = {
+	displayName: validators.maxLength(
+		100,
+		"Display name must be 100 characters or fewer.",
+	),
+	givenName: validators.maxLength(
+		100,
+		"Given name must be 100 characters or fewer.",
+	),
+	familyName: validators.maxLength(
+		100,
+		"Family name must be 100 characters or fewer.",
+	),
+	middleName: validators.maxLength(
+		100,
+		"Middle name must be 100 characters or fewer.",
+	),
+	nickname: validators.maxLength(
+		100,
+		"Nickname must be 100 characters or fewer.",
+	),
+	preferredUsername: validators.maxLength(
+		100,
+		"Preferred username must be 100 characters or fewer.",
+	),
+	profileUrl: [
+		validators.maxLength(500, "Profile URL must be 500 characters or fewer."),
+		validators.url(),
+	],
+	website: [
+		validators.maxLength(500, "Website URL must be 500 characters or fewer."),
+		validators.url(),
+	],
+	gender: validators.maxLength(50, "Gender must be 50 characters or fewer."),
+	zoneinfo: [
+		validators.maxLength(100, "Time zone must be 100 characters or fewer."),
+		validators.timeZone(),
+	],
+	locale: [
+		validators.maxLength(50, "Locale must be 50 characters or fewer."),
+		validators.locale(),
+	],
+};
+
 function ProfileFields({
 	fields,
 	form,
+	errors,
 	onChange,
 }: {
 	fields: ProfileField[];
 	form: ProfileForm;
+	errors: ValidationErrors<ProfileForm>;
 	onChange: (name: keyof ProfileForm, value: string) => void;
 }) {
 	return (
@@ -170,6 +222,7 @@ function ProfileFields({
 					{...field}
 					id={name}
 					value={form[name]}
+					error={errors[name]}
 					onChange={(value) => onChange(name, value)}
 				/>
 			))}
@@ -185,6 +238,13 @@ function ProfilePage() {
 	const [saving, setSaving] = useState(false);
 	const [avatarSaving, setAvatarSaving] = useState(false);
 	const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
+
+	const { errors, isValid } = useMemo(
+		() => validateForm(form, FIELD_VALIDATORS),
+		[form],
+	);
+
+	const canSubmit = isValid && !saving;
 
 	useEffect(() => {
 		if (!user) {
@@ -244,6 +304,11 @@ function ProfilePage() {
 
 	async function handleSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
+
+		if (!canSubmit) {
+			return;
+		}
+
 		setSaving(true);
 
 		try {
@@ -436,6 +501,7 @@ function ProfilePage() {
 								<ProfileFields
 									fields={section.fields}
 									form={form}
+									errors={errors}
 									onChange={handleFieldChange}
 								/>
 							</section>
@@ -443,7 +509,7 @@ function ProfilePage() {
 					</CardContent>
 
 					<CardFooter>
-						<Button type="submit" loading={saving}>
+						<Button type="submit" loading={saving} disabled={!canSubmit}>
 							Save changes
 						</Button>
 					</CardFooter>

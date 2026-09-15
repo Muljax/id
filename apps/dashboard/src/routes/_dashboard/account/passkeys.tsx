@@ -1,7 +1,7 @@
 import { startRegistration } from "@simplewebauthn/browser";
 import { createFileRoute } from "@tanstack/react-router";
 import { Fingerprint, KeyRound, Plus, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useToast } from "@/components/Toast";
 import Badge from "@/components/ui/Badge";
@@ -19,6 +19,11 @@ import {
 	type Passkey,
 	verifyPasskeyRegistration,
 } from "@/lib/api";
+import {
+	type FieldValidators,
+	validateForm,
+	validators,
+} from "@/lib/validation";
 
 export const Route = createFileRoute("/_dashboard/account/passkeys")({
 	staticData: {
@@ -30,6 +35,12 @@ export const Route = createFileRoute("/_dashboard/account/passkeys")({
 	component: PasskeysPage,
 });
 
+const PASSKEY_VALIDATORS: FieldValidators<{ passkeyName: string }> = {
+	passkeyName: [
+		validators.maxLength(100, "Passkey name must be 100 characters or fewer."),
+	],
+};
+
 function PasskeysPage() {
 	const toast = useToast();
 
@@ -40,6 +51,13 @@ function PasskeysPage() {
 	const [passkeyToDelete, setPasskeyToDelete] = useState<Passkey | null>(null);
 	const [registerModalOpen, setRegisterModalOpen] = useState(false);
 	const [passkeyName, setPasskeyName] = useState("");
+
+	const { errors, isValid } = useMemo(
+		() => validateForm({ passkeyName }, PASSKEY_VALIDATORS),
+		[passkeyName],
+	);
+
+	const canRegister = isValid && !registering;
 
 	const loadPasskeys = useCallback(async () => {
 		try {
@@ -59,6 +77,10 @@ function PasskeysPage() {
 	}, [loadPasskeys]);
 
 	async function handleRegister() {
+		if (!canRegister) {
+			return;
+		}
+
 		setRegistering(true);
 
 		try {
@@ -266,10 +288,15 @@ function PasskeysPage() {
 							placeholder="e.g. Work MacBook"
 							value={passkeyName}
 							onChange={(event) => setPasskeyName(event.target.value)}
-							maxLength={100}
+							hasError={Boolean(errors.passkeyName && passkeyName)}
 							autoFocus
 							disabled={registering}
 						/>
+						{errors.passkeyName && passkeyName && (
+							<p className="mt-1.5 text-xs text-red-400">
+								{errors.passkeyName}
+							</p>
+						)}
 					</div>
 
 					<div className="flex justify-end gap-3 pt-2">
@@ -285,7 +312,7 @@ function PasskeysPage() {
 							Cancel
 						</Button>
 
-						<Button type="submit" loading={registering}>
+						<Button type="submit" loading={registering} disabled={!canRegister}>
 							Continue
 						</Button>
 					</div>

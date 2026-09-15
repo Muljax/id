@@ -1,7 +1,7 @@
 import { startAuthentication } from "@simplewebauthn/browser";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Fingerprint } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import PreAuthLayout from "@/components/PreAuthLayout";
 import { useToast } from "@/components/Toast";
@@ -9,6 +9,11 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { useAuth } from "@/context/AuthContext";
 import { getPasskeyLoginOptions, login, verifyPasskeyLogin } from "@/lib/api";
+import {
+	type FieldValidators,
+	validateForm,
+	validators,
+} from "@/lib/validation";
 
 export interface LoginSearch {
 	return_to?: string;
@@ -42,6 +47,19 @@ async function loginWithPasskey() {
 	await verifyPasskeyLogin(response, challengeId);
 }
 
+interface LoginForm {
+	email: string;
+	password: string;
+}
+
+const LOGIN_VALIDATORS: FieldValidators<LoginForm> = {
+	email: [
+		validators.required("Email address is required."),
+		validators.email(),
+	],
+	password: [validators.required("Password is required.")],
+};
+
 function LoginPage() {
 	const { refresh } = useAuth();
 	const toast = useToast();
@@ -49,11 +67,20 @@ function LoginPage() {
 	const { return_to, prompt } = Route.useSearch();
 	const forceLogin = prompt === "login";
 
-	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
+	const [form, setForm] = useState<LoginForm>({
+		email: "",
+		password: "",
+	});
 	const [rememberMe, setRememberMe] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 	const [passkeySubmitting, setPasskeySubmitting] = useState(false);
+
+	const { isValid } = useMemo(
+		() => validateForm(form, LOGIN_VALIDATORS),
+		[form],
+	);
+
+	const canSubmit = isValid && !submitting && !passkeySubmitting;
 
 	async function finishLogin() {
 		await refresh();
@@ -76,10 +103,15 @@ function LoginPage() {
 
 	async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
+
+		if (!canSubmit) {
+			return;
+		}
+
 		setSubmitting(true);
 
 		try {
-			await login(email, password, rememberMe, prompt);
+			await login(form.email.trim(), form.password, rememberMe, prompt);
 			await finishLogin();
 		} catch (error) {
 			toast.error(
@@ -149,8 +181,13 @@ function LoginPage() {
 							id="email"
 							type="email"
 							autoComplete="email"
-							value={email}
-							onChange={(event) => setEmail(event.target.value)}
+							value={form.email}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									email: event.target.value,
+								}))
+							}
 							placeholder="you@example.com"
 							required
 							disabled={submitting || passkeySubmitting}
@@ -178,8 +215,13 @@ function LoginPage() {
 							id="password"
 							type="password"
 							autoComplete="current-password"
-							value={password}
-							onChange={(event) => setPassword(event.target.value)}
+							value={form.password}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									password: event.target.value,
+								}))
+							}
 							placeholder="Enter password"
 							required
 							disabled={submitting || passkeySubmitting}
@@ -202,7 +244,7 @@ function LoginPage() {
 					<Button
 						type="submit"
 						loading={submitting}
-						disabled={passkeySubmitting}
+						disabled={!canSubmit}
 						className="w-full mt-2"
 						size="lg"
 					>
