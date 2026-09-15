@@ -61,3 +61,34 @@ export function generatePasswordResetLink(userId: string) {
 		},
 	);
 }
+
+export type LifecycleAction = "enable" | "disable";
+
+export interface UserLifecycleOptions {
+	action: LifecycleAction;
+	executeAt?: number | null;
+}
+
+export interface UserLifecycleResponse {
+	success?: boolean;
+	id?: string;
+	userId: string;
+	action: LifecycleAction;
+	status: string;
+	scheduled: boolean;
+	executeAt?: number;
+	executedAt?: number;
+}
+
+export function executeUserLifecycle(
+	userId: string,
+	options: UserLifecycleOptions,
+) {
+	return api<UserLifecycleResponse>(
+		`/api/admin/users/${encodeURIComponent(userId)}/lifecycle`,
+		{
+			method: "POST",
+			body: JSON.stringify(options),
+		},
+	);
+}
