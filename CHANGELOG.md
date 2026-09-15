@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.23.0](https://github.com/Muljax/id/compare/v0.22.0...v0.23.0) (2026-09-15)
+
+
+### Features
+
+* **branding:** add dynamic instance name and custom logo support ([#198](https://github.com/Muljax/id/issues/198)) ([afd0907](https://github.com/Muljax/id/commit/afd0907693e11cb4ff50a54c5c1e1657f9525a31))
+
 ## [0.22.0](https://github.com/Muljax/id/compare/v0.21.1...v0.22.0) (2026-09-15)
 
 
