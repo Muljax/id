@@ -3,8 +3,10 @@ import {
 	type ErrorComponentProps,
 	Outlet,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import NotFound from "@/components/ui/NotFound";
+import { INSTANCE_NAME } from "@/lib/config";
 
 export const Route = createRootRoute({
 	component: RootLayout,
@@ -13,6 +15,10 @@ export const Route = createRootRoute({
 });
 
 function RootLayout() {
+	useEffect(() => {
+		document.title = INSTANCE_NAME;
+	}, []);
+
 	return <Outlet />;
 }
 

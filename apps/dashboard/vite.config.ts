@@ -14,6 +14,7 @@ const packageJson = JSON.parse(
 
 export default defineConfig({
 	envDir: "../../",
+	envPrefix: ["VITE_", "INSTANCE_"],
 
 	plugins: [
 		tanstackRouter({

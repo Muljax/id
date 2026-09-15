@@ -10,6 +10,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import PageHeader from "@/components/ui/PageHeader";
 import Spinner from "@/components/ui/Spinner";
 import { getOAuthGrants, revokeOAuthGrant, type OAuthGrant } from "@/lib/api";
+import { INSTANCE_NAME } from "@/lib/config";
 
 export const Route = createFileRoute("/_dashboard/account/authorized-apps")({
 	staticData: {
@@ -83,7 +84,16 @@ function AuthorizedAppsPage() {
 				<EmptyState
 					icon={<AppWindow size={24} />}
 					title="No authorized applications"
-					description="You have not authorized any third-party applications or services to connect to your Muljax ID account."
+					description={
+						<>
+							You have not authorized any third-party applications or services
+							to connect to your{" "}
+							<span className="text-violet-400 font-medium">
+								{INSTANCE_NAME}
+							</span>{" "}
+							account.
+						</>
+					}
 				/>
 			) : (
 				<Card>

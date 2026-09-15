@@ -50,6 +50,47 @@ Then configure the Cloudflare account, domain, and other deployment values.
 
 > **Important:** `terraform.tfvars` may contain sensitive values. It is ignored by Git and should never be committed.
 
+## Branding & Customization
+
+You can customize the tenant's brand name, logo, and favicon across the dashboard, authentication flows, and OAuth consent screens.
+
+### 1. Instance Name
+
+Set `INSTANCE_NAME` in your `.env` (or `terraform.tfvars` for production):
+
+```env
+INSTANCE_NAME="Acme ID"
+```
+
+The instance name will automatically update across:
+- Desktop sidebar, mobile drawer, and topbar navigation
+- Authentication pages (login, registration, password recovery)
+- OAuth authorization and consent prompts
+- Dashboard overview and administration directory views
+- Browser window / tab `<title>`
+
+### 2. Logo & Icon
+
+The platform supports both bundled static assets and external logo URLs:
+
+* **Static Dist Asset (Recommended):**
+  Place your logo file in `apps/dashboard/public/assets/` (e.g., `apps/dashboard/public/assets/logo.svg` or `logo.png`). Any file in this directory is automatically bundled into the dashboard build and served at `/assets/<filename>`.
+  
+  The dashboard defaults to `/assets/logo.svg`, which is also used as the browser tab favicon.
+
+* **Remote URL or Custom Path:**
+  Set `INSTANCE_LOGO` in `.env`:
+  ```env
+  INSTANCE_LOGO="https://cdn.example.com/logo.svg"
+  ```
+  Or reference a custom bundled asset path:
+  ```env
+  INSTANCE_LOGO="/assets/custom-logo.png"
+  ```
+
+* **Fallback Glyph:**
+  If no custom logo is specified or an image fails to load, a modern accessible identity badge is rendered as a fallback.
+
 ## Install dependencies
 
 Install the project dependencies using Bun:

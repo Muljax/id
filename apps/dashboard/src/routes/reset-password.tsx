@@ -1,11 +1,12 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { AlertCircle, CheckCircle2, Lock, ShieldCheck } from "lucide-react";
+import { AlertCircle, CheckCircle2, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import PreAuthLayout from "@/components/PreAuthLayout";
 import { useToast } from "@/components/Toast";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import InstanceLogo from "@/components/ui/InstanceLogo";
 import Spinner from "@/components/ui/Spinner";
 import { confirmPasswordReset, verifyPasswordResetToken } from "@/lib/api";
 import {
@@ -220,9 +221,7 @@ function ResetPasswordPage() {
 			<div className="space-y-6">
 				{/* Header */}
 				<div className="text-center space-y-2">
-					<div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-violet-500/20 bg-violet-500/10 text-violet-400 shadow-inner">
-						<Lock size={22} />
-					</div>
+					<InstanceLogo className="mx-auto h-12 w-12 rounded-2xl mb-3 shadow-lg" />
 
 					<h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
 						Choose new password

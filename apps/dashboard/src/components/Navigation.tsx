@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 
 import NotificationBell from "@/components/NotificationBell";
 import Button from "@/components/ui/Button";
+import InstanceLogo from "@/components/ui/InstanceLogo";
 import { useAuth } from "@/context/AuthContext";
+import { INSTANCE_NAME } from "@/lib/config";
 import { getNavigationItems } from "@/lib/navigation";
 import { routeTree } from "@/routeTree.gen";
 
@@ -203,12 +205,15 @@ export default function DashboardLayout() {
 				{/* Desktop Sidebar (lg:flex, hidden on < lg) */}
 				<aside className="relative z-20 hidden w-64 shrink-0 flex-col border-r border-white/6 bg-zinc-950/80 backdrop-blur-xl lg:flex">
 					{/* Brand */}
-					<div className="px-6 py-5 border-b border-white/6">
-						<div className="text-sm font-semibold tracking-tight text-white">
-							Muljax ID
-						</div>
-						<div className="text-[11px] text-zinc-500 font-mono mt-0.5">
-							Identity Provider
+					<div className="flex items-center gap-3 px-6 py-5 border-b border-white/6">
+						<InstanceLogo className="h-8 w-8 rounded-lg shrink-0" />
+						<div className="min-w-0">
+							<div className="text-sm font-semibold tracking-tight text-violet-400 truncate">
+								{INSTANCE_NAME}
+							</div>
+							<div className="text-[11px] text-zinc-500 font-mono mt-0.5">
+								Identity Provider
+							</div>
 						</div>
 					</div>
 
@@ -235,9 +240,12 @@ export default function DashboardLayout() {
 
 						<aside className="relative flex h-full w-72 max-w-[85vw] flex-col border-r border-white/10 bg-zinc-950 shadow-2xl">
 							<div className="flex items-center justify-between px-6 py-5 border-b border-white/6">
-								<span className="text-sm font-semibold text-white">
-									Muljax ID
-								</span>
+								<div className="flex items-center gap-3 min-w-0">
+									<InstanceLogo className="h-7 w-7 rounded-lg shrink-0" />
+									<span className="text-sm font-semibold text-violet-400 truncate">
+										{INSTANCE_NAME}
+									</span>
+								</div>
 
 								<button
 									type="button"
@@ -278,9 +286,12 @@ export default function DashboardLayout() {
 								<Menu size={18} />
 							</button>
 
-							<span className="text-sm font-semibold text-white lg:hidden">
-								Muljax ID
-							</span>
+							<div className="flex items-center gap-2.5 lg:hidden">
+								<InstanceLogo className="h-6 w-6 rounded-md shrink-0" />
+								<span className="text-sm font-semibold text-violet-400">
+									{INSTANCE_NAME}
+								</span>
+							</div>
 						</div>
 
 						<div className="flex items-center gap-3">

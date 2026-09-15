@@ -9,8 +9,10 @@ import Card, {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/Card";
+import InstanceLogo from "@/components/ui/InstanceLogo";
 import Spinner from "@/components/ui/Spinner";
 import { api, getOAuthClientDetails, type OAuthClientDetails } from "@/lib/api";
+import { INSTANCE_NAME } from "@/lib/config";
 
 export interface AuthorizeSearch {
 	client_id?: string;
@@ -367,11 +369,16 @@ function AuthorizePage() {
 			<div className="relative z-10 w-full max-w-lg space-y-6">
 				{/* Top Branding */}
 				<div className="text-center">
+					<InstanceLogo className="mx-auto h-12 w-12 rounded-2xl mb-3 shadow-lg" />
+
 					<h1 className="text-2xl font-bold tracking-tight text-white">
 						Authorize application
 					</h1>
+
 					<p className="mt-1 text-sm text-zinc-400">
-						Review permissions requested by this service.
+						Review permissions requested by this service to connect to your{" "}
+						<span className="text-violet-400 font-medium">{INSTANCE_NAME}</span>{" "}
+						account.
 					</p>
 				</div>
 

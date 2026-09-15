@@ -7,8 +7,10 @@ import PreAuthLayout from "@/components/PreAuthLayout";
 import { useToast } from "@/components/Toast";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import InstanceLogo from "@/components/ui/InstanceLogo";
 import { useAuth } from "@/context/AuthContext";
 import { getPasskeyLoginOptions, login, verifyPasskeyLogin } from "@/lib/api";
+import { INSTANCE_NAME } from "@/lib/config";
 import {
 	type FieldValidators,
 	validateForm,
@@ -155,16 +157,27 @@ function LoginPage() {
 		<PreAuthLayout>
 			<div className="space-y-6">
 				{/* Heading */}
-				<div>
-					<h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-						{forceLogin ? "Confirm your identity" : "Sign in to Muljax ID"}
-					</h1>
+				<div className="space-y-3">
+					<InstanceLogo className="h-10 w-10 rounded-xl" />
 
-					<p className="mt-1.5 text-sm text-zinc-400">
-						{forceLogin
-							? "Re-authenticate to continue to the requested application."
-							: "Enter your credentials or use your passkey."}
-					</p>
+					<div>
+						<h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+							{forceLogin ? (
+								"Confirm your identity"
+							) : (
+								<>
+									Sign in to{" "}
+									<span className="text-violet-400">{INSTANCE_NAME}</span>
+								</>
+							)}
+						</h1>
+
+						<p className="mt-1.5 text-sm text-zinc-400">
+							{forceLogin
+								? "Re-authenticate to continue to the requested application."
+								: "Enter your credentials or use your passkey."}
+						</p>
+					</div>
 				</div>
 
 				{/* Primary Form */}
