@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.26.3](https://github.com/Muljax/id/compare/v0.26.2...v0.26.3) (2026-09-16)
+
+
+### Bug Fixes
+
+* **crypto:** resolve illegal invocation in timingSafeEqual ([#216](https://github.com/Muljax/id/issues/216)) ([36de80a](https://github.com/Muljax/id/commit/36de80a719ca9f67f369259806f4ab35043235d5))
+* normalize resource names from the instance name var ([#215](https://github.com/Muljax/id/issues/215)) ([7e8d4e7](https://github.com/Muljax/id/commit/7e8d4e76ad9b83eb60fa71ea426d77afdbb5f620))
+
 ## [0.26.2](https://github.com/Muljax/id/compare/v0.26.1...v0.26.2) (2026-09-16)
 
 
