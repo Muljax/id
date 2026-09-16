@@ -6,3 +6,4 @@ export * from "./notifications";
 export * from "./oauth";
 export * from "./passkeys";
 export * from "./sessions";
+export * from "./rbac";

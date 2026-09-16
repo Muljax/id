@@ -8,6 +8,13 @@ export const queryKeys = {
 	admin: {
 		clients: ["admin", "clients"] as const,
 		users: ["admin", "users"] as const,
+		roles: ["admin", "roles"] as const,
+		role: (id?: string) => ["admin", "roles", id] as const,
+		permissions: ["admin", "permissions"] as const,
+		userRoles: (userId?: string) =>
+			["admin", "users", userId, "roles"] as const,
+		userPermissions: (userId?: string) =>
+			["admin", "users", userId, "permissions"] as const,
 	},
 	account: {
 		passkeys: ["account", "passkeys"] as const,

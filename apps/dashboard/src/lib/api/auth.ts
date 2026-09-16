@@ -25,6 +25,8 @@ export interface AuthUser {
 
 	createdAt: number;
 	isAdmin: boolean;
+	roles?: string[];
+	permissions?: string[];
 }
 
 export interface AuthResponse {

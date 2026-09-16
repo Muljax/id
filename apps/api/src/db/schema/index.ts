@@ -7,3 +7,4 @@ export * from "./password-reset";
 export * from "./sessions";
 export * from "./users";
 export * from "./passkeyChallenges";
+export * from "./rbac";

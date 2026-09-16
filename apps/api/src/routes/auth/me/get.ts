@@ -2,6 +2,8 @@ import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
 
 import { createDb } from "@/db";
+import { hasPermission } from "@/lib/rbac/matcher";
+import { getUserEffectivePermissions } from "@/lib/rbac/permissions";
 import { getSessionUser } from "@/lib/session";
 
 const route = new Hono<{ Bindings: Env }>();
@@ -30,6 +32,9 @@ route.get("/", async (c) => {
 		);
 	}
 
+	const { roles, permissions } = await getUserEffectivePermissions(db, user.id);
+	const isAdmin = roles.includes("admin") || hasPermission(permissions, "*");
+
 	return c.json({
 		user: {
 			id: user.id,
@@ -49,7 +54,9 @@ route.get("/", async (c) => {
 			locale: user.locale,
 			emailVerifiedAt: user.emailVerifiedAt,
 			createdAt: user.createdAt,
-			isAdmin: user.isAdmin,
+			isAdmin,
+			roles,
+			permissions: Array.from(permissions),
 		},
 	});
 });

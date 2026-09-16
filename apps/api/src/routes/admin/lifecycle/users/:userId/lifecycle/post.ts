@@ -7,7 +7,7 @@ import { disableUser } from "@/lib/lifecycle/actions/disable";
 import { enableUser } from "@/lib/lifecycle/actions/enable";
 import { LIFECYCLE_ACTIONS, type LifecycleAction } from "@/lib/lifecycle/types";
 import { emitNotification } from "@/lib/notifications/emitter";
-import { requireAdmin } from "@/middleware/auth";
+import { type AppEnv, requirePermission } from "@/middleware/auth";
 
 /**
  * Controls the actions allowed by the lifecycle endpoint.
@@ -19,9 +19,9 @@ function isLifecycleAction(value: unknown): value is LifecycleAction {
 	);
 }
 
-const route = new Hono<{ Bindings: Env }>();
+const route = new Hono<AppEnv>();
 
-route.post("/", requireAdmin, async (c) => {
+route.post("/", requirePermission("users:lifecycle"), async (c) => {
 	const userId = c.req.param("userId");
 
 	if (!userId) {
@@ -91,7 +91,6 @@ route.post("/", requireAdmin, async (c) => {
 			id: users.id,
 			email: users.email,
 			displayName: users.displayName,
-			isAdmin: users.isAdmin,
 			disabledAt: users.disabledAt,
 		})
 		.from(users)

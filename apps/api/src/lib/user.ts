@@ -1,8 +1,9 @@
-import { users } from "../db/schema";
+import { eq, inArray } from "drizzle-orm";
+import { roles, userRoles, users } from "../db/schema";
 import type { Database } from "../db";
 
 export async function getUsers(db: Database) {
-	return db
+	const userList = await db
 		.select({
 			id: users.id,
 			email: users.email,
@@ -24,13 +25,50 @@ export async function getUsers(db: Database) {
 			locale: users.locale,
 
 			emailVerifiedAt: users.emailVerifiedAt,
-			isAdmin: users.isAdmin,
 			disabledAt: users.disabledAt,
 
 			createdAt: users.createdAt,
 			updatedAt: users.updatedAt,
 		})
 		.from(users);
+
+	if (userList.length === 0) {
+		return [];
+	}
+
+	const userIds = userList.map((u) => u.id);
+
+	const allUserRoles = await db
+		.select({
+			userId: userRoles.userId,
+			roleId: userRoles.roleId,
+			roleName: roles.name,
+		})
+		.from(userRoles)
+		.innerJoin(roles, eq(userRoles.roleId, roles.id))
+		.where(inArray(userRoles.userId, userIds));
+
+	const userRolesMap = new Map<
+		string,
+		{ roleId: string; roleName: string }[]
+	>();
+	for (const ur of allUserRoles) {
+		const existing = userRolesMap.get(ur.userId) ?? [];
+		existing.push({ roleId: ur.roleId, roleName: ur.roleName });
+		userRolesMap.set(ur.userId, existing);
+	}
+
+	return userList.map((u) => {
+		const assigned = userRolesMap.get(u.id) ?? [];
+		const roleIds = assigned.map((r) => r.roleId);
+		const roleNames = assigned.map((r) => r.roleName);
+		return {
+			...u,
+			roles: roleNames,
+			roleIds,
+			isAdmin: roleIds.includes("admin"),
+		};
+	});
 }
 
 /**
@@ -68,6 +106,5 @@ export function toAuthUser(user: typeof users.$inferSelect) {
 		locale: user.locale,
 		emailVerifiedAt: user.emailVerifiedAt,
 		createdAt: user.createdAt,
-		isAdmin: user.isAdmin,
 	};
 }

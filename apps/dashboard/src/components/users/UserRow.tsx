@@ -14,6 +14,7 @@ interface UserRowProps {
 	onToggle: () => void;
 	onResetPassword: (user: AdminUser) => void;
 	onManageLifecycle: (user: AdminUser) => void;
+	onManageRoles: (user: AdminUser) => void;
 }
 
 export default function UserRow({
@@ -24,6 +25,7 @@ export default function UserRow({
 	onToggle,
 	onResetPassword,
 	onManageLifecycle,
+	onManageRoles,
 }: UserRowProps) {
 	const name = user.displayName || user.email;
 	const status = getUserStatus(user);
@@ -92,6 +94,7 @@ export default function UserRow({
 					isSelf={isSelf}
 					onResetPassword={onResetPassword}
 					onManageLifecycle={onManageLifecycle}
+					onManageRoles={onManageRoles}
 				/>
 			)}
 		</div>

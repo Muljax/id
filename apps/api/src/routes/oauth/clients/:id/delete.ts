@@ -3,11 +3,11 @@ import { Hono } from "hono";
 import { createDb } from "@/db";
 import { emitNotification } from "@/lib/notifications/emitter";
 import { deleteOAuthClient } from "@/lib/oauth/client";
-import { requireAdmin } from "@/middleware/auth";
+import { type AppEnv, requirePermission } from "@/middleware/auth";
 
-const route = new Hono<{ Bindings: Env }>();
+const route = new Hono<AppEnv>();
 
-route.delete("/", requireAdmin, async (c) => {
+route.delete("/", requirePermission("oauth_clients:write"), async (c) => {
 	const clientId = c.req.param("id");
 
 	if (!clientId) {

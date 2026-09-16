@@ -2,12 +2,17 @@ import { Hono } from "hono";
 
 import { notificationBus } from "@/lib/notifications/bus";
 import type { NotificationPayload } from "@/lib/notifications/types";
-import { requireAuth } from "@/middleware/auth";
+import { hasPermission } from "@/lib/rbac/matcher";
+import { type AppEnv, requireAuth } from "@/middleware/auth";
 
-const route = new Hono<{ Bindings: Env }>();
+const route = new Hono<AppEnv>();
 
 route.get("/", requireAuth, (c) => {
 	const user = c.get("user");
+	const roles = c.get("roles") ?? [];
+	const permissions = c.get("permissions") ?? new Set();
+	const isAdmin = roles.includes("admin") || hasPermission(permissions, "*");
+
 	const encoder = new TextEncoder();
 
 	let unsubscribe: (() => void) | null = null;
@@ -37,8 +42,7 @@ route.get("/", requireAuth, (c) => {
 					// Check audience match
 					const isTargetedToUser = notification.userId === user.id;
 					const isBroadcast = notification.target === "all";
-					const isAdminTargeted =
-						user.isAdmin && notification.target === "admins";
+					const isAdminTargeted = isAdmin && notification.target === "admins";
 
 					if (!isTargetedToUser && !isBroadcast && !isAdminTargeted) {
 						return;
@@ -59,21 +63,15 @@ route.get("/", requireAuth, (c) => {
 			);
 		},
 		cancel() {
-			if (unsubscribe) {
-				unsubscribe();
-				unsubscribe = null;
-			}
-			if (heartbeatInterval) {
-				clearInterval(heartbeatInterval);
-				heartbeatInterval = null;
-			}
+			if (unsubscribe) unsubscribe();
+			if (heartbeatInterval) clearInterval(heartbeatInterval);
 		},
 	});
 
 	return new Response(stream, {
 		headers: {
-			"Content-Type": "text/event-stream; charset=utf-8",
-			"Cache-Control": "no-cache, no-transform",
+			"Content-Type": "text/event-stream",
+			"Cache-Control": "no-cache",
 			Connection: "keep-alive",
 		},
 	});

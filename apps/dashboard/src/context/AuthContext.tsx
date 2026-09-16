@@ -11,6 +11,7 @@ import {
 
 import Spinner from "@/components/ui/Spinner";
 import { type AuthUser, getCurrentUser, logout as apiLogout } from "@/lib/api";
+import { checkPermission } from "@/lib/permissions";
 import { queryKeys } from "@/lib/queryKeys";
 
 export interface AuthContextValue {
@@ -19,6 +20,8 @@ export interface AuthContextValue {
 	setUser: (user: AuthUser | null) => void;
 	refresh: () => Promise<AuthUser | null>;
 	logout: () => Promise<void>;
+	hasPermission: (permission: string) => boolean;
+	hasAnyPermission: (permissions: string[]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -70,6 +73,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		}
 	}, [queryClient]);
 
+	const permissionsSet = useMemo(
+		() => (user?.permissions ? new Set(user.permissions) : null),
+		[user?.permissions],
+	);
+
+	const hasPermissionFn = useCallback(
+		(permission: string) => {
+			if (!user) return false;
+			if (user.isAdmin) return true;
+			return checkPermission(permissionsSet ?? user.permissions, permission);
+		},
+		[user, permissionsSet],
+	);
+
+	const hasAnyPermissionFn = useCallback(
+		(perms: string[]) => perms.some((p) => hasPermissionFn(p)),
+		[hasPermissionFn],
+	);
+
 	const value = useMemo(
 		() => ({
 			user,
@@ -77,8 +99,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			setUser,
 			refresh,
 			logout,
+			hasPermission: hasPermissionFn,
+			hasAnyPermission: hasAnyPermissionFn,
 		}),
-		[user, isLoading, isFetching, setUser, refresh, logout],
+		[
+			user,
+			isLoading,
+			isFetching,
+			setUser,
+			refresh,
+			logout,
+			hasPermissionFn,
+			hasAnyPermissionFn,
+		],
 	);
 
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -144,6 +177,41 @@ export function AdminGuard({ children }: GuardProps) {
 					<h1 className="text-xl font-semibold text-white">Access denied</h1>
 					<p className="mt-2 text-sm text-zinc-400">
 						You do not have administrative privileges to access this area.
+					</p>
+				</div>
+			</div>
+		);
+	}
+
+	return <>{children}</>;
+}
+
+export function PermissionGuard({
+	permission,
+	children,
+}: {
+	permission: string;
+	children: ReactNode;
+}) {
+	const { loading, hasPermission } = useAuth();
+
+	if (loading) {
+		return (
+			<div className="flex min-h-[50vh] items-center justify-center">
+				<Spinner size="lg" />
+			</div>
+		);
+	}
+
+	if (!hasPermission(permission)) {
+		return (
+			<div className="flex min-h-[50vh] items-center justify-center px-4">
+				<div className="rounded-2xl border border-white/8 bg-zinc-900/50 p-8 text-center backdrop-blur-sm">
+					<h1 className="text-xl font-semibold text-white">Access denied</h1>
+					<p className="mt-2 text-sm text-zinc-400">
+						You do not have the required permission (
+						<code className="text-violet-400 font-mono">{permission}</code>) to
+						access this section.
 					</p>
 				</div>
 			</div>

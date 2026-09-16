@@ -5,6 +5,7 @@ import { sessions, users } from "../db/schema";
 import { generateToken, hashToken } from "./token";
 import { isUserDisabled } from "./user";
 import { parseUserAgent } from "./userAgent";
+import { isUserAdmin } from "./rbac/permissions";
 
 const SESSION_DURATION = 1000 * 60 * 60 * 24 * 30;
 
@@ -180,7 +181,12 @@ export async function getSessionUser(db: Database, token: string) {
 export async function getAdminUser(db: Database, token: string) {
 	const user = await getSessionUser(db, token);
 
-	if (!user?.isAdmin) {
+	if (!user) {
+		return null;
+	}
+
+	const isAdmin = await isUserAdmin(db, user.id);
+	if (!isAdmin) {
 		return null;
 	}
 
