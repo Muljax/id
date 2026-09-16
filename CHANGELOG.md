@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.26.2](https://github.com/Muljax/id/compare/v0.26.1...v0.26.2) (2026-09-16)
+
+
+### Bug Fixes
+
+* **auth:** resolve double sign-in and cookie session persistence ([#213](https://github.com/Muljax/id/issues/213)) ([cfcfc8f](https://github.com/Muljax/id/commit/cfcfc8ff6309bd9cccf8c1ced26a19cd772f7169))
+
 ## [0.26.1](https://github.com/Muljax/id/compare/v0.26.0...v0.26.1) (2026-09-16)
 
 
