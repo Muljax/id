@@ -1,6 +1,7 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppWindow, Edit3, Plus, RefreshCw, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 
 import ClientModal from "@/components/ClientModal";
 import { useToast } from "@/components/Toast";
@@ -17,6 +18,7 @@ import {
 	type OAuthClient,
 } from "@/lib/api";
 import { INSTANCE_NAME } from "@/lib/config";
+import { queryKeys } from "@/lib/queryKeys";
 
 export const Route = createFileRoute("/_dashboard/admin/clients")({
 	staticData: {
@@ -31,36 +33,44 @@ export const Route = createFileRoute("/_dashboard/admin/clients")({
 
 function ClientsPage() {
 	const toast = useToast();
+	const queryClient = useQueryClient();
 
-	const [clients, setClients] = useState<OAuthClient[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [refreshing, setRefreshing] = useState(false);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [editingClient, setEditingClient] = useState<OAuthClient | null>(null);
 	const [deletingClient, setDeletingClient] = useState<OAuthClient | null>(
 		null,
 	);
-	const [deleting, setDeleting] = useState(false);
 
-	const loadClients = useCallback(async () => {
-		try {
-			const response = await getOAuthClients();
-			setClients(response.clients);
-		} catch (error) {
+	const {
+		data: clients = [],
+		isLoading,
+		isFetching,
+		refetch,
+	} = useQuery({
+		queryKey: queryKeys.admin.clients,
+		queryFn: async () => {
+			const res = await getOAuthClients();
+			return res.clients;
+		},
+	});
+
+	const deleteMutation = useMutation({
+		mutationFn: (clientId: string) => deleteOAuthClient(clientId),
+		onSuccess: () => {
+			setDeletingClient(null);
+			toast.success("OAuth client deleted successfully.");
+			void queryClient.invalidateQueries({
+				queryKey: queryKeys.admin.clients,
+			});
+		},
+		onError: (error) => {
 			toast.error(
 				error instanceof Error
 					? error.message
-					: "Unable to load OAuth clients.",
+					: "Unable to delete OAuth client.",
 			);
-		} finally {
-			setLoading(false);
-			setRefreshing(false);
-		}
-	}, [toast]);
-
-	useEffect(() => {
-		void loadClients();
-	}, [loadClients]);
+		},
+	});
 
 	function openCreate() {
 		setEditingClient(null);
@@ -79,34 +89,19 @@ function ClientsPage() {
 
 	async function handleSaved() {
 		closeModal();
-		await loadClients();
+		await queryClient.invalidateQueries({
+			queryKey: queryKeys.admin.clients,
+		});
 	}
 
 	async function handleDelete() {
 		if (!deletingClient) {
 			return;
 		}
-
-		setDeleting(true);
-
-		try {
-			await deleteOAuthClient(deletingClient.id);
-			setClients((current) =>
-				current.filter((item) => item.id !== deletingClient.id),
-			);
-			setDeletingClient(null);
-		} catch (error) {
-			toast.error(
-				error instanceof Error
-					? error.message
-					: "Unable to delete OAuth client.",
-			);
-		} finally {
-			setDeleting(false);
-		}
+		await deleteMutation.mutateAsync(deletingClient.id);
 	}
 
-	if (loading) {
+	if (isLoading) {
 		return (
 			<div className="flex justify-center py-16">
 				<Spinner size="lg" />
@@ -125,10 +120,9 @@ function ClientsPage() {
 							type="button"
 							variant="secondary"
 							size="sm"
-							loading={refreshing}
+							loading={isFetching && !isLoading}
 							onClick={() => {
-								setRefreshing(true);
-								void loadClients();
+								void refetch();
 							}}
 							icon={<RefreshCw size={14} />}
 						>
@@ -291,7 +285,7 @@ function ClientsPage() {
 				title="Delete OAuth client?"
 				description={`Are you sure you want to delete "${deletingClient?.name}"? All existing tokens and authorizations will be immediately invalidated.`}
 				onClose={() => {
-					if (!deleting) {
+					if (!deleteMutation.isPending) {
 						setDeletingClient(null);
 					}
 				}}
@@ -300,7 +294,7 @@ function ClientsPage() {
 					<Button
 						type="button"
 						variant="ghost"
-						disabled={deleting}
+						disabled={deleteMutation.isPending}
 						onClick={() => setDeletingClient(null)}
 					>
 						Cancel
@@ -309,7 +303,7 @@ function ClientsPage() {
 					<Button
 						type="button"
 						variant="danger"
-						loading={deleting}
+						loading={deleteMutation.isPending}
 						onClick={() => void handleDelete()}
 					>
 						Delete client

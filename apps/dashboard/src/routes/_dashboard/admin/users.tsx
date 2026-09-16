@@ -1,6 +1,7 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { RefreshCw, Users } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -14,6 +15,7 @@ import UserRow from "@/components/users/UserRow";
 import { useAuth } from "@/context/AuthContext";
 import { getUsers, type AdminUser } from "@/lib/api/admin";
 import { INSTANCE_NAME } from "@/lib/config";
+import { queryKeys } from "@/lib/queryKeys";
 
 export interface UsersSearch {
 	userId?: string;
@@ -35,9 +37,8 @@ export const Route = createFileRoute("/_dashboard/admin/users")({
 function UsersPage() {
 	const { userId } = Route.useSearch();
 	const { user: currentUser } = useAuth();
-	const [users, setUsers] = useState<AdminUser[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [refreshing, setRefreshing] = useState(false);
+	const queryClient = useQueryClient();
+
 	const [expandedUserId, setExpandedUserId] = useState<string | null>(
 		userId ?? null,
 	);
@@ -47,18 +48,18 @@ function UsersPage() {
 	const [lifecycleTargetUser, setLifecycleTargetUser] =
 		useState<AdminUser | null>(null);
 
-	const loadUsers = useCallback(() => {
-		return getUsers()
-			.then(({ users }) => setUsers(users))
-			.finally(() => {
-				setLoading(false);
-				setRefreshing(false);
-			});
-	}, []);
-
-	useEffect(() => {
-		void loadUsers();
-	}, [loadUsers]);
+	const {
+		data: users = [],
+		isLoading,
+		isFetching,
+		refetch,
+	} = useQuery({
+		queryKey: queryKeys.admin.users,
+		queryFn: async () => {
+			const res = await getUsers();
+			return res.users;
+		},
+	});
 
 	useEffect(() => {
 		if (userId) {
@@ -67,15 +68,15 @@ function UsersPage() {
 	}, [userId]);
 
 	useEffect(() => {
-		if (userId && !loading && users.length > 0) {
+		if (userId && !isLoading && users.length > 0) {
 			const element = document.getElementById(`user-row-${userId}`);
 			if (element) {
 				element.scrollIntoView({ behavior: "smooth", block: "center" });
 			}
 		}
-	}, [userId, loading, users]);
+	}, [userId, isLoading, users]);
 
-	if (loading) {
+	if (isLoading) {
 		return (
 			<div className="flex justify-center py-16">
 				<Spinner size="lg" />
@@ -99,10 +100,9 @@ function UsersPage() {
 						type="button"
 						variant="secondary"
 						size="sm"
-						loading={refreshing}
+						loading={isFetching && !isLoading}
 						onClick={() => {
-							setRefreshing(true);
-							void loadUsers();
+							void refetch();
 						}}
 						icon={<RefreshCw size={14} />}
 					>
@@ -163,7 +163,9 @@ function UsersPage() {
 					onClose={() => setLifecycleTargetUser(null)}
 					onSuccess={() => {
 						setLifecycleTargetUser(null);
-						void loadUsers();
+						void queryClient.invalidateQueries({
+							queryKey: queryKeys.admin.users,
+						});
 					}}
 				/>
 			)}
