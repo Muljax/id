@@ -35,3 +35,6 @@ class_name = "LifecycleWorkflow"
 
 [secrets]
 required = ["OIDC_PRIVATE_KEY", "ADMIN_BOOTSTRAP_SECRET"]
+
+[triggers]
+crons = ["0 * * * *"]

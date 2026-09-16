@@ -1,4 +1,4 @@
-import { and, eq, gt, ne } from "drizzle-orm";
+import { and, eq, gt, lte, ne } from "drizzle-orm";
 
 import type { Database } from "../db";
 import { sessions, users } from "../db/schema";
@@ -74,7 +74,7 @@ export async function createSession(
 /**
  * Retrieves a session by its plaintext token.
  *
- * Expired sessions are deleted before returning.
+ * Expired sessions are filtered out before returning.
  *
  * @param db The database connection.
  * @param token The plaintext session token.
@@ -86,28 +86,21 @@ export async function getSession(db: Database, token: string) {
 	const result = await db
 		.select()
 		.from(sessions)
-		.where(eq(sessions.tokenHash, tokenHash))
+		.where(
+			and(
+				eq(sessions.tokenHash, tokenHash),
+				gt(sessions.expiresAt, Date.now()),
+			),
+		)
 		.limit(1);
 
-	const session = result[0];
-
-	if (!session) {
-		return null;
-	}
-
-	if (session.expiresAt <= Date.now()) {
-		await db.delete(sessions).where(eq(sessions.id, session.id));
-
-		return null;
-	}
-
-	return session;
+	return result[0] ?? null;
 }
 
 /**
  * Retrieves the session and user associated with a plaintext session token.
  *
- * Expired sessions are deleted before returning.
+ * Expired sessions are filtered out before returning.
  *
  * This is preferred over calling `getSession()` and `getSessionUser()`
  * separately when both the authenticated user and session are required.
@@ -127,28 +120,37 @@ export async function getSessionUserWithSession(db: Database, token: string) {
 		})
 		.from(sessions)
 		.innerJoin(users, eq(sessions.userId, users.id))
-		.where(eq(sessions.tokenHash, tokenHash))
+		.where(
+			and(
+				eq(sessions.tokenHash, tokenHash),
+				gt(sessions.expiresAt, Date.now()),
+			),
+		)
 		.limit(1);
 
-	const record = result[0];
+	return result[0] ?? null;
+}
 
-	if (!record) {
-		return null;
-	}
+/**
+ * Deletes all expired sessions from the database.
+ *
+ * Designed to be executed periodically by a cron trigger or background worker.
+ *
+ * @param db The database connection.
+ * @returns The number of expired sessions deleted.
+ */
+export async function cleanupExpiredSessions(db: Database) {
+	const result = await db
+		.delete(sessions)
+		.where(lte(sessions.expiresAt, Date.now()));
 
-	if (record.session.expiresAt <= Date.now()) {
-		await db.delete(sessions).where(eq(sessions.id, record.session.id));
-
-		return null;
-	}
-
-	return record;
+	return result.meta.changes;
 }
 
 /**
  * Retrieves the user associated with a plaintext session token.
  *
- * Expired sessions are deleted before returning.
+ * Expired sessions are filtered out before returning.
  *
  * @param db The database connection.
  * @param token The plaintext session token.
