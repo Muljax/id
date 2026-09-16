@@ -26,7 +26,7 @@
         "hono": "4.13.8",
       },
       "devDependencies": {
-        "@cloudflare/workers-types": "5.20260915.1",
+        "@cloudflare/workers-types": "5.20260916.1",
         "@types/bun": "1.4.2",
         "@types/node": "26.6.1",
         "drizzle-kit": "1.0.0-rc.5-ab785fc",
@@ -49,7 +49,7 @@
         "tailwindcss": "4.3.3",
       },
       "devDependencies": {
-        "@cloudflare/workers-types": "5.20260915.1",
+        "@cloudflare/workers-types": "5.20260916.1",
         "@tanstack/router-plugin": "1.168.38",
         "@types/node": "26.6.1",
         "@types/react": "19.3.0",
@@ -128,7 +128,7 @@
 
     "@cloudflare/workerd-windows-64": ["@cloudflare/workerd-windows-64@1.20260915.1", "", { "os": "win32", "cpu": "x64" }, "sha512-+FQ3o/grK2tQy6dw3AqSOYWsYROZqxCQKBqSHQVcXvr2x2QetCT64OrvAAJ0hpQAokREFwQyzsNmMiZbAdW0zw=="],
 
-    "@cloudflare/workers-types": ["@cloudflare/workers-types@5.20260915.1", "", {}, "sha512-3Lw2wkyVcEDdD0W6rNBmannaAkUsWGsO5TjbyHflWIDlhxtFRDFnxqHoDlg4YiVxinsIcBl1j9jW1kdruUhZpg=="],
+    "@cloudflare/workers-types": ["@cloudflare/workers-types@5.20260916.1", "", {}, "sha512-BR2oaseRZZ5q8uToQpAA/6hYNc1+jcKB5OIfK+PkZPkbS7OICVKvRS+WpKgbyTQ7yl6colb3pIHwQRgszfFd5g=="],
 
     "@commitlint/cli": ["@commitlint/cli@21.2.2", "", { "dependencies": { "@commitlint/config-conventional": "^21.2.2", "@commitlint/format": "^21.2.2", "@commitlint/lint": "^21.2.2", "@commitlint/load": "^21.2.2", "@commitlint/read": "^21.2.1", "@commitlint/types": "^21.2.0", "tinyexec": "^1.0.0", "yargs": "^18.0.0" }, "bin": { "commitlint": "cli.js" } }, "sha512-a+6hQxIxnpdvSvS2apvttPNbEliYsVC3PqFYDiiB2kjbwIsQsj1urvQ4Tkf70pKYozPalKAuRQmm/GHwndduqA=="],
 
