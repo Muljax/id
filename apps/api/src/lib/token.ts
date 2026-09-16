@@ -1,11 +1,5 @@
 const encoder = new TextEncoder();
 
-function toHex(bytes: Uint8Array): string {
-	return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join(
-		"",
-	);
-}
-
 /**
  * Generates a cryptographically secure random token.
  *
@@ -16,7 +10,7 @@ export function generateToken(): string {
 
 	crypto.getRandomValues(bytes);
 
-	return toHex(bytes);
+	return bytes.toHex();
 }
 
 /**
@@ -30,5 +24,5 @@ export async function hashToken(token: string): Promise<string> {
 
 	const hash = await crypto.subtle.digest("SHA-256", data);
 
-	return toHex(new Uint8Array(hash));
+	return new Uint8Array(hash).toHex();
 }
