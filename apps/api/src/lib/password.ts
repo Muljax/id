@@ -12,18 +12,18 @@ setWASMModules({
 });
 
 const SALT_LENGTH = 16;
-const ARGON2_MEMORY_SIZE = 64 * 1024;
+const ARGON2_MEMORY_SIZE = 19 * 1024;
 const ARGON2_ITERATIONS = 2;
 const ARGON2_PARALLELISM = 1;
 const ARGON2_HASH_LENGTH = 32;
 
 /**
- * A structurally valid Argon2id hash matching the standard cost parameters (m=65536, t=2, p=1).
+ * A structurally valid Argon2id hash matching the cost parameters (m=19456, t=2, p=1).
  * Used during authentication when a user is not found to ensure constant-time response
- * and prevent user enumeration timing attacks.
+ * and prevent user enumeration timing attacks while respecting serverless memory constraints.
  */
 export const DUMMY_PASSWORD_HASH =
-	"$argon2id$v=19$m=65536,t=2,p=1$c29tZXNhbHRzb21lc2FsdA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+	"$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHRzb21lc2FsdA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 
 /**
  * Hashes a password using Argon2id with a randomly generated salt.
