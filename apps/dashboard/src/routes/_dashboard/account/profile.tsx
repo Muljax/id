@@ -1,11 +1,6 @@
+import { useForm } from "@tanstack/react-form";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-	type ChangeEvent,
-	type FormEvent,
-	useEffect,
-	useMemo,
-	useState,
-} from "react";
+import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 
 import { useToast } from "@/components/Toast";
 import AvatarCropper from "@/components/ui/AvatarCropper";
@@ -22,12 +17,7 @@ import {
 	updateProfile,
 	uploadProfileAvatar,
 } from "@/lib/api";
-import {
-	type FieldValidators,
-	type ValidationErrors,
-	validateForm,
-	validators,
-} from "@/lib/validation";
+import { type ValidatorFn, validateField, validators } from "@/lib/validation";
 
 export const Route = createFileRoute("/_dashboard/account/profile")({
 	staticData: {
@@ -55,21 +45,6 @@ type ProfileForm = {
 	birthdate: string;
 	zoneinfo: string;
 	locale: string;
-};
-
-const EMPTY_PROFILE: ProfileForm = {
-	displayName: "",
-	givenName: "",
-	familyName: "",
-	middleName: "",
-	nickname: "",
-	preferredUsername: "",
-	profileUrl: "",
-	website: "",
-	gender: "",
-	birthdate: "",
-	zoneinfo: "",
-	locale: "",
 };
 
 type ProfileField = {
@@ -159,7 +134,12 @@ const PROFILE_SECTIONS: ProfileSection[] = [
 	},
 ];
 
-const FIELD_VALIDATORS: FieldValidators<ProfileForm> = {
+const FIELD_VALIDATORS: Partial<
+	Record<
+		keyof ProfileForm,
+		ValidatorFn<string, ProfileForm> | ValidatorFn<string, ProfileForm>[]
+	>
+> = {
 	displayName: validators.maxLength(
 		100,
 		"Display name must be 100 characters or fewer.",
@@ -203,55 +183,62 @@ const FIELD_VALIDATORS: FieldValidators<ProfileForm> = {
 	],
 };
 
-function ProfileFields({
-	fields,
-	form,
-	errors,
-	onChange,
-}: {
-	fields: ProfileField[];
-	form: ProfileForm;
-	errors: ValidationErrors<ProfileForm>;
-	onChange: (name: keyof ProfileForm, value: string) => void;
-}) {
-	return (
-		<div className="grid gap-5 sm:grid-cols-2">
-			{fields.map(({ name, ...field }) => (
-				<Field
-					key={name}
-					{...field}
-					id={name}
-					value={form[name]}
-					error={errors[name]}
-					onChange={(value) => onChange(name, value)}
-				/>
-			))}
-		</div>
-	);
-}
-
 function ProfilePage() {
 	const { user, loading, refresh } = useAuth();
 	const toast = useToast();
 
-	const [form, setForm] = useState<ProfileForm>(EMPTY_PROFILE);
-	const [saving, setSaving] = useState(false);
 	const [avatarSaving, setAvatarSaving] = useState(false);
 	const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
 
-	const { errors, isValid } = useMemo(
-		() => validateForm(form, FIELD_VALIDATORS),
-		[form],
-	);
+	const form = useForm({
+		defaultValues: {
+			displayName: user?.displayName ?? "",
+			givenName: user?.givenName ?? "",
+			familyName: user?.familyName ?? "",
+			middleName: user?.middleName ?? "",
+			nickname: user?.nickname ?? "",
+			preferredUsername: user?.preferredUsername ?? "",
+			profileUrl: user?.profileUrl ?? "",
+			website: user?.website ?? "",
+			gender: user?.gender ?? "",
+			birthdate: user?.birthdate ?? "",
+			zoneinfo: user?.zoneinfo ?? "",
+			locale: user?.locale ?? "",
+		},
+		onSubmit: async ({ value }) => {
+			try {
+				await updateProfile({
+					displayName: value.displayName.trim(),
+					givenName: value.givenName.trim(),
+					familyName: value.familyName.trim(),
+					middleName: value.middleName.trim(),
+					nickname: value.nickname.trim(),
+					preferredUsername: value.preferredUsername.trim(),
+					profileUrl: value.profileUrl.trim(),
+					website: value.website.trim(),
+					gender: value.gender.trim(),
+					birthdate: value.birthdate.trim(),
+					zoneinfo: value.zoneinfo.trim(),
+					locale: value.locale.trim(),
+				});
 
-	const canSubmit = isValid && !saving;
+				await refresh();
+			} catch (error) {
+				toast.error(
+					error instanceof Error
+						? error.message
+						: "Unable to update your profile.",
+				);
+			}
+		},
+	});
 
 	useEffect(() => {
 		if (!user) {
 			return;
 		}
 
-		setForm({
+		form.reset({
 			displayName: user.displayName ?? "",
 			givenName: user.givenName ?? "",
 			familyName: user.familyName ?? "",
@@ -265,7 +252,7 @@ function ProfilePage() {
 			zoneinfo: user.zoneinfo ?? "",
 			locale: user.locale ?? "",
 		});
-	}, [user]);
+	}, [user, form]);
 
 	const initials = useMemo(() => {
 		if (!user) {
@@ -293,50 +280,6 @@ function ProfilePage() {
 				<Spinner size="lg" />
 			</div>
 		);
-	}
-
-	function handleFieldChange(name: keyof ProfileForm, value: string) {
-		setForm((current) => ({
-			...current,
-			[name]: value,
-		}));
-	}
-
-	async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-		event.preventDefault();
-
-		if (!canSubmit) {
-			return;
-		}
-
-		setSaving(true);
-
-		try {
-			await updateProfile({
-				displayName: form.displayName.trim(),
-				givenName: form.givenName.trim(),
-				familyName: form.familyName.trim(),
-				middleName: form.middleName.trim(),
-				nickname: form.nickname.trim(),
-				preferredUsername: form.preferredUsername.trim(),
-				profileUrl: form.profileUrl.trim(),
-				website: form.website.trim(),
-				gender: form.gender.trim(),
-				birthdate: form.birthdate.trim(),
-				zoneinfo: form.zoneinfo.trim(),
-				locale: form.locale.trim(),
-			});
-
-			await refresh();
-		} catch (error) {
-			toast.error(
-				error instanceof Error
-					? error.message
-					: "Unable to update your profile.",
-			);
-		} finally {
-			setSaving(false);
-		}
 	}
 
 	function handleAvatarSelect(event: ChangeEvent<HTMLInputElement>) {
@@ -411,7 +354,13 @@ function ProfilePage() {
 			/>
 
 			<Card>
-				<form onSubmit={handleSubmit}>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						form.handleSubmit();
+					}}
+				>
 					<CardContent className="space-y-8">
 						{/* Avatar Section */}
 						<section>
@@ -480,6 +429,7 @@ function ProfilePage() {
 							<div className="mt-4 max-w-md">
 								<Field
 									id="email"
+									name="email"
 									label="Email address"
 									value={user.email ?? ""}
 									onChange={() => {}}
@@ -498,20 +448,54 @@ function ProfilePage() {
 								<h3 className="text-sm font-medium text-white mb-4">
 									{section.title}
 								</h3>
-								<ProfileFields
-									fields={section.fields}
-									form={form}
-									errors={errors}
-									onChange={handleFieldChange}
-								/>
+								<div className="grid gap-5 sm:grid-cols-2">
+									{section.fields.map(({ name, ...fieldProps }) => {
+										const rule = FIELD_VALIDATORS[name];
+										return (
+											<form.Field
+												key={name}
+												name={name}
+												validators={
+													rule
+														? {
+																onChange: validateField(rule),
+															}
+														: undefined
+												}
+											>
+												{(field) => (
+													<Field
+														{...fieldProps}
+														id={field.name}
+														name={field.name}
+														value={field.state.value}
+														error={field.state.meta.errors[0]}
+														onChange={(value) => field.handleChange(value)}
+														onBlur={field.handleBlur}
+													/>
+												)}
+											</form.Field>
+										);
+									})}
+								</div>
 							</section>
 						))}
 					</CardContent>
 
 					<CardFooter>
-						<Button type="submit" loading={saving} disabled={!canSubmit}>
-							Save changes
-						</Button>
+						<form.Subscribe
+							selector={(state) => [state.canSubmit, state.isSubmitting]}
+						>
+							{([canSubmit, isSubmitting]) => (
+								<Button
+									type="submit"
+									loading={Boolean(isSubmitting)}
+									disabled={!canSubmit}
+								>
+									Save changes
+								</Button>
+							)}
+						</form.Subscribe>
 					</CardFooter>
 				</form>
 			</Card>

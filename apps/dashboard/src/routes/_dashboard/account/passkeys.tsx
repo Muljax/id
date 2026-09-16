@@ -1,7 +1,8 @@
 import { startRegistration } from "@simplewebauthn/browser";
+import { useForm } from "@tanstack/react-form";
 import { createFileRoute } from "@tanstack/react-router";
 import { Fingerprint, KeyRound, Plus, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useToast } from "@/components/Toast";
 import Badge from "@/components/ui/Badge";
@@ -21,7 +22,7 @@ import {
 } from "@/lib/api";
 import {
 	type FieldValidators,
-	validateForm,
+	validateField,
 	validators,
 } from "@/lib/validation";
 
@@ -46,18 +47,9 @@ function PasskeysPage() {
 
 	const [passkeys, setPasskeys] = useState<Passkey[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [registering, setRegistering] = useState(false);
 	const [deleting, setDeleting] = useState<string | null>(null);
 	const [passkeyToDelete, setPasskeyToDelete] = useState<Passkey | null>(null);
 	const [registerModalOpen, setRegisterModalOpen] = useState(false);
-	const [passkeyName, setPasskeyName] = useState("");
-
-	const { errors, isValid } = useMemo(
-		() => validateForm({ passkeyName }, PASSKEY_VALIDATORS),
-		[passkeyName],
-	);
-
-	const canRegister = isValid && !registering;
 
 	const loadPasskeys = useCallback(async () => {
 		try {
@@ -76,48 +68,47 @@ function PasskeysPage() {
 		void loadPasskeys();
 	}, [loadPasskeys]);
 
-	async function handleRegister() {
-		if (!canRegister) {
-			return;
-		}
+	const registerForm = useForm({
+		defaultValues: {
+			passkeyName: "",
+		},
+		onSubmit: async ({ value }) => {
+			try {
+				const options = await getPasskeyRegistrationOptions();
 
-		setRegistering(true);
+				const response = await startRegistration({
+					optionsJSON: options,
+				});
 
-		try {
-			const options = await getPasskeyRegistrationOptions();
+				await verifyPasskeyRegistration(
+					response,
+					value.passkeyName.trim() || "Passkey",
+				);
 
-			const response = await startRegistration({
-				optionsJSON: options,
-			});
-
-			await verifyPasskeyRegistration(
-				response,
-				passkeyName.trim() || "Passkey",
-			);
-
-			setPasskeyName("");
-			setRegisterModalOpen(false);
-
-			await loadPasskeys();
-		} catch (error) {
-			if (
-				error instanceof Error &&
-				(error.name === "NotAllowedError" ||
-					error.message.toLowerCase().includes("not allowed"))
-			) {
+				registerForm.reset();
 				setRegisterModalOpen(false);
-				setPasskeyName("");
-				toast.error("Passkey registration was cancelled.");
-				return;
-			}
 
-			toast.error(
-				error instanceof Error ? error.message : "Unable to register passkey.",
-			);
-		} finally {
-			setRegistering(false);
-		}
-	}
+				await loadPasskeys();
+			} catch (error) {
+				if (
+					error instanceof Error &&
+					(error.name === "NotAllowedError" ||
+						error.message.toLowerCase().includes("not allowed"))
+				) {
+					setRegisterModalOpen(false);
+					registerForm.reset();
+					toast.error("Passkey registration was cancelled.");
+					return;
+				}
+
+				toast.error(
+					error instanceof Error
+						? error.message
+						: "Unable to register passkey.",
+				);
+			}
+		},
+	});
 
 	async function handleDelete() {
 		if (!passkeyToDelete) {
@@ -260,61 +251,88 @@ function PasskeysPage() {
 				title="Register new passkey"
 				description="Choose a friendly name for this credential (e.g. 'MacBook Touch ID' or 'YubiKey 5C')."
 				onClose={() => {
-					if (!registering) {
+					if (!registerForm.state.isSubmitting) {
 						setRegisterModalOpen(false);
-						setPasskeyName("");
+						registerForm.reset();
 					}
 				}}
 			>
 				<form
 					onSubmit={(event) => {
 						event.preventDefault();
-						void handleRegister();
+						event.stopPropagation();
+						registerForm.handleSubmit();
 					}}
 					className="space-y-5"
 				>
-					<div>
-						<label
-							htmlFor="passkey-name"
-							className="mb-2 block text-sm font-medium text-zinc-300"
-						>
-							Passkey name
-						</label>
+					<registerForm.Field
+						name="passkeyName"
+						validators={{
+							onChange: validateField(PASSKEY_VALIDATORS.passkeyName),
+						}}
+					>
+						{(field) => (
+							<div>
+								<label
+									htmlFor="passkey-name"
+									className="mb-2 block text-sm font-medium text-zinc-300"
+								>
+									Passkey name
+								</label>
 
-						<Input
-							id="passkey-name"
-							name="passkey-name"
-							type="text"
-							placeholder="e.g. Work MacBook"
-							value={passkeyName}
-							onChange={(event) => setPasskeyName(event.target.value)}
-							hasError={Boolean(errors.passkeyName && passkeyName)}
-							autoFocus
-							disabled={registering}
-						/>
-						{errors.passkeyName && passkeyName && (
-							<p className="mt-1.5 text-xs text-red-400">
-								{errors.passkeyName}
-							</p>
+								<Input
+									id="passkey-name"
+									name="passkey-name"
+									type="text"
+									placeholder="e.g. Work MacBook"
+									value={field.state.value}
+									onChange={(event) => field.handleChange(event.target.value)}
+									onBlur={field.handleBlur}
+									hasError={Boolean(
+										field.state.meta.errors[0] && field.state.value,
+									)}
+									autoFocus
+									disabled={registerForm.state.isSubmitting}
+								/>
+								{field.state.meta.errors[0] && field.state.value && (
+									<p className="mt-1.5 text-xs text-red-400">
+										{field.state.meta.errors[0]}
+									</p>
+								)}
+							</div>
 						)}
-					</div>
+					</registerForm.Field>
 
 					<div className="flex justify-end gap-3 pt-2">
-						<Button
-							type="button"
-							variant="ghost"
-							disabled={registering}
-							onClick={() => {
-								setRegisterModalOpen(false);
-								setPasskeyName("");
-							}}
-						>
-							Cancel
-						</Button>
+						<registerForm.Subscribe selector={(state) => [state.isSubmitting]}>
+							{([isSubmitting]) => (
+								<Button
+									type="button"
+									variant="ghost"
+									disabled={Boolean(isSubmitting)}
+									onClick={() => {
+										setRegisterModalOpen(false);
+										registerForm.reset();
+									}}
+								>
+									Cancel
+								</Button>
+							)}
+						</registerForm.Subscribe>
 
-						<Button type="submit" loading={registering} disabled={!canRegister}>
-							Continue
-						</Button>
+						<registerForm.Subscribe
+							selector={(state) => [state.canSubmit, state.isSubmitting]}
+						>
+							{([canSubmit, isSubmitting]) => (
+								<Button
+									type="submit"
+									loading={Boolean(isSubmitting)}
+									disabled={!canSubmit}
+								>
+									Continue
+								</Button>
+							)}
+						</registerForm.Subscribe>
 					</div>
 				</form>
 			</Modal>

@@ -1,3 +1,4 @@
+import { useForm } from "@tanstack/react-form";
 import {
 	AlertTriangle,
 	Calendar,
@@ -20,7 +21,7 @@ import {
 } from "@/lib/api/admin";
 import {
 	type FieldValidators,
-	validateForm,
+	validateField,
 	validators,
 } from "@/lib/validation";
 
@@ -60,78 +61,51 @@ export default function UserLifecycleModal({
 		return tomorrow.toISOString().split("T")[0];
 	}, []);
 
-	const [scheduleForm, setScheduleForm] = useState<ScheduleForm>({
-		date: defaultDate,
-		time: "00:00",
-	});
-	const [submitting, setSubmitting] = useState(false);
+	const form = useForm({
+		defaultValues: {
+			date: defaultDate,
+			time: "00:00",
+		},
+		onSubmit: async ({ value }) => {
+			const executeAt =
+				scheduleMode === "scheduled"
+					? new Date(`${value.date}T${value.time}`).getTime()
+					: null;
 
-	const { errors, isValid } = useMemo(
-		() => validateForm(scheduleForm, SCHEDULE_VALIDATORS),
-		[scheduleForm],
-	);
+			try {
+				await executeUserLifecycle(user.id, {
+					action,
+					executeAt,
+				});
 
-	const scheduledTimestamp = useMemo(() => {
-		if (!scheduleForm.date || !scheduleForm.time) {
-			return null;
-		}
-		const ts = new Date(`${scheduleForm.date}T${scheduleForm.time}`).getTime();
-		return Number.isNaN(ts) ? null : ts;
-	}, [scheduleForm.date, scheduleForm.time]);
-
-	const isFuture = Boolean(
-		scheduledTimestamp && scheduledTimestamp > Date.now(),
-	);
-
-	const canSubmit =
-		!submitting && (scheduleMode === "immediate" || (isValid && isFuture));
-
-	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-		event.preventDefault();
-
-		if (!canSubmit) {
-			return;
-		}
-
-		setSubmitting(true);
-
-		const executeAt = scheduleMode === "scheduled" ? scheduledTimestamp : null;
-
-		try {
-			await executeUserLifecycle(user.id, {
-				action,
-				executeAt,
-			});
-
-			if (action === "enable") {
-				if (executeAt) {
+				if (action === "enable") {
+					if (executeAt) {
+						toast.success(
+							`Activation scheduled for ${new Date(executeAt).toLocaleString()}.`,
+						);
+					} else {
+						toast.success(`Account for ${user.email} enabled immediately.`);
+					}
+				} else if (executeAt) {
 					toast.success(
-						`Activation scheduled for ${new Date(executeAt).toLocaleString()}.`,
+						`Deactivation scheduled for ${new Date(executeAt).toLocaleString()}.`,
 					);
 				} else {
-					toast.success(`Account for ${user.email} enabled immediately.`);
+					toast.success(
+						`Account for ${user.email} disabled immediately. Active sessions revoked.`,
+					);
 				}
-			} else if (executeAt) {
-				toast.success(
-					`Deactivation scheduled for ${new Date(executeAt).toLocaleString()}.`,
-				);
-			} else {
-				toast.success(
-					`Account for ${user.email} disabled immediately. Active sessions revoked.`,
-				);
-			}
 
-			onSuccess();
-		} catch (error) {
-			const message =
-				error instanceof Error
-					? error.message
-					: "Failed to update account lifecycle.";
-			toast.error(message);
-		} finally {
-			setSubmitting(false);
-		}
-	}
+				onSuccess();
+			} catch (error) {
+				const message =
+					error instanceof Error
+						? error.message
+						: "Failed to update account lifecycle.";
+				toast.error(message);
+			}
+		},
+	});
 
 	return (
 		<Modal
@@ -144,7 +118,14 @@ export default function UserLifecycleModal({
 			description={`Update access status for ${user.displayName || user.email}.`}
 			onClose={onClose}
 		>
-			<form onSubmit={handleSubmit} className="space-y-5">
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					form.handleSubmit();
+				}}
+				className="space-y-5"
+			>
 				{isSelf && action === "disable" ? (
 					<div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-xs text-red-300">
 						You cannot disable your own administrator account.
@@ -196,7 +177,6 @@ export default function UserLifecycleModal({
 								<button
 									type="button"
 									onClick={() => setScheduleMode("immediate")}
-									disabled={submitting}
 									className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all cursor-pointer ${
 										scheduleMode === "immediate"
 											? "border-violet-500/50 bg-violet-500/10 text-white"
@@ -221,7 +201,6 @@ export default function UserLifecycleModal({
 								<button
 									type="button"
 									onClick={() => setScheduleMode("scheduled")}
-									disabled={submitting}
 									className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all cursor-pointer ${
 										scheduleMode === "scheduled"
 											? "border-violet-500/50 bg-violet-500/10 text-white"
@@ -251,107 +230,161 @@ export default function UserLifecycleModal({
 								</div>
 
 								<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-									<div>
-										<label
-											htmlFor="schedule-date"
-											className="mb-1 block text-[11px] font-medium text-zinc-400"
-										>
-											Date
-										</label>
-										<Input
-											id="schedule-date"
-											type="date"
-											value={scheduleForm.date}
-											onChange={(e) =>
-												setScheduleForm((prev) => ({
-													...prev,
-													date: e.target.value,
-												}))
-											}
-											hasError={Boolean(errors.date)}
-											disabled={submitting}
-											required
-										/>
-									</div>
+									<form.Field
+										name="date"
+										validators={{
+											onChange: validateField(SCHEDULE_VALIDATORS.date),
+										}}
+									>
+										{(field) => (
+											<div>
+												<label
+													htmlFor="schedule-date"
+													className="mb-1 block text-[11px] font-medium text-zinc-400"
+												>
+													Date
+												</label>
+												<Input
+													id="schedule-date"
+													type="date"
+													value={field.state.value}
+													onChange={(e) => field.handleChange(e.target.value)}
+													onBlur={field.handleBlur}
+													hasError={Boolean(field.state.meta.errors[0])}
+													required
+												/>
+											</div>
+										)}
+									</form.Field>
 
-									<div>
-										<label
-											htmlFor="schedule-time"
-											className="mb-1 block text-[11px] font-medium text-zinc-400"
-										>
-											Time
-										</label>
-										<Input
-											id="schedule-time"
-											type="time"
-											value={scheduleForm.time}
-											onChange={(e) =>
-												setScheduleForm((prev) => ({
-													...prev,
-													time: e.target.value,
-												}))
-											}
-											hasError={Boolean(errors.time)}
-											disabled={submitting}
-											required
-										/>
-									</div>
+									<form.Field
+										name="time"
+										validators={{
+											onChange: validateField(SCHEDULE_VALIDATORS.time),
+										}}
+									>
+										{(field) => (
+											<div>
+												<label
+													htmlFor="schedule-time"
+													className="mb-1 block text-[11px] font-medium text-zinc-400"
+												>
+													Time
+												</label>
+												<Input
+													id="schedule-time"
+													type="time"
+													value={field.state.value}
+													onChange={(e) => field.handleChange(e.target.value)}
+													onBlur={field.handleBlur}
+													hasError={Boolean(field.state.meta.errors[0])}
+													required
+												/>
+											</div>
+										)}
+									</form.Field>
 								</div>
 
-								{scheduledTimestamp && !isFuture && (
-									<p className="text-xs text-red-400">
-										Scheduled execution time must be in the future.
-									</p>
-								)}
+								<form.Subscribe
+									selector={(state) => [state.values.date, state.values.time]}
+								>
+									{([date, time]) => {
+										const ts =
+											date && time
+												? new Date(`${date}T${time}`).getTime()
+												: null;
+										const isFut = Boolean(
+											ts && !Number.isNaN(ts) && ts > Date.now(),
+										);
 
-								{scheduledTimestamp && isFuture && (
-									<p className="text-[11px] text-zinc-400">
-										Will automatically execute on{" "}
-										<span className="font-mono text-zinc-200">
-											{new Date(scheduledTimestamp).toLocaleString()}
-										</span>
-									</p>
-								)}
+										return (
+											<>
+												{ts && !isFut && (
+													<p className="text-xs text-red-400">
+														Scheduled execution time must be in the future.
+													</p>
+												)}
+
+												{ts && isFut && (
+													<p className="text-[11px] text-zinc-400">
+														Will automatically execute on{" "}
+														<span className="font-mono text-zinc-200">
+															{new Date(ts).toLocaleString()}
+														</span>
+													</p>
+												)}
+											</>
+										);
+									}}
+								</form.Subscribe>
 							</div>
 						)}
 
 						<div className="flex justify-end gap-3 pt-2">
-							<Button
-								type="button"
-								variant="secondary"
-								disabled={submitting}
-								onClick={onClose}
-							>
-								Cancel
-							</Button>
+							<form.Subscribe selector={(state) => [state.isSubmitting]}>
+								{([isSubmitting]) => (
+									<Button
+										type="button"
+										variant="secondary"
+										disabled={Boolean(isSubmitting)}
+										onClick={onClose}
+									>
+										Cancel
+									</Button>
+								)}
+							</form.Subscribe>
 
-							<Button
-								type="submit"
-								variant={action === "enable" ? "primary" : "danger"}
-								loading={submitting}
-								disabled={!canSubmit || (isSelf && action === "disable")}
-								icon={
-									action === "enable" ? (
-										scheduleMode === "scheduled" ? (
-											<Calendar size={14} />
-										) : (
-											<UserCheck size={14} />
-										)
-									) : scheduleMode === "scheduled" ? (
-										<Calendar size={14} />
-									) : (
-										<UserX size={14} />
-									)
+							<form.Subscribe
+								selector={(state) =>
+									[state.values, state.canSubmit, state.isSubmitting] as const
 								}
 							>
-								{action === "enable"
-									? scheduleMode === "scheduled"
-										? "Schedule Activation"
-										: "Enable Account"
-									: scheduleMode === "scheduled"
-										? "Schedule Deactivation"
-										: "Deactivate Immediately"}
-							</Button>
+								{([values, canSubmit, isSubmitting]) => {
+									const scheduledTimestamp =
+										values.date && values.time
+											? new Date(`${values.date}T${values.time}`).getTime()
+											: null;
+									const isFuture = Boolean(
+										scheduledTimestamp &&
+											!Number.isNaN(scheduledTimestamp) &&
+											scheduledTimestamp > Date.now(),
+									);
+									const disabled =
+										Boolean(isSubmitting) ||
+										(isSelf && action === "disable") ||
+										(scheduleMode === "scheduled" && (!canSubmit || !isFuture));
+
+									return (
+										<Button
+											type="submit"
+											variant={action === "enable" ? "primary" : "danger"}
+											loading={Boolean(isSubmitting)}
+											disabled={disabled}
+											icon={
+												action === "enable" ? (
+													scheduleMode === "scheduled" ? (
+														<Calendar size={14} />
+													) : (
+														<UserCheck size={14} />
+													)
+												) : scheduleMode === "scheduled" ? (
+													<Calendar size={14} />
+												) : (
+													<UserX size={14} />
+												)
+											}
+										>
+											{action === "enable"
+												? scheduleMode === "scheduled"
+													? "Schedule Activation"
+													: "Enable Account"
+												: scheduleMode === "scheduled"
+													? "Schedule Deactivation"
+													: "Deactivate Immediately"}
+										</Button>
+									);
+								}}
+							</form.Subscribe>
 						</div>
 					</>
 				)}

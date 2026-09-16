@@ -93,14 +93,14 @@ export const validators = {
 	 * Validates that a field matches the value of another field in the same form.
 	 */
 	matches: <F extends object = Record<string, unknown>>(
-		targetKey: keyof F,
+		targetKey: (keyof F & string) | string,
 		message = "Values do not match.",
 	): ValidatorFn<unknown, F> => {
 		return (value, form) => {
 			if (!value) {
 				return null;
 			}
-			if (value !== form[targetKey]) {
+			if (value !== (form as Record<string, unknown>)[targetKey]) {
 				return message;
 			}
 			return null;
@@ -111,14 +111,14 @@ export const validators = {
 	 * Validates that a field is different from the value of another field in the same form.
 	 */
 	differentFrom: <F extends object = Record<string, unknown>>(
-		targetKey: keyof F,
+		targetKey: (keyof F & string) | string,
 		message = "Value must be different.",
 	): ValidatorFn<unknown, F> => {
 		return (value, form) => {
-			if (!value || !form[targetKey]) {
+			if (!value || !(form as Record<string, unknown>)[targetKey]) {
 				return null;
 			}
-			if (value === form[targetKey]) {
+			if (value === (form as Record<string, unknown>)[targetKey]) {
 				return message;
 			}
 			return null;
@@ -312,4 +312,40 @@ export function validateForm<T extends object>(
 	}
 
 	return { errors, isValid };
+}
+
+/**
+ * Adapts ValidatorFn rules into a TanStack Form field validator.
+ */
+export function validateField<T = unknown, F = unknown>(
+	rules?:
+		| ValidatorFn<unknown, F>
+		| ValidatorFn<T, F>
+		| (ValidatorFn<unknown, F> | ValidatorFn<T, F> | undefined | null)[]
+		| null,
+) {
+	if (!rules) {
+		return () => undefined;
+	}
+
+	const fns = Array.isArray(rules)
+		? (rules.filter(Boolean) as (ValidatorFn<unknown, F> | ValidatorFn<T, F>)[])
+		: [rules];
+
+	return ({
+		value,
+		fieldApi,
+	}: {
+		value: T;
+		fieldApi?: { form?: { state?: { values?: unknown } } };
+	}): string | undefined => {
+		const formValues = (fieldApi?.form?.state?.values ?? {}) as F;
+		for (const fn of fns) {
+			const error = fn(value, formValues);
+			if (error) {
+				return error;
+			}
+		}
+		return undefined;
+	};
 }

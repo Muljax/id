@@ -1,7 +1,8 @@
 import { startAuthentication } from "@simplewebauthn/browser";
+import { useForm } from "@tanstack/react-form";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Fingerprint } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import PreAuthLayout from "@/components/PreAuthLayout";
 import { useToast } from "@/components/Toast";
@@ -11,11 +12,7 @@ import InstanceLogo from "@/components/ui/InstanceLogo";
 import { useAuth } from "@/context/AuthContext";
 import { getPasskeyLoginOptions, login, verifyPasskeyLogin } from "@/lib/api";
 import { INSTANCE_NAME } from "@/lib/config";
-import {
-	type FieldValidators,
-	validateForm,
-	validators,
-} from "@/lib/validation";
+import { validateField, validators } from "@/lib/validation";
 
 export interface LoginSearch {
 	return_to?: string;
@@ -52,19 +49,6 @@ async function loginWithPasskey() {
 	await verifyPasskeyLogin(response, challengeId);
 }
 
-interface LoginForm {
-	email: string;
-	password: string;
-}
-
-const LOGIN_VALIDATORS: FieldValidators<LoginForm> = {
-	email: [
-		validators.required("Email address is required."),
-		validators.email(),
-	],
-	password: [validators.required("Password is required.")],
-};
-
 function LoginPage() {
 	const { refresh } = useAuth();
 	const toast = useToast();
@@ -72,20 +56,7 @@ function LoginPage() {
 	const { return_to, prompt } = Route.useSearch();
 	const forceLogin = prompt === "login";
 
-	const [form, setForm] = useState<LoginForm>({
-		email: "",
-		password: "",
-	});
-	const [rememberMe, setRememberMe] = useState(false);
-	const [submitting, setSubmitting] = useState(false);
 	const [passkeySubmitting, setPasskeySubmitting] = useState(false);
-
-	const { isValid } = useMemo(
-		() => validateForm(form, LOGIN_VALIDATORS),
-		[form],
-	);
-
-	const canSubmit = isValid && !submitting && !passkeySubmitting;
 
 	async function finishLogin() {
 		await refresh();
@@ -106,26 +77,28 @@ function LoginPage() {
 		await navigate({ to: "/" });
 	}
 
-	async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
-		event.preventDefault();
-
-		if (!canSubmit) {
-			return;
-		}
-
-		setSubmitting(true);
-
-		try {
-			await login(form.email.trim(), form.password, rememberMe, prompt);
-			await finishLogin();
-		} catch (error) {
-			toast.error(
-				error instanceof Error ? error.message : "Unable to sign in.",
-			);
-		} finally {
-			setSubmitting(false);
-		}
-	}
+	const form = useForm({
+		defaultValues: {
+			email: "",
+			password: "",
+			rememberMe: false,
+		},
+		onSubmit: async ({ value }) => {
+			try {
+				await login(
+					value.email.trim(),
+					value.password,
+					value.rememberMe,
+					prompt,
+				);
+				await finishLogin();
+			} catch (error) {
+				toast.error(
+					error instanceof Error ? error.message : "Unable to sign in.",
+				);
+			}
+		},
+	});
 
 	async function handlePasskeyLogin() {
 		if (passkeySubmitting) {
@@ -184,88 +157,145 @@ function LoginPage() {
 				</div>
 
 				{/* Primary Form */}
-				<form onSubmit={handleLogin} className="space-y-4">
-					<div>
-						<label
-							htmlFor="email"
-							className="mb-1.5 block text-xs font-medium text-zinc-300"
-						>
-							Email address
-						</label>
-
-						<Input
-							id="email"
-							type="email"
-							autoComplete="email"
-							value={form.email}
-							onChange={(event) =>
-								setForm((current) => ({
-									...current,
-									email: event.target.value,
-								}))
-							}
-							placeholder="you@example.com"
-							required
-							disabled={submitting || passkeySubmitting}
-						/>
-					</div>
-
-					<div>
-						<div className="mb-1.5 flex items-center justify-between">
-							<label
-								htmlFor="password"
-								className="text-xs font-medium text-zinc-300"
-							>
-								Password
-							</label>
-
-							<Link
-								to="/forgot-password"
-								className="text-xs font-medium text-violet-400 transition-colors hover:text-violet-300"
-							>
-								Forgot password?
-							</Link>
-						</div>
-
-						<Input
-							id="password"
-							type="password"
-							autoComplete="current-password"
-							value={form.password}
-							onChange={(event) =>
-								setForm((current) => ({
-									...current,
-									password: event.target.value,
-								}))
-							}
-							placeholder="Enter password"
-							required
-							disabled={submitting || passkeySubmitting}
-						/>
-					</div>
-
-					<div className="pt-1">
-						<label className="flex cursor-pointer items-center gap-2.5 text-xs text-zinc-400 select-none">
-							<input
-								type="checkbox"
-								checked={rememberMe}
-								onChange={(event) => setRememberMe(event.target.checked)}
-								disabled={submitting || passkeySubmitting}
-								className="h-4 w-4 rounded border-white/10 bg-zinc-900 accent-violet-500"
-							/>
-							Remember this device
-						</label>
-					</div>
-
-					<Button
-						type="submit"
-						loading={submitting}
-						disabled={!canSubmit}
-						className="w-full mt-2"
-						size="lg"
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						void form.handleSubmit();
+					}}
+					className="space-y-4"
+				>
+					<form.Field
+						name="email"
+						validators={{
+							onChange: validateField([
+								validators.required("Email address is required."),
+								validators.email(),
+							]),
+						}}
 					>
-						Sign in
-					</Button>
+						{(field) => (
+							<div>
+								<label
+									htmlFor={field.name}
+									className="mb-1.5 block text-xs font-medium text-zinc-300"
+								>
+									Email address
+								</label>
+
+								<Input
+									id={field.name}
+									name={field.name}
+									type="email"
+									autoComplete="email"
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(event) => field.handleChange(event.target.value)}
+									hasError={
+										field.state.meta.isTouched &&
+										field.state.meta.errors.length > 0
+									}
+									placeholder="you@example.com"
+									required
+									disabled={form.state.isSubmitting || passkeySubmitting}
+								/>
+
+								{field.state.meta.isTouched && field.state.meta.errors[0] ? (
+									<p className="mt-1 text-xs text-red-400">
+										{String(field.state.meta.errors[0])}
+									</p>
+								) : null}
+							</div>
+						)}
+					</form.Field>
+
+					<form.Field
+						name="password"
+						validators={{
+							onChange: validateField(
+								validators.required("Password is required."),
+							),
+						}}
+					>
+						{(field) => (
+							<div>
+								<div className="mb-1.5 flex items-center justify-between">
+									<label
+										htmlFor={field.name}
+										className="text-xs font-medium text-zinc-300"
+									>
+										Password
+									</label>
+
+									<Link
+										to="/forgot-password"
+										className="text-xs font-medium text-violet-400 transition-colors hover:text-violet-300"
+									>
+										Forgot password?
+									</Link>
+								</div>
+
+								<Input
+									id={field.name}
+									name={field.name}
+									type="password"
+									autoComplete="current-password"
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(event) => field.handleChange(event.target.value)}
+									hasError={
+										field.state.meta.isTouched &&
+										field.state.meta.errors.length > 0
+									}
+									placeholder="Enter password"
+									required
+									disabled={form.state.isSubmitting || passkeySubmitting}
+								/>
+
+								{field.state.meta.isTouched && field.state.meta.errors[0] ? (
+									<p className="mt-1 text-xs text-red-400">
+										{String(field.state.meta.errors[0])}
+									</p>
+								) : null}
+							</div>
+						)}
+					</form.Field>
+
+					<form.Field name="rememberMe">
+						{(field) => (
+							<div className="pt-1">
+								<label className="flex cursor-pointer items-center gap-2.5 text-xs text-zinc-400 select-none">
+									<input
+										type="checkbox"
+										name={field.name}
+										checked={field.state.value}
+										onChange={(event) =>
+											field.handleChange(event.target.checked)
+										}
+										disabled={form.state.isSubmitting || passkeySubmitting}
+										className="h-4 w-4 rounded border-white/10 bg-zinc-900 accent-violet-500"
+									/>
+									Remember this device
+								</label>
+							</div>
+						)}
+					</form.Field>
+
+					<form.Subscribe
+						selector={(state) => [state.canSubmit, state.isSubmitting]}
+					>
+						{([canSubmit, isSubmitting]) => (
+							<Button
+								type="submit"
+								loading={Boolean(isSubmitting)}
+								disabled={!canSubmit || passkeySubmitting}
+								className="w-full mt-2"
+								size="lg"
+							>
+								Sign in
+							</Button>
+						)}
+					</form.Subscribe>
 				</form>
 
 				{/* Centered OR Divider */}
@@ -283,7 +313,7 @@ function LoginPage() {
 					variant="secondary"
 					size="lg"
 					loading={passkeySubmitting}
-					disabled={submitting}
+					disabled={form.state.isSubmitting}
 					onClick={() => void handlePasskeyLogin()}
 					icon={<Fingerprint size={18} className="text-violet-400" />}
 					className="w-full"
