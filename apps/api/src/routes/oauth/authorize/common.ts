@@ -6,6 +6,7 @@ import {
 	type AuthorizationRequest,
 	validateAuthorizationRequest,
 } from "@/lib/oauth/authorization";
+import { base64UrlDecode } from "@/lib/base64";
 import { getDashboardOrigin } from "@/lib/env";
 import { getSessionUserWithSession } from "@/lib/session";
 import { isUserDisabled } from "@/lib/user";
@@ -38,8 +39,10 @@ function decodeRequestObject(request: string): RequestObjectClaims {
 		throw new Error("Request object must use an empty signature");
 	}
 
+	const textDecoder = new TextDecoder();
+
 	const header = JSON.parse(
-		atob(encodedHeader.replace(/-/g, "+").replace(/_/g, "/")),
+		textDecoder.decode(base64UrlDecode(encodedHeader)),
 	) as { alg?: string };
 
 	if (header.alg !== "none") {
@@ -47,7 +50,7 @@ function decodeRequestObject(request: string): RequestObjectClaims {
 	}
 
 	const payload = JSON.parse(
-		atob(encodedPayload.replace(/-/g, "+").replace(/_/g, "/")),
+		textDecoder.decode(base64UrlDecode(encodedPayload)),
 	) as RequestObjectClaims;
 
 	return payload;

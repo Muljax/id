@@ -11,14 +11,8 @@ const CHALLENGE_DURATION = 5 * 60 * 1000;
  * @param buffer The bytes to encode.
  * @returns The Base64-encoded value.
  */
-export function arrayBufferToBase64(buffer: Uint8Array) {
-	let binary = "";
-
-	for (const byte of buffer) {
-		binary += String.fromCharCode(byte);
-	}
-
-	return btoa(binary);
+export function arrayBufferToBase64(buffer: Uint8Array): string {
+	return buffer.toBase64();
 }
 
 /**
@@ -28,7 +22,7 @@ export function arrayBufferToBase64(buffer: Uint8Array) {
  * @returns The decoded byte array.
  */
 export function base64ToUint8Array(value: string) {
-	return Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
+	return new Uint8Array(Uint8Array.fromBase64(value));
 }
 
 /**
