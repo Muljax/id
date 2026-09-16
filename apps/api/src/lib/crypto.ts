@@ -20,20 +20,26 @@ export async function timingSafeEqual(
 	const hashA = new Uint8Array(await crypto.subtle.digest("SHA-256", bytesA));
 	const hashB = new Uint8Array(await crypto.subtle.digest("SHA-256", bytesB));
 
-	const nativeTimingSafeEqual =
-		(
+	if (
+		"timingSafeEqual" in crypto.subtle &&
+		typeof crypto.subtle.timingSafeEqual === "function"
+	) {
+		return crypto.subtle.timingSafeEqual(hashA, hashB);
+	}
+
+	if (
+		"timingSafeEqual" in crypto &&
+		typeof (
 			crypto as unknown as {
 				timingSafeEqual?: (x: ArrayBufferView, y: ArrayBufferView) => boolean;
 			}
-		).timingSafeEqual ??
-		(
-			crypto.subtle as unknown as {
-				timingSafeEqual?: (x: ArrayBufferView, y: ArrayBufferView) => boolean;
+		).timingSafeEqual === "function"
+	) {
+		return (
+			crypto as unknown as {
+				timingSafeEqual: (x: ArrayBufferView, y: ArrayBufferView) => boolean;
 			}
-		)?.timingSafeEqual;
-
-	if (typeof nativeTimingSafeEqual === "function") {
-		return nativeTimingSafeEqual(hashA, hashB);
+		).timingSafeEqual(hashA, hashB);
 	}
 
 	let diff = 0;
