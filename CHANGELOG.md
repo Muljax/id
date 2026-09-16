@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.26.1](https://github.com/Muljax/id/compare/v0.26.0...v0.26.1) (2026-09-16)
+
+
+### Performance Improvements
+
+* background expired session deletion ([#208](https://github.com/Muljax/id/issues/208)) ([93b4e2c](https://github.com/Muljax/id/commit/93b4e2c81131198dd727d52d90a51a70d1895649))
+* set argon2id memory alloc to 19mb ([#210](https://github.com/Muljax/id/issues/210)) ([dd5794c](https://github.com/Muljax/id/commit/dd5794c6ebede41345c824eb254e495083754c2a))
+* use javascript native toHex ([#211](https://github.com/Muljax/id/issues/211)) ([a773099](https://github.com/Muljax/id/commit/a7730991634c395bbbbbe119ad18719682ddf72d))
+* use native base64 and timingSafeEqual methods ([#212](https://github.com/Muljax/id/issues/212)) ([2837f8a](https://github.com/Muljax/id/commit/2837f8a85ee75625ff4681cc7d22c0a9571c9824))
+
 ## [0.26.0](https://github.com/Muljax/id/compare/v0.25.0...v0.26.0) (2026-09-16)
 
 
