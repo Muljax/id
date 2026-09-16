@@ -1,8 +1,9 @@
 import { startRegistration } from "@simplewebauthn/browser";
 import { useForm } from "@tanstack/react-form";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Fingerprint, KeyRound, Plus, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useToast } from "@/components/Toast";
 import Badge from "@/components/ui/Badge";
@@ -20,6 +21,7 @@ import {
 	type Passkey,
 	verifyPasskeyRegistration,
 } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 import {
 	type FieldValidators,
 	validateField,
@@ -44,29 +46,34 @@ const PASSKEY_VALIDATORS: FieldValidators<{ passkeyName: string }> = {
 
 function PasskeysPage() {
 	const toast = useToast();
+	const queryClient = useQueryClient();
 
-	const [passkeys, setPasskeys] = useState<Passkey[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [deleting, setDeleting] = useState<string | null>(null);
 	const [passkeyToDelete, setPasskeyToDelete] = useState<Passkey | null>(null);
 	const [registerModalOpen, setRegisterModalOpen] = useState(false);
 
-	const loadPasskeys = useCallback(async () => {
-		try {
-			const response = await getPasskeys();
-			setPasskeys(response.passkeys);
-		} catch (error) {
-			toast.error(
-				error instanceof Error ? error.message : "Unable to load passkeys.",
-			);
-		} finally {
-			setLoading(false);
-		}
-	}, [toast]);
+	const { data: passkeys = [], isLoading } = useQuery({
+		queryKey: queryKeys.account.passkeys,
+		queryFn: async () => {
+			const res = await getPasskeys();
+			return res.passkeys;
+		},
+	});
 
-	useEffect(() => {
-		void loadPasskeys();
-	}, [loadPasskeys]);
+	const deleteMutation = useMutation({
+		mutationFn: (id: string) => deletePasskey(id),
+		onSuccess: () => {
+			setPasskeyToDelete(null);
+			toast.success("Passkey removed successfully.");
+			void queryClient.invalidateQueries({
+				queryKey: queryKeys.account.passkeys,
+			});
+		},
+		onError: (error) => {
+			toast.error(
+				error instanceof Error ? error.message : "Unable to remove passkey.",
+			);
+		},
+	});
 
 	const registerForm = useForm({
 		defaultValues: {
@@ -87,8 +94,11 @@ function PasskeysPage() {
 
 				registerForm.reset();
 				setRegisterModalOpen(false);
+				toast.success("Passkey registered successfully.");
 
-				await loadPasskeys();
+				void queryClient.invalidateQueries({
+					queryKey: queryKeys.account.passkeys,
+				});
 			} catch (error) {
 				if (
 					error instanceof Error &&
@@ -114,24 +124,10 @@ function PasskeysPage() {
 		if (!passkeyToDelete) {
 			return;
 		}
-
-		const id = passkeyToDelete.id;
-		setDeleting(id);
-
-		try {
-			await deletePasskey(id);
-			setPasskeys((current) => current.filter((passkey) => passkey.id !== id));
-			setPasskeyToDelete(null);
-		} catch (error) {
-			toast.error(
-				error instanceof Error ? error.message : "Unable to remove passkey.",
-			);
-		} finally {
-			setDeleting(null);
-		}
+		await deleteMutation.mutateAsync(passkeyToDelete.id);
 	}
 
-	if (loading) {
+	if (isLoading) {
 		return (
 			<div className="flex justify-center py-16">
 				<Spinner size="lg" />
@@ -231,8 +227,14 @@ function PasskeysPage() {
 									type="button"
 									variant="danger"
 									size="sm"
-									disabled={deleting === passkey.id}
-									loading={deleting === passkey.id}
+									disabled={
+										deleteMutation.isPending &&
+										deleteMutation.variables === passkey.id
+									}
+									loading={
+										deleteMutation.isPending &&
+										deleteMutation.variables === passkey.id
+									}
 									onClick={() => setPasskeyToDelete(passkey)}
 									icon={<Trash2 size={14} />}
 									className="self-end sm:self-center shrink-0"
@@ -343,7 +345,7 @@ function PasskeysPage() {
 				title="Remove passkey?"
 				description="Are you sure you want to remove this passkey? You will no longer be able to use it to authenticate."
 				onClose={() => {
-					if (!deleting) {
+					if (!deleteMutation.isPending) {
 						setPasskeyToDelete(null);
 					}
 				}}
@@ -352,7 +354,7 @@ function PasskeysPage() {
 					<Button
 						type="button"
 						variant="ghost"
-						disabled={deleting !== null}
+						disabled={deleteMutation.isPending}
 						onClick={() => setPasskeyToDelete(null)}
 					>
 						Cancel
@@ -361,7 +363,7 @@ function PasskeysPage() {
 					<Button
 						type="button"
 						variant="danger"
-						loading={deleting !== null}
+						loading={deleteMutation.isPending}
 						onClick={() => void handleDelete()}
 					>
 						Remove passkey

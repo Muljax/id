@@ -1,3 +1,4 @@
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { AlertTriangle, AppWindow, CheckCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -11,8 +12,9 @@ import Card, {
 } from "@/components/ui/Card";
 import InstanceLogo from "@/components/ui/InstanceLogo";
 import Spinner from "@/components/ui/Spinner";
-import { api, getOAuthClientDetails, type OAuthClientDetails } from "@/lib/api";
+import { api, getOAuthClientDetails } from "@/lib/api";
 import { INSTANCE_NAME } from "@/lib/config";
+import { queryKeys } from "@/lib/queryKeys";
 
 export interface AuthorizeSearch {
 	client_id?: string;
@@ -69,13 +71,7 @@ export const Route = createFileRoute("/authorize")({
 function AuthorizePage() {
 	const search = Route.useSearch();
 
-	const [loading, setLoading] = useState(false);
-	const [loadingClient, setLoadingClient] = useState(true);
-	const [checkingGrant, setCheckingGrant] = useState(true);
-	const [hasGrant, setHasGrant] = useState(false);
-	const [error, setError] = useState<string | null>(null);
-	const [client, setClient] = useState<OAuthClientDetails | null>(null);
-
+	const [customError, setCustomError] = useState<string | null>(null);
 	const autoApproved = useRef(false);
 	const promptNoneHandled = useRef(false);
 
@@ -92,25 +88,83 @@ function AuthorizePage() {
 
 	const isSilent = search.prompt === "none";
 
-	useEffect(() => {
-		if (!search.client_id) {
-			setLoadingClient(false);
+	const {
+		data: client = null,
+		isLoading: loadingClient,
+		error: clientError,
+	} = useQuery({
+		queryKey: queryKeys.oauth.clientDetails(
+			search.client_id,
+			search.redirect_uri,
+		),
+		queryFn: () => {
+			if (!search.client_id) {
+				throw new Error("Client ID is required.");
+			}
+			return getOAuthClientDetails(search.client_id, search.redirect_uri);
+		},
+		enabled: Boolean(search.client_id),
+		retry: false,
+	});
+
+	const {
+		data: grantData,
+		isLoading: checkingGrant,
+		error: grantError,
+	} = useQuery({
+		queryKey: queryKeys.oauth.grant(search.client_id, search.scope),
+		queryFn: () => {
+			if (!search.client_id || !search.scope) {
+				throw new Error("Client ID and Scope are required.");
+			}
+			return api<GrantResponse>(
+				`/oauth/grant?client_id=${encodeURIComponent(
+					search.client_id,
+				)}&scope=${encodeURIComponent(search.scope)}`,
+			);
+		},
+		enabled: Boolean(search.client_id && search.scope && !requiresInteraction),
+		retry: false,
+	});
+
+	const hasGrant = Boolean(grantData?.granted);
+
+	const approveMutation = useMutation({
+		mutationFn: async () => {
+			return api<{ redirect_uri: string }>("/oauth/approve", {
+				method: "POST",
+				body: JSON.stringify({
+					client_id: search.client_id,
+					redirect_uri: search.redirect_uri,
+					response_type: search.response_type,
+					scope: search.scope,
+					state: search.state,
+					code_challenge: search.code_challenge,
+					code_challenge_method: search.code_challenge_method,
+					nonce: search.nonce,
+					acr_values: search.acr_values,
+					claims: search.claims,
+				}),
+			});
+		},
+		onSuccess: (response) => {
+			window.location.href = response.redirect_uri;
+		},
+		onError: (err) => {
+			setCustomError(
+				err instanceof Error ? err.message : "Unable to authorize application.",
+			);
+		},
+	});
+
+	const approve = useCallback(async () => {
+		if (missing) {
+			setCustomError("Invalid authorization request.");
 			return;
 		}
-
-		void getOAuthClientDetails(search.client_id, search.redirect_uri)
-			.then(setClient)
-			.catch((error) => {
-				setError(
-					error instanceof Error
-						? error.message
-						: "Unable to load application information.",
-				);
-			})
-			.finally(() => {
-				setLoadingClient(false);
-			});
-	}, [search.client_id, search.redirect_uri]);
+		setCustomError(null);
+		await approveMutation.mutateAsync();
+	}, [missing, approveMutation]);
 
 	useEffect(() => {
 		if (missing || loadingClient || !client || search.prompt !== "login") {
@@ -123,57 +177,6 @@ function AuthorizePage() {
 			returnTo,
 		)}&prompt=login`;
 	}, [missing, loadingClient, client, search.prompt]);
-
-	useEffect(() => {
-		if (!search.client_id || !search.scope) {
-			setCheckingGrant(false);
-			return;
-		}
-
-		if (requiresInteraction) {
-			setHasGrant(false);
-			setCheckingGrant(false);
-			return;
-		}
-
-		let cancelled = false;
-		setCheckingGrant(true);
-
-		void api<GrantResponse>(
-			`/oauth/grant?client_id=${encodeURIComponent(
-				search.client_id,
-			)}&scope=${encodeURIComponent(search.scope)}`,
-		)
-			.then((result) => {
-				if (cancelled) {
-					return;
-				}
-
-				setHasGrant(result.granted);
-			})
-			.catch((error) => {
-				if (cancelled) {
-					return;
-				}
-
-				setError(
-					error instanceof Error
-						? error.message
-						: "Unable to check authorization.",
-				);
-
-				setHasGrant(false);
-			})
-			.finally(() => {
-				if (!cancelled) {
-					setCheckingGrant(false);
-				}
-			});
-
-		return () => {
-			cancelled = true;
-		};
-	}, [search.client_id, search.scope, requiresInteraction]);
 
 	/*
 	 * prompt=none MUST NOT display authentication or consent UI.
@@ -226,56 +229,6 @@ function AuthorizePage() {
 		hasGrant,
 		search.redirect_uri,
 		search.state,
-	]);
-
-	const approve = useCallback(async () => {
-		if (missing) {
-			setError("Invalid authorization request.");
-			return;
-		}
-
-		setLoading(true);
-		setError(null);
-
-		try {
-			const response = await api<{ redirect_uri: string }>("/oauth/approve", {
-				method: "POST",
-				body: JSON.stringify({
-					client_id: search.client_id,
-					redirect_uri: search.redirect_uri,
-					response_type: search.response_type,
-					scope: search.scope,
-					state: search.state,
-					code_challenge: search.code_challenge,
-					code_challenge_method: search.code_challenge_method,
-					nonce: search.nonce,
-					acr_values: search.acr_values,
-					claims: search.claims,
-				}),
-			});
-
-			window.location.href = response.redirect_uri;
-		} catch (error) {
-			setError(
-				error instanceof Error
-					? error.message
-					: "Unable to authorize application.",
-			);
-
-			setLoading(false);
-		}
-	}, [
-		missing,
-		search.client_id,
-		search.redirect_uri,
-		search.response_type,
-		search.scope,
-		search.state,
-		search.code_challenge,
-		search.code_challenge_method,
-		search.nonce,
-		search.acr_values,
-		search.claims,
 	]);
 
 	useEffect(() => {
@@ -425,9 +378,15 @@ function AuthorizePage() {
 							</div>
 						</div>
 
-						{error && (
+						{(customError || clientError || grantError) && (
 							<div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-300">
-								{error}
+								{customError ||
+									(clientError instanceof Error
+										? clientError.message
+										: "Unable to load application information.") ||
+									(grantError instanceof Error
+										? grantError.message
+										: "Unable to check authorization.")}
 							</div>
 						)}
 					</CardContent>
@@ -436,7 +395,7 @@ function AuthorizePage() {
 						<Button
 							type="button"
 							variant="secondary"
-							disabled={loading}
+							disabled={approveMutation.isPending}
 							onClick={handleDeny}
 						>
 							Deny
@@ -444,8 +403,8 @@ function AuthorizePage() {
 
 						<Button
 							type="button"
-							loading={loading}
-							disabled={loadingClient || !client}
+							loading={approveMutation.isPending}
+							disabled={loadingClient || !client || approveMutation.isPending}
 							onClick={() => void approve()}
 						>
 							Authorize

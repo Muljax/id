@@ -1,3 +1,4 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import {
 	createContext,
@@ -6,11 +7,11 @@ import {
 	useContext,
 	useEffect,
 	useMemo,
-	useState,
 } from "react";
 
 import Spinner from "@/components/ui/Spinner";
 import { type AuthUser, getCurrentUser, logout as apiLogout } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 
 export interface AuthContextValue {
 	user: AuthUser | null;
@@ -26,40 +27,47 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-	const [user, setUser] = useState<AuthUser | null>(null);
-	const [loading, setLoading] = useState(true);
+	const queryClient = useQueryClient();
+
+	const {
+		data: user = null,
+		isLoading,
+		refetch,
+	} = useQuery<AuthUser | null>({
+		queryKey: queryKeys.auth.me,
+		queryFn: async () => {
+			try {
+				const response = await getCurrentUser();
+				return response.user;
+			} catch {
+				return null;
+			}
+		},
+		staleTime: 1000 * 60 * 5, // 5 minutes
+		retry: false,
+	});
 
 	const refresh = useCallback(async () => {
-		try {
-			const response = await getCurrentUser();
-			setUser(response.user);
-		} catch {
-			setUser(null);
-		}
-	}, []);
+		await refetch();
+	}, [refetch]);
 
 	const logout = useCallback(async () => {
 		try {
 			await apiLogout();
 		} finally {
-			setUser(null);
+			queryClient.setQueryData(queryKeys.auth.me, null);
+			queryClient.clear();
 		}
-	}, []);
-
-	useEffect(() => {
-		refresh().finally(() => {
-			setLoading(false);
-		});
-	}, [refresh]);
+	}, [queryClient]);
 
 	const value = useMemo(
 		() => ({
 			user,
-			loading,
+			loading: isLoading,
 			refresh,
 			logout,
 		}),
-		[user, loading, refresh, logout],
+		[user, isLoading, refresh, logout],
 	);
 
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

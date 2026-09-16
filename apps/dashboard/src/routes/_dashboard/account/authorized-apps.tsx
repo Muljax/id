@@ -1,6 +1,7 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppWindow, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useToast } from "@/components/Toast";
 import Badge from "@/components/ui/Badge";
@@ -9,8 +10,9 @@ import Card, { CardHeader, CardTitle } from "@/components/ui/Card";
 import EmptyState from "@/components/ui/EmptyState";
 import PageHeader from "@/components/ui/PageHeader";
 import Spinner from "@/components/ui/Spinner";
-import { getOAuthGrants, revokeOAuthGrant, type OAuthGrant } from "@/lib/api";
+import { getOAuthGrants, revokeOAuthGrant } from "@/lib/api";
 import { INSTANCE_NAME } from "@/lib/config";
+import { queryKeys } from "@/lib/queryKeys";
 
 export const Route = createFileRoute("/_dashboard/account/authorized-apps")({
 	staticData: {
@@ -24,48 +26,42 @@ export const Route = createFileRoute("/_dashboard/account/authorized-apps")({
 
 function AuthorizedAppsPage() {
 	const toast = useToast();
+	const queryClient = useQueryClient();
 
-	const [grants, setGrants] = useState<OAuthGrant[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [revoking, setRevoking] = useState<string | null>(null);
+	const [revokingClientId, setRevokingClientId] = useState<string | null>(null);
 
-	const loadGrants = useCallback(async () => {
-		try {
-			const response = await getOAuthGrants();
-			setGrants(response.grants);
-		} catch (error) {
-			toast.error(
-				error instanceof Error
-					? error.message
-					: "Unable to load authorized apps.",
-			);
-		} finally {
-			setLoading(false);
-		}
-	}, [toast]);
+	const { data: grants = [], isLoading } = useQuery({
+		queryKey: queryKeys.account.grants,
+		queryFn: async () => {
+			const res = await getOAuthGrants();
+			return res.grants;
+		},
+	});
 
-	useEffect(() => {
-		void loadGrants();
-	}, [loadGrants]);
-
-	async function handleRevoke(clientId: string) {
-		setRevoking(clientId);
-
-		try {
-			await revokeOAuthGrant(clientId);
-			setGrants((current) =>
-				current.filter((grant) => grant.clientId !== clientId),
-			);
-		} catch (error) {
+	const revokeMutation = useMutation({
+		mutationFn: (clientId: string) => revokeOAuthGrant(clientId),
+		onSuccess: () => {
+			toast.success("App access revoked successfully.");
+			void queryClient.invalidateQueries({
+				queryKey: queryKeys.account.grants,
+			});
+		},
+		onError: (error) => {
 			toast.error(
 				error instanceof Error ? error.message : "Unable to revoke app access.",
 			);
-		} finally {
-			setRevoking(null);
-		}
+		},
+		onSettled: () => {
+			setRevokingClientId(null);
+		},
+	});
+
+	async function handleRevoke(clientId: string) {
+		setRevokingClientId(clientId);
+		await revokeMutation.mutateAsync(clientId);
 	}
 
-	if (loading) {
+	if (isLoading) {
 		return (
 			<div className="flex justify-center py-16">
 				<Spinner size="lg" />
@@ -154,8 +150,8 @@ function AuthorizedAppsPage() {
 									type="button"
 									variant="danger"
 									size="sm"
-									disabled={revoking === grant.clientId}
-									loading={revoking === grant.clientId}
+									disabled={revokingClientId === grant.clientId}
+									loading={revokingClientId === grant.clientId}
 									onClick={() => void handleRevoke(grant.clientId)}
 									icon={<Trash2 size={14} />}
 									className="self-end sm:self-start shrink-0"

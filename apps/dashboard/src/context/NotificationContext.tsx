@@ -1,10 +1,10 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	createContext,
 	useCallback,
 	useContext,
 	useEffect,
 	useRef,
-	useState,
 	type ReactNode,
 } from "react";
 
@@ -17,6 +17,7 @@ import {
 	markNotificationRead,
 	type Notification,
 } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface NotificationContextValue {
 	notifications: Notification[];
@@ -35,158 +36,200 @@ const NotificationContext = createContext<NotificationContextValue | null>(
 export function NotificationProvider({ children }: { children: ReactNode }) {
 	const { user } = useAuth();
 	const toast = useToast();
-
-	const [notifications, setNotifications] = useState<Notification[]>([]);
-	const [unreadCount, setUnreadCount] = useState(0);
-	const [loading, setLoading] = useState(true);
+	const queryClient = useQueryClient();
 
 	const knownNotificationIds = useRef<Set<string>>(new Set());
 	const initialLoadDone = useRef(false);
-	const lastFetchTime = useRef(0);
 
-	const loadNotifications = useCallback(
-		async (isBackground = false) => {
-			if (!user) {
-				setNotifications([]);
-				setUnreadCount(0);
-				setLoading(false);
-				knownNotificationIds.current.clear();
-				initialLoadDone.current = false;
-				return;
+	const {
+		data = { notifications: [], unreadCount: 0 },
+		isLoading,
+		refetch,
+	} = useQuery({
+		queryKey: queryKeys.notifications.all,
+		queryFn: getNotifications,
+		enabled: Boolean(user),
+		refetchInterval: 10000,
+		refetchOnWindowFocus: true,
+	});
+
+	const notifications = data.notifications;
+	const unreadCount = data.unreadCount;
+
+	useEffect(() => {
+		if (!user) {
+			knownNotificationIds.current.clear();
+			initialLoadDone.current = false;
+			return;
+		}
+
+		if (initialLoadDone.current && notifications.length > 0) {
+			const newItems = notifications.filter(
+				(n) => !knownNotificationIds.current.has(n.id) && !n.readAt,
+			);
+
+			for (const notification of newItems) {
+				if (notification.severity === "danger") {
+					toast.error(`${notification.title}: ${notification.message}`);
+				} else if (notification.severity === "warning") {
+					toast.warning(`${notification.title}: ${notification.message}`);
+				} else if (notification.severity === "success") {
+					toast.success(`${notification.title}: ${notification.message}`);
+				} else {
+					toast.info(`${notification.title}: ${notification.message}`);
+				}
+			}
+		}
+
+		for (const n of notifications) {
+			knownNotificationIds.current.add(n.id);
+		}
+
+		if (notifications.length > 0 || !isLoading) {
+			initialLoadDone.current = true;
+		}
+	}, [user, notifications, isLoading, toast]);
+
+	const markReadMutation = useMutation({
+		mutationFn: markNotificationRead,
+		onMutate: async (id: string) => {
+			await queryClient.cancelQueries({
+				queryKey: queryKeys.notifications.all,
+			});
+			const previous = queryClient.getQueryData<{
+				notifications: Notification[];
+				unreadCount: number;
+			}>(queryKeys.notifications.all);
+
+			if (previous) {
+				queryClient.setQueryData(queryKeys.notifications.all, {
+					...previous,
+					notifications: previous.notifications.map((n) =>
+						n.id === id ? { ...n, readAt: Date.now() } : n,
+					),
+					unreadCount: Math.max(0, previous.unreadCount - 1),
+				});
 			}
 
-			if (!isBackground) {
-				setLoading(true);
-			}
-
-			try {
-				const res = await getNotifications();
-				lastFetchTime.current = Date.now();
-
-				if (initialLoadDone.current) {
-					const newItems = res.notifications.filter(
-						(n) => !knownNotificationIds.current.has(n.id) && !n.readAt,
-					);
-
-					for (const notification of newItems) {
-						if (notification.severity === "danger") {
-							toast.error(`${notification.title}: ${notification.message}`);
-						} else if (notification.severity === "warning") {
-							toast.warning(`${notification.title}: ${notification.message}`);
-						} else if (notification.severity === "success") {
-							toast.success(`${notification.title}: ${notification.message}`);
-						} else {
-							toast.info(`${notification.title}: ${notification.message}`);
-						}
-					}
-				}
-
-				for (const n of res.notifications) {
-					knownNotificationIds.current.add(n.id);
-				}
-
-				setNotifications(res.notifications);
-				setUnreadCount(res.unreadCount);
-				initialLoadDone.current = true;
-			} catch (error) {
-				console.error("[Notifications] Failed to load:", error);
-			} finally {
-				if (!isBackground) {
-					setLoading(false);
-				}
+			return { previous };
+		},
+		onError: (_err, _id, context) => {
+			if (context?.previous) {
+				queryClient.setQueryData(queryKeys.notifications.all, context.previous);
 			}
 		},
-		[user, toast],
+		onSettled: () => {
+			void queryClient.invalidateQueries({
+				queryKey: queryKeys.notifications.all,
+			});
+		},
+	});
+
+	const markAllReadMutation = useMutation({
+		mutationFn: markAllNotificationsRead,
+		onMutate: async () => {
+			await queryClient.cancelQueries({
+				queryKey: queryKeys.notifications.all,
+			});
+			const previous = queryClient.getQueryData<{
+				notifications: Notification[];
+				unreadCount: number;
+			}>(queryKeys.notifications.all);
+
+			if (previous) {
+				const now = Date.now();
+				queryClient.setQueryData(queryKeys.notifications.all, {
+					...previous,
+					notifications: previous.notifications.map((n) =>
+						n.readAt ? n : { ...n, readAt: now },
+					),
+					unreadCount: 0,
+				});
+			}
+
+			return { previous };
+		},
+		onError: (_err, _vars, context) => {
+			if (context?.previous) {
+				queryClient.setQueryData(queryKeys.notifications.all, context.previous);
+			}
+		},
+		onSettled: () => {
+			void queryClient.invalidateQueries({
+				queryKey: queryKeys.notifications.all,
+			});
+		},
+	});
+
+	const dismissMutation = useMutation({
+		mutationFn: deleteNotification,
+		onMutate: async (id: string) => {
+			await queryClient.cancelQueries({
+				queryKey: queryKeys.notifications.all,
+			});
+			const previous = queryClient.getQueryData<{
+				notifications: Notification[];
+				unreadCount: number;
+			}>(queryKeys.notifications.all);
+
+			if (previous) {
+				const item = previous.notifications.find((n) => n.id === id);
+				queryClient.setQueryData(queryKeys.notifications.all, {
+					...previous,
+					notifications: previous.notifications.filter((n) => n.id !== id),
+					unreadCount:
+						item && !item.readAt
+							? Math.max(0, previous.unreadCount - 1)
+							: previous.unreadCount,
+				});
+			}
+
+			return { previous };
+		},
+		onError: (_err, _id, context) => {
+			if (context?.previous) {
+				queryClient.setQueryData(queryKeys.notifications.all, context.previous);
+			}
+		},
+		onSettled: () => {
+			void queryClient.invalidateQueries({
+				queryKey: queryKeys.notifications.all,
+			});
+		},
+	});
+
+	const markAsRead = useCallback(
+		async (id: string) => {
+			await markReadMutation.mutateAsync(id);
+		},
+		[markReadMutation],
 	);
 
-	useEffect(() => {
-		void loadNotifications(false);
-	}, [loadNotifications]);
-
-	useEffect(() => {
-		if (!user) return;
-
-		const POLL_INTERVAL = 10000; // 10 seconds
-
-		const interval = setInterval(() => {
-			if (
-				typeof document !== "undefined" &&
-				document.visibilityState === "visible"
-			) {
-				void loadNotifications(true);
-			}
-		}, POLL_INTERVAL);
-
-		function handleVisibilityOrFocus() {
-			if (
-				typeof document !== "undefined" &&
-				document.visibilityState === "visible" &&
-				Date.now() - lastFetchTime.current > 3000
-			) {
-				void loadNotifications(true);
-			}
-		}
-
-		window.addEventListener("focus", handleVisibilityOrFocus);
-		document.addEventListener("visibilitychange", handleVisibilityOrFocus);
-
-		return () => {
-			clearInterval(interval);
-			window.removeEventListener("focus", handleVisibilityOrFocus);
-			document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
-		};
-	}, [user, loadNotifications]);
-
-	const markAsRead = useCallback(async (id: string) => {
-		try {
-			await markNotificationRead(id);
-			setNotifications((prev) =>
-				prev.map((n) => (n.id === id ? { ...n, readAt: Date.now() } : n)),
-			);
-			setUnreadCount((prev) => Math.max(0, prev - 1));
-		} catch (e) {
-			console.error("[Notifications] Failed to mark as read:", e);
-		}
-	}, []);
-
 	const markAllAsRead = useCallback(async () => {
-		try {
-			await markAllNotificationsRead();
-			const now = Date.now();
-			setNotifications((prev) =>
-				prev.map((n) => (n.readAt ? n : { ...n, readAt: now })),
-			);
-			setUnreadCount(0);
-		} catch (e) {
-			console.error("[Notifications] Failed to mark all as read:", e);
-		}
-	}, []);
+		await markAllReadMutation.mutateAsync();
+	}, [markAllReadMutation]);
 
-	const dismiss = useCallback(async (id: string) => {
-		try {
-			await deleteNotification(id);
-			setNotifications((prev) => {
-				const item = prev.find((n) => n.id === id);
-				if (item && !item.readAt) {
-					setUnreadCount((count) => Math.max(0, count - 1));
-				}
-				return prev.filter((n) => n.id !== id);
-			});
-		} catch (e) {
-			console.error("[Notifications] Failed to dismiss notification:", e);
-		}
-	}, []);
+	const dismiss = useCallback(
+		async (id: string) => {
+			await dismissMutation.mutateAsync(id);
+		},
+		[dismissMutation],
+	);
+
+	const refresh = useCallback(async () => {
+		await refetch();
+	}, [refetch]);
 
 	return (
 		<NotificationContext.Provider
 			value={{
 				notifications,
 				unreadCount,
-				loading,
+				loading: isLoading,
 				markAsRead,
 				markAllAsRead,
 				dismiss,
-				refresh: loadNotifications,
+				refresh,
 			}}
 		>
 			{children}
