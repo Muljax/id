@@ -238,13 +238,11 @@ function ChangePasswordPage() {
 							sessions.
 						</p>
 
-						<form.Subscribe
-							selector={(state) => [state.canSubmit, state.isSubmitting]}
-						>
-							{([canSubmit, isSubmitting]) => (
+						<form.Subscribe selector={(state) => [state.isSubmitting]}>
+							{([isSubmitting]) => (
 								<Button
 									type="submit"
-									disabled={!canSubmit}
+									disabled={Boolean(isSubmitting)}
 									loading={Boolean(isSubmitting)}
 									className="w-full sm:w-auto"
 								>

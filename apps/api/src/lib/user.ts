@@ -48,3 +48,26 @@ export function isUserDisabled(
 ): boolean {
 	return user?.disabledAt != null && user.disabledAt <= Date.now();
 }
+
+export function toAuthUser(user: typeof users.$inferSelect) {
+	return {
+		id: user.id,
+		email: user.email,
+		displayName: user.displayName,
+		givenName: user.givenName,
+		familyName: user.familyName,
+		middleName: user.middleName,
+		nickname: user.nickname,
+		preferredUsername: user.preferredUsername,
+		profileUrl: user.profileUrl,
+		profileImageKey: user.profileImageKey,
+		website: user.website,
+		gender: user.gender,
+		birthdate: user.birthdate,
+		zoneinfo: user.zoneinfo,
+		locale: user.locale,
+		emailVerifiedAt: user.emailVerifiedAt,
+		createdAt: user.createdAt,
+		isAdmin: user.isAdmin,
+	};
+}

@@ -1,5 +1,6 @@
 import { useForm } from "@tanstack/react-form";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import PreAuthLayout from "@/components/PreAuthLayout";
 import { useToast } from "@/components/Toast";
@@ -36,9 +37,20 @@ function getSafeReturnTo(value: string | undefined) {
 
 function RegisterPage() {
 	const navigate = useNavigate();
-	const { refresh } = useAuth();
+	const { user, setUser } = useAuth();
 	const toast = useToast();
 	const { return_to } = Route.useSearch();
+
+	useEffect(() => {
+		if (user) {
+			const destination = getSafeReturnTo(return_to);
+			if (destination) {
+				window.location.href = destination;
+			} else {
+				void navigate({ to: "/" });
+			}
+		}
+	}, [user, return_to, navigate]);
 
 	const form = useForm({
 		defaultValues: {
@@ -48,8 +60,8 @@ function RegisterPage() {
 		},
 		onSubmit: async ({ value }) => {
 			try {
-				await register(value.email.trim(), value.password);
-				await refresh();
+				const response = await register(value.email.trim(), value.password);
+				setUser(response.user);
 
 				toast.success("Account created successfully.");
 
@@ -265,16 +277,14 @@ function RegisterPage() {
 						}}
 					</form.Field>
 
-					<form.Subscribe
-						selector={(state) => [state.canSubmit, state.isSubmitting]}
-					>
-						{([canSubmit, isSubmitting]) => (
+					<form.Subscribe selector={(state) => [state.isSubmitting]}>
+						{([isSubmitting]) => (
 							<Button
 								type="submit"
 								className="w-full mt-2"
 								size="lg"
 								loading={Boolean(isSubmitting)}
-								disabled={!canSubmit}
+								disabled={Boolean(isSubmitting)}
 							>
 								Create account
 							</Button>

@@ -7,7 +7,7 @@ import { users } from "@/db/schema";
 import { setSessionCookie } from "@/lib/cookie";
 import { DUMMY_PASSWORD_HASH, verifyPassword } from "@/lib/password";
 import { createSession, deleteSession, getSession } from "@/lib/session";
-import { isUserDisabled } from "@/lib/user";
+import { isUserDisabled, toAuthUser } from "@/lib/user";
 
 interface CloudflareRequestProperties {
 	country?: string;
@@ -88,10 +88,7 @@ route.post("/", async (c) => {
 
 		if (existingSession && existingSession.userId === user.id) {
 			return c.json({
-				user: {
-					id: user.id,
-					email: user.email,
-				},
+				user: toAuthUser(user),
 			});
 		}
 	}
@@ -118,10 +115,7 @@ route.post("/", async (c) => {
 	setSessionCookie(c, session.token);
 
 	return c.json({
-		user: {
-			id: user.id,
-			email: user.email,
-		},
+		user: toAuthUser(user),
 	});
 });
 

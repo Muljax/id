@@ -16,7 +16,8 @@ import { queryKeys } from "@/lib/queryKeys";
 export interface AuthContextValue {
 	user: AuthUser | null;
 	loading: boolean;
-	refresh: () => Promise<void>;
+	setUser: (user: AuthUser | null) => void;
+	refresh: () => Promise<AuthUser | null>;
 	logout: () => Promise<void>;
 }
 
@@ -32,6 +33,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	const {
 		data: user = null,
 		isLoading,
+		isFetching,
 		refetch,
 	} = useQuery<AuthUser | null>({
 		queryKey: queryKeys.auth.me,
@@ -47,8 +49,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		retry: false,
 	});
 
+	const setUser = useCallback(
+		(newUser: AuthUser | null) => {
+			queryClient.setQueryData(queryKeys.auth.me, newUser);
+		},
+		[queryClient],
+	);
+
 	const refresh = useCallback(async () => {
-		await refetch();
+		const result = await refetch();
+		return result.data ?? null;
 	}, [refetch]);
 
 	const logout = useCallback(async () => {
@@ -63,11 +73,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	const value = useMemo(
 		() => ({
 			user,
-			loading: isLoading,
+			loading: isLoading || (isFetching && !user),
+			setUser,
 			refresh,
 			logout,
 		}),
-		[user, isLoading, refresh, logout],
+		[user, isLoading, isFetching, setUser, refresh, logout],
 	);
 
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
