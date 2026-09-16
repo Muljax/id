@@ -112,6 +112,21 @@ resource "cloudflare_workers_script" "api" {
   ]
 }
 
+resource "cloudflare_workers_cron_trigger" "api_cleanup" {
+  account_id  = var.cloudflare_account_id
+  script_name = local.api_worker_name
+
+  schedules = [
+    {
+      cron = "0 * * * *"
+    }
+  ]
+
+  depends_on = [
+    cloudflare_workers_script.api,
+  ]
+}
+
 resource "cloudflare_workers_script" "dashboard" {
   account_id = var.cloudflare_account_id
 

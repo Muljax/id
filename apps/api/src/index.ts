@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 
+import { createDb } from "./db";
+import { cleanupExpiredAuthData } from "./lib/cleanup";
 import { dashboardCors } from "./middleware/cors";
 import admin from "./routes/admin";
 import auth from "./routes/auth";
@@ -30,7 +32,17 @@ app.route("/oauth", oauth);
 app.route("/.well-known", wellKnown);
 app.route("/api/users", users);
 
-export default app;
+export default {
+	fetch: app.fetch,
+	async scheduled(
+		_controller: ScheduledController,
+		env: Env,
+		ctx: ExecutionContext,
+	) {
+		const db = createDb(env.DB);
+		ctx.waitUntil(cleanupExpiredAuthData(db));
+	},
+};
 
 // Wrangler insisted this was re exported in the worker source file
 import { LifecycleWorkflow } from "./workflows/lifecycle";
