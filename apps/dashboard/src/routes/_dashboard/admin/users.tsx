@@ -11,6 +11,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import Spinner from "@/components/ui/Spinner";
 import ResetPasswordModal from "@/components/users/ResetPasswordModal";
 import UserLifecycleModal from "@/components/users/UserLifecycleModal";
+import UserRolesModal from "@/components/users/UserRolesModal";
 import UserRow from "@/components/users/UserRow";
 import { useAuth } from "@/context/AuthContext";
 import { getUsers, type AdminUser } from "@/lib/api/admin";
@@ -47,6 +48,9 @@ function UsersPage() {
 	);
 	const [lifecycleTargetUser, setLifecycleTargetUser] =
 		useState<AdminUser | null>(null);
+	const [rolesTargetUser, setRolesTargetUser] = useState<AdminUser | null>(
+		null,
+	);
 
 	const {
 		data: users = [],
@@ -143,10 +147,18 @@ function UsersPage() {
 								}
 								onResetPassword={(target) => setResetTargetUser(target)}
 								onManageLifecycle={(target) => setLifecycleTargetUser(target)}
+								onManageRoles={(target) => setRolesTargetUser(target)}
 							/>
 						))}
 					</div>
 				</Card>
+			)}
+
+			{rolesTargetUser && (
+				<UserRolesModal
+					user={rolesTargetUser}
+					onClose={() => setRolesTargetUser(null)}
+				/>
 			)}
 
 			{resetTargetUser && (

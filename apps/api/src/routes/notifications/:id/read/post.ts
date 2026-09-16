@@ -3,12 +3,16 @@ import { Hono } from "hono";
 
 import { createDb } from "@/db";
 import { notifications } from "@/db/schema";
-import { requireAuth } from "@/middleware/auth";
+import { hasPermission } from "@/lib/rbac/matcher";
+import { type AppEnv, requireAuth } from "@/middleware/auth";
 
-const route = new Hono<{ Bindings: Env }>();
+const route = new Hono<AppEnv>();
 
 route.post("/", requireAuth, async (c) => {
 	const user = c.get("user");
+	const roles = c.get("roles") ?? [];
+	const permissions = c.get("permissions") ?? new Set();
+	const isAdmin = roles.includes("admin") || hasPermission(permissions, "*");
 	const id = c.req.param("id");
 
 	if (!id) {
@@ -22,7 +26,7 @@ route.post("/", requireAuth, async (c) => {
 		eq(notifications.target, "all"),
 	];
 
-	if (user.isAdmin) {
+	if (isAdmin) {
 		targetConditions.push(eq(notifications.target, "admins"));
 	}
 

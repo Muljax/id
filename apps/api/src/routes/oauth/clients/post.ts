@@ -8,11 +8,11 @@ import {
 } from "@/lib/oauth/client";
 import { emitNotification } from "@/lib/notifications/emitter";
 import { hashToken } from "@/lib/token";
-import { requireAdmin } from "@/middleware/auth";
+import { type AppEnv, requirePermission } from "@/middleware/auth";
 
-const route = new Hono<{ Bindings: Env }>();
+const route = new Hono<AppEnv>();
 
-route.post("/", requireAdmin, async (c) => {
+route.post("/", requirePermission("oauth_clients:write"), async (c) => {
 	const body = await c.req.json<{
 		name: string;
 		clientType: string;

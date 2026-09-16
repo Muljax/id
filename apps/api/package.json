@@ -8,7 +8,8 @@
   "build": "bun build.ts",
   "deploy": "wrangler deploy",
   "db:generate": "drizzle-kit generate",
-  "db:migrate": "wrangler d1 migrations apply DB --remote"
+  "db:migrate": "wrangler d1 migrations apply DB --remote",
+  "db:seed": "bun run ../../scripts/seed-d1.ts"
  },
  "devDependencies": {
   "@cloudflare/workers-types": "5.20260916.1",

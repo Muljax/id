@@ -2,10 +2,11 @@ import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 
 import { createDb } from "@/db";
-import { users } from "@/db/schema";
+import { userRoles, users } from "@/db/schema";
 import { setSessionCookie } from "@/lib/cookie";
 import { emitNotification } from "@/lib/notifications/emitter";
 import { hashPassword } from "@/lib/password";
+import { SYSTEM_ROLE_IDS } from "@/lib/rbac/constants";
 import { createSession } from "@/lib/session";
 
 interface CloudflareRequestProperties {
@@ -28,26 +29,25 @@ route.post("/", async (c) => {
 	if (!email || !password) {
 		return c.json(
 			{
-				error: "Email and password are required",
+				error: "Email and password are required.",
 			},
 			400,
 		);
 	}
 
-	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-	if (!emailRegex.test(email)) {
+	if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
 		return c.json(
 			{
-				error: "Invalid email address format",
+				error: "Invalid email format.",
 			},
 			400,
 		);
 	}
 
-	if (password.length < 8 || password.length > 128) {
+	if (password.length < 8) {
 		return c.json(
 			{
-				error: "Password must be between 8 and 128 characters",
+				error: "Password must be at least 8 characters long.",
 			},
 			400,
 		);
@@ -55,18 +55,16 @@ route.post("/", async (c) => {
 
 	const db = createDb(c.env.DB);
 
-	const existingUser = await db
-		.select({
-			id: users.id,
-		})
+	const existing = await db
+		.select({ id: users.id })
 		.from(users)
 		.where(eq(users.email, email))
 		.limit(1);
 
-	if (existingUser.length > 0) {
+	if (existing.length > 0) {
 		return c.json(
 			{
-				error: "An account with that email already exists",
+				error: "An account with this email already exists.",
 			},
 			409,
 		);
@@ -83,6 +81,15 @@ route.post("/", async (c) => {
 		createdAt: now,
 		updatedAt: now,
 	});
+
+	await db
+		.insert(userRoles)
+		.values({
+			userId,
+			roleId: SYSTEM_ROLE_IDS.USER,
+			assignedAt: now,
+		})
+		.onConflictDoNothing();
 
 	await emitNotification(db, {
 		userId,
@@ -141,6 +148,8 @@ route.post("/", async (c) => {
 				emailVerifiedAt: null,
 				createdAt: now,
 				isAdmin: false,
+				roles: [SYSTEM_ROLE_IDS.USER],
+				permissions: [],
 			},
 		},
 		201,

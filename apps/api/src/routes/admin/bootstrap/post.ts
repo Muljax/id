@@ -1,11 +1,13 @@
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
 
 import { createDb } from "@/db";
-import { users } from "@/db/schema";
+import { userRoles } from "@/db/schema";
 import { timingSafeEqual } from "@/lib/crypto";
 import { emitNotification } from "@/lib/notifications/emitter";
+import { SYSTEM_ROLE_IDS } from "@/lib/rbac/constants";
+import { seedRbacData } from "@/lib/rbac/seed";
 import { getSessionUser } from "@/lib/session";
 
 const route = new Hono<{ Bindings: Env }>();
@@ -48,22 +50,13 @@ route.post("/", async (c) => {
 		);
 	}
 
-	const result = await db
-		.update(users)
-		.set({
-			isAdmin: true,
-			updatedAt: Date.now(),
-		})
-		.where(
-			sql`${eq(users.id, user.id)}
-                AND NOT EXISTS (
-                    SELECT 1
-                    FROM users
-                    WHERE is_admin = 1
-                )`,
-		);
+	const existingAdmin = await db
+		.select({ userId: userRoles.userId })
+		.from(userRoles)
+		.where(eq(userRoles.roleId, SYSTEM_ROLE_IDS.ADMIN))
+		.limit(1);
 
-	if (result.meta.changes !== 1) {
+	if (existingAdmin.length > 0) {
 		return c.json(
 			{
 				error: "Admin bootstrap has already been completed.",
@@ -71,6 +64,12 @@ route.post("/", async (c) => {
 			409,
 		);
 	}
+
+	await db.insert(userRoles).values({
+		userId: user.id,
+		roleId: SYSTEM_ROLE_IDS.ADMIN,
+		assignedAt: Date.now(),
+	});
 
 	await emitNotification(db, {
 		userId: user.id,

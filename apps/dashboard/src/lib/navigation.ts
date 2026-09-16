@@ -1,4 +1,5 @@
 import type { AnyRoute } from "@tanstack/react-router";
+import { checkPermission } from "./permissions";
 
 /**
  * Navigation metadata defined on a route.
@@ -6,11 +7,13 @@ import type { AnyRoute } from "@tanstack/react-router";
  * @property label The label displayed in the dashboard sidebar.
  * @property order The position of the route in the sidebar.
  * @property adminOnly Whether the route is only visible to administrators.
+ * @property requiredPermission Specific permission slug needed to view this route.
  */
 export interface NavigationData {
 	label: string;
 	order: number;
 	adminOnly?: boolean;
+	requiredPermission?: string;
 	hidden?: boolean;
 }
 
@@ -21,12 +24,14 @@ export interface NavigationData {
  * @property to The route path used by the sidebar link.
  * @property order The position of the item within its group.
  * @property adminOnly Whether the item is only visible to administrators.
+ * @property requiredPermission Specific permission slug needed to view this item.
  */
 export interface NavigationItem {
 	label: string;
 	to: string;
 	order: number;
 	adminOnly?: boolean;
+	requiredPermission?: string;
 	hidden?: boolean;
 }
 
@@ -47,38 +52,47 @@ function getNavigation(route: AnyRoute): NavigationData | undefined {
 	return route.options.staticData?.navigation;
 }
 
+function isVisible(
+	navigation: NavigationData,
+	isAdmin: boolean,
+	permissions: string[] = [],
+): boolean {
+	if (navigation.hidden) {
+		return false;
+	}
+
+	if (navigation.adminOnly && !isAdmin) {
+		return false;
+	}
+
+	if (navigation.requiredPermission && !isAdmin) {
+		if (!checkPermission(permissions, navigation.requiredPermission)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 /**
  * Collects child navigation items from a route.
- *
- * Routes without navigation metadata are traversed so that nested routes can
- * still contribute sidebar items. Admin-only routes are excluded from the
- * sidebar for non-administrators.
- *
- * Marking a route inside an `adminOnly` route group as `adminOnly` is
- * technically redundant because the entire group is already hidden.
- * Explicitly marking those child routes is still recommended so their
- * intended access level remains clear if the route structure changes.
- *
- * @param route The parent route whose children should be collected.
- * @param isAdmin Whether the current user is an administrator.
- * @returns The visible child sidebar items sorted by order.
  */
-function collectChildren(route: AnyRoute, isAdmin: boolean): NavigationItem[] {
+function collectChildren(
+	route: AnyRoute,
+	isAdmin: boolean,
+	permissions: string[] = [],
+): NavigationItem[] {
 	const items: NavigationItem[] = [];
 
 	for (const child of route.children ?? []) {
 		const navigation = getNavigation(child);
 
 		if (!navigation) {
-			items.push(...collectChildren(child, isAdmin));
+			items.push(...collectChildren(child, isAdmin, permissions));
 			continue;
 		}
 
-		if (navigation.adminOnly && !isAdmin) {
-			continue;
-		}
-
-		if (navigation.hidden) {
+		if (!isVisible(navigation, isAdmin, permissions)) {
 			continue;
 		}
 
@@ -87,6 +101,7 @@ function collectChildren(route: AnyRoute, isAdmin: boolean): NavigationItem[] {
 			to: child.fullPath,
 			order: navigation.order,
 			adminOnly: navigation.adminOnly,
+			requiredPermission: navigation.requiredPermission,
 			hidden: navigation.hidden,
 		});
 	}
@@ -96,29 +111,17 @@ function collectChildren(route: AnyRoute, isAdmin: boolean): NavigationItem[] {
 
 /**
  * Collects navigation groups from a route tree.
- *
- * Admin-only groups are excluded from the dashboard sidebar when the current
- * user is not an administrator. Routes without navigation metadata are
- * traversed to find nested sidebar groups.
- *
- * @param route The route to inspect.
- * @param isAdmin Whether the current user is an administrator.
- * @param items The sidebar groups collected so far.
- * @returns The collected sidebar groups.
  */
 function collectNavigation(
 	route: AnyRoute,
 	isAdmin: boolean,
+	permissions: string[] = [],
 	items: NavigationGroup[] = [],
 ) {
 	const navigation = getNavigation(route);
 
 	if (navigation) {
-		if (navigation.hidden) {
-			return items;
-		}
-
-		if (navigation.adminOnly && !isAdmin) {
+		if (!isVisible(navigation, isAdmin, permissions)) {
 			return items;
 		}
 
@@ -127,15 +130,16 @@ function collectNavigation(
 			to: route.fullPath,
 			order: navigation.order,
 			adminOnly: navigation.adminOnly,
+			requiredPermission: navigation.requiredPermission,
 			hidden: navigation.hidden,
-			children: collectChildren(route, isAdmin),
+			children: collectChildren(route, isAdmin, permissions),
 		});
 
 		return items;
 	}
 
 	for (const child of route.children ?? []) {
-		collectNavigation(child, isAdmin, items);
+		collectNavigation(child, isAdmin, permissions, items);
 	}
 
 	return items;
@@ -143,28 +147,13 @@ function collectNavigation(
 
 /**
  * Builds the navigation items visible in the dashboard sidebar.
- *
- * Navigation is derived from route metadata and filtered according to the
- * user's administrator status. Admin-only routes are hidden from the
- * dashboard sidebar for non-administrators.
- *
- * This function only controls what appears in the sidebar. It does not
- * authorize or restrict access to routes. Protected routes must still enforce
- * authorization through their route guards.
- *
- * Marking routes inside an `adminOnly` group as `adminOnly` is technically
- * redundant, but still recommended to make each route's intended access level
- * explicit.
- *
- * @param routeTree The application's route tree.
- * @param isAdmin Whether the current user is an administrator.
- * @returns The navigation groups visible in the dashboard sidebar.
  */
 export function getNavigationItems(
 	routeTree: AnyRoute,
 	isAdmin: boolean,
+	permissions: string[] = [],
 ): NavigationGroup[] {
-	return collectNavigation(routeTree, isAdmin).sort(
+	return collectNavigation(routeTree, isAdmin, permissions).sort(
 		(a, b) => a.order - b.order,
 	);
 }

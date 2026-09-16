@@ -48,6 +48,9 @@ resource "terraform_data" "d1_migrations" {
   provisioner "local-exec" {
     working_dir = path.module
 
-    command = "bunx wrangler d1 migrations apply ${local.database_name} --remote --config ${local_file.d1_migrations_config.filename}"
+    command = <<-EOT
+      bunx wrangler d1 migrations apply ${local.database_name} --remote --config ${local_file.d1_migrations_config.filename}
+      DATABASE_NAME="${local.database_name}" CONFIG_FILE="${local_file.d1_migrations_config.filename}" bun run ../scripts/seed-d1.ts
+    EOT
   }
 }

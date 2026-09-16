@@ -2,11 +2,11 @@ import { Hono } from "hono";
 
 import { createDb } from "@/db";
 import { getOAuthClients } from "@/lib/oauth/client";
-import { requireAdmin } from "@/middleware/auth";
+import { type AppEnv, requirePermission } from "@/middleware/auth";
 
-const route = new Hono<{ Bindings: Env }>();
+const route = new Hono<AppEnv>();
 
-route.get("/", requireAdmin, async (c) => {
+route.get("/", requirePermission("oauth_clients:read"), async (c) => {
 	const db = createDb(c.env.DB);
 	const clients = await getOAuthClients(db);
 

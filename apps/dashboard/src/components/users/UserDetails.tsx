@@ -1,5 +1,6 @@
-import { KeyRound, UserCheck, UserX } from "lucide-react";
+import { KeyRound, Shield, UserCheck, UserX } from "lucide-react";
 
+import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { getUserStatus } from "@/components/users/status";
 import type { AdminUser } from "@/lib/api/admin";
@@ -9,11 +10,13 @@ export default function UserDetails({
 	isSelf,
 	onResetPassword,
 	onManageLifecycle,
+	onManageRoles,
 }: {
 	user: AdminUser;
 	isSelf: boolean;
 	onResetPassword: (user: AdminUser) => void;
 	onManageLifecycle: (user: AdminUser) => void;
+	onManageRoles: (user: AdminUser) => void;
 }) {
 	const status = getUserStatus(user);
 	const statusText =
@@ -38,7 +41,6 @@ export default function UserDetails({
 		["Birthdate", user.birthdate],
 		["Time zone", user.zoneinfo],
 		["Locale", user.locale],
-		["Role", user.isAdmin ? "Administrator" : "Standard User"],
 		["Account status", statusText],
 		[
 			"Email verified",
@@ -63,9 +65,46 @@ export default function UserDetails({
 						</p>
 					</div>
 				))}
+
+				<div className="min-w-0 sm:col-span-2 lg:col-span-3">
+					<span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+						Assigned Roles
+					</span>
+					<div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+						{user.roles && user.roles.length > 0 ? (
+							user.roles.map((roleName) => (
+								<Badge
+									key={roleName}
+									variant={
+										roleName.toLowerCase() === "administrator"
+											? "violet"
+											: "default"
+									}
+									size="sm"
+								>
+									{roleName}
+								</Badge>
+							))
+						) : (
+							<span className="font-mono text-xs text-zinc-500">
+								No roles assigned
+							</span>
+						)}
+					</div>
+				</div>
 			</div>
 
 			<div className="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-white/6 pt-4">
+				<Button
+					type="button"
+					variant="secondary"
+					size="sm"
+					icon={<Shield size={14} />}
+					onClick={() => onManageRoles(user)}
+				>
+					Manage Roles
+				</Button>
+
 				<Button
 					type="button"
 					variant="secondary"

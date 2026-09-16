@@ -6,11 +6,11 @@ import { users } from "@/db/schema";
 import { getDashboardOrigin } from "@/lib/env";
 import { emitNotification } from "@/lib/notifications/emitter";
 import { createPasswordResetToken } from "@/lib/password-reset";
-import { requireAdmin } from "@/middleware/auth";
+import { type AppEnv, requirePermission } from "@/middleware/auth";
 
-const route = new Hono<{ Bindings: Env }>();
+const route = new Hono<AppEnv>();
 
-route.post("/", requireAdmin, async (c) => {
+route.post("/", requirePermission("users:password-reset"), async (c) => {
 	const userId = c.req.param("userId");
 
 	if (!userId) {
