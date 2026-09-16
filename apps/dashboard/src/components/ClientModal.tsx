@@ -1,5 +1,6 @@
+import { useForm } from "@tanstack/react-form";
 import { Globe, Server, Shield } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import ClientCredentialsView from "@/components/clients/ClientCredentialsView";
 import ScopeSelector from "@/components/clients/ScopeSelector";
@@ -13,11 +14,7 @@ import {
 	type OAuthClient,
 	updateOAuthClient,
 } from "@/lib/api";
-import {
-	type FieldValidators,
-	validateForm,
-	validators,
-} from "@/lib/validation";
+import { validateField, validators } from "@/lib/validation";
 
 type ClientProfile = "web_app" | "spa_native" | "m2m_service";
 type ClientType = "public" | "confidential";
@@ -28,36 +25,6 @@ interface ClientModalProps {
 	onClose: () => void;
 	onSaved: () => Promise<void>;
 }
-
-interface ClientForm {
-	name: string;
-	redirectUris: string;
-	scopes: string[];
-}
-
-const getClientValidators = (
-	isPublic: boolean,
-): FieldValidators<ClientForm> => ({
-	name: [
-		validators.required("Client name is required."),
-		validators.maxLength(100, "Client name must be 100 characters or fewer."),
-	],
-	redirectUris: [
-		validators.custom((val) => {
-			if (isPublic && !val?.trim()) {
-				return "Public clients require at least one redirect URI.";
-			}
-			return null;
-		}, "Public clients require at least one redirect URI."),
-		validators.urlList("Each line must be a valid HTTP or HTTPS URL."),
-	],
-	scopes: [
-		validators.minItems(
-			1,
-			"At least one scope must be assigned to the client.",
-		),
-	],
-});
 
 /**
  * Modal for creating and managing OAuth 2.0 / OIDC clients across Web, SPA, and M2M profiles.
@@ -71,119 +38,106 @@ export default function ClientModal({
 	const toast = useToast();
 	const editing = client !== null;
 
-	const [name, setName] = useState("");
-	const [profile, setProfile] = useState<ClientProfile>("m2m_service");
-	const [redirectUris, setRedirectUris] = useState("");
-	const [scopes, setScopes] = useState<string[]>([]);
-	const [saving, setSaving] = useState(false);
-
 	const [createdClientId, setCreatedClientId] = useState<string | null>(null);
 	const [secret, setSecret] = useState<string | null>(null);
 
-	const clientValidators = useMemo(
-		() => getClientValidators(profile === "spa_native"),
-		[profile],
-	);
+	const form = useForm({
+		defaultValues: {
+			name: "",
+			profile: "m2m_service" as ClientProfile,
+			redirectUris: "",
+			scopes: [] as string[],
+		},
+		onSubmit: async ({ value }) => {
+			const normalizedName = value.name.trim();
+			const normalizedRedirectUris = value.redirectUris
+				.split("\n")
+				.map((uri) => uri.trim())
+				.filter(Boolean);
 
-	const { errors, isValid } = useMemo(
-		() => validateForm({ name, redirectUris, scopes }, clientValidators),
-		[name, redirectUris, scopes, clientValidators],
-	);
+			const clientType: ClientType =
+				value.profile === "spa_native" ? "public" : "confidential";
 
-	const canSubmit = isValid && !saving;
+			try {
+				if (editing) {
+					await updateOAuthClient(client.id, {
+						name: normalizedName,
+						redirectUris: normalizedRedirectUris,
+						scopes: value.scopes,
+					});
+
+					await onSaved();
+					return;
+				}
+
+				const response = await createOAuthClient({
+					name: normalizedName,
+					clientType,
+					redirectUris: normalizedRedirectUris,
+					scopes: value.scopes,
+				});
+
+				setCreatedClientId(response.client_id);
+				setSecret(response.client_secret ?? null);
+			} catch (error) {
+				toast.error(
+					error instanceof Error
+						? error.message
+						: "Unable to save OAuth client.",
+				);
+			}
+		},
+	});
 
 	useEffect(() => {
 		if (!open) return;
 
 		if (client) {
-			setName(client.name);
-			setRedirectUris(client.redirectUris.join("\n"));
-			setScopes(client.scopes);
+			let clientProfile: ClientProfile = "web_app";
 			if (client.clientType === "public") {
-				setProfile("spa_native");
+				clientProfile = "spa_native";
 			} else if (
 				client.redirectUris.length === 0 ||
 				!client.scopes.includes("openid")
 			) {
-				setProfile("m2m_service");
-			} else {
-				setProfile("web_app");
+				clientProfile = "m2m_service";
 			}
+
+			form.reset({
+				name: client.name,
+				profile: clientProfile,
+				redirectUris: client.redirectUris.join("\n"),
+				scopes: client.scopes,
+			});
 		} else {
-			setName("");
-			setProfile("m2m_service");
-			setRedirectUris("");
-			setScopes([]);
+			form.reset({
+				name: "",
+				profile: "m2m_service",
+				redirectUris: "",
+				scopes: [],
+			});
 		}
 
 		setCreatedClientId(null);
 		setSecret(null);
-	}, [open, client]);
+	}, [open, client, form]);
 
 	function handleProfileChange(newProfile: ClientProfile) {
-		setProfile(newProfile);
+		form.setFieldValue("profile", newProfile);
+		const currentScopes = form.state.values.scopes;
 		if (newProfile === "m2m_service") {
-			// Clear standard OIDC scopes if they were just the defaults
 			if (
-				scopes.length === 3 &&
-				scopes.includes("openid") &&
-				scopes.includes("profile") &&
-				scopes.includes("email")
+				currentScopes.length === 3 &&
+				currentScopes.includes("openid") &&
+				currentScopes.includes("profile") &&
+				currentScopes.includes("email")
 			) {
-				setScopes([]);
+				form.setFieldValue("scopes", []);
 			}
 		} else if (newProfile === "web_app" || newProfile === "spa_native") {
-			if (!scopes.includes("openid")) {
-				setScopes(["openid", "profile", "email"]);
+			if (!currentScopes.includes("openid")) {
+				form.setFieldValue("scopes", ["openid", "profile", "email"]);
 			}
-		}
-	}
-
-	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-		event.preventDefault();
-
-		if (!canSubmit) {
-			return;
-		}
-
-		const normalizedName = name.trim();
-		const normalizedRedirectUris = redirectUris
-			.split("\n")
-			.map((uri) => uri.trim())
-			.filter(Boolean);
-
-		const clientType: ClientType =
-			profile === "spa_native" ? "public" : "confidential";
-
-		setSaving(true);
-
-		try {
-			if (editing) {
-				await updateOAuthClient(client.id, {
-					name: normalizedName,
-					redirectUris: normalizedRedirectUris,
-					scopes,
-				});
-
-				await onSaved();
-				return;
-			}
-
-			const response = await createOAuthClient({
-				name: normalizedName,
-				clientType,
-				redirectUris: normalizedRedirectUris,
-				scopes,
-			});
-
-			setCreatedClientId(response.client_id);
-			setSecret(response.client_secret ?? null);
-		} catch (error) {
-			toast.error(
-				error instanceof Error ? error.message : "Unable to save OAuth client.",
-			);
-		} finally {
-			setSaving(false);
 		}
 	}
 
@@ -211,31 +165,60 @@ export default function ClientModal({
 				<ClientCredentialsView
 					clientId={createdClientId}
 					secret={secret}
-					isM2M={profile === "m2m_service"}
+					isM2M={form.state.values.profile === "m2m_service"}
 					onDone={() => void onSaved()}
 				/>
 			) : (
-				<form onSubmit={handleSubmit} className="space-y-5">
-					<div>
-						<label
-							htmlFor="client-name"
-							className="mb-2 block text-sm font-medium text-zinc-300"
-						>
-							Client Name
-						</label>
-						<Input
-							id="client-name"
-							value={name}
-							onChange={(event) => setName(event.target.value)}
-							placeholder="e.g. Keyzori License Server, Billing Sync Worker"
-							disabled={saving}
-							hasError={Boolean(errors.name && name)}
-							required
-						/>
-						{errors.name && name && (
-							<p className="mt-1.5 text-xs text-red-400">{errors.name}</p>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						void form.handleSubmit();
+					}}
+					className="space-y-5"
+				>
+					<form.Field
+						name="name"
+						validators={{
+							onChange: validateField([
+								validators.required("Client name is required."),
+								validators.maxLength(
+									100,
+									"Client name must be 100 characters or fewer.",
+								),
+							]),
+						}}
+					>
+						{(field) => (
+							<div>
+								<label
+									htmlFor={field.name}
+									className="mb-2 block text-sm font-medium text-zinc-300"
+								>
+									Client Name
+								</label>
+								<Input
+									id={field.name}
+									name={field.name}
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(event) => field.handleChange(event.target.value)}
+									placeholder="e.g. Keyzori License Server, Billing Sync Worker"
+									disabled={form.state.isSubmitting}
+									hasError={
+										field.state.meta.isTouched &&
+										field.state.meta.errors.length > 0
+									}
+									required
+								/>
+								{field.state.meta.isTouched && field.state.meta.errors[0] ? (
+									<p className="mt-1.5 text-xs text-red-400">
+										{String(field.state.meta.errors[0])}
+									</p>
+								) : null}
+							</div>
 						)}
-					</div>
+					</form.Field>
 
 					{!editing && (
 						<div>
@@ -246,9 +229,9 @@ export default function ClientModal({
 								<button
 									type="button"
 									onClick={() => handleProfileChange("m2m_service")}
-									disabled={saving}
+									disabled={form.state.isSubmitting}
 									className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all cursor-pointer ${
-										profile === "m2m_service"
+										form.state.values.profile === "m2m_service"
 											? "border-violet-500/50 bg-violet-500/10 text-white"
 											: "border-white/8 bg-zinc-900/40 text-zinc-400 hover:bg-white/[0.04]"
 									}`}
@@ -265,9 +248,9 @@ export default function ClientModal({
 								<button
 									type="button"
 									onClick={() => handleProfileChange("web_app")}
-									disabled={saving}
+									disabled={form.state.isSubmitting}
 									className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all cursor-pointer ${
-										profile === "web_app"
+										form.state.values.profile === "web_app"
 											? "border-violet-500/50 bg-violet-500/10 text-white"
 											: "border-white/8 bg-zinc-900/40 text-zinc-400 hover:bg-white/[0.04]"
 									}`}
@@ -284,9 +267,9 @@ export default function ClientModal({
 								<button
 									type="button"
 									onClick={() => handleProfileChange("spa_native")}
-									disabled={saving}
+									disabled={form.state.isSubmitting}
 									className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all cursor-pointer ${
-										profile === "spa_native"
+										form.state.values.profile === "spa_native"
 											? "border-violet-500/50 bg-violet-500/10 text-white"
 											: "border-white/8 bg-zinc-900/40 text-zinc-400 hover:bg-white/[0.04]"
 									}`}
@@ -303,70 +286,125 @@ export default function ClientModal({
 						</div>
 					)}
 
-					<div>
-						<label
-							htmlFor="redirect-uris"
-							className="mb-2 block text-sm font-medium text-zinc-300"
-						>
-							Redirect URIs{" "}
-							{profile === "m2m_service" && (
-								<span className="text-zinc-500 font-normal">
-									(Optional for M2M)
-								</span>
-							)}
-						</label>
-						<Textarea
-							id="redirect-uris"
-							value={redirectUris}
-							onChange={(event) => setRedirectUris(event.target.value)}
-							disabled={saving}
-							hasError={Boolean(errors.redirectUris && redirectUris)}
-							rows={profile === "m2m_service" ? 2 : 3}
-							placeholder={
-								profile === "m2m_service"
-									? "Not required for Client Credentials grant"
-									: "https://app.example.com/oauth/callback"
-							}
-							required={profile !== "m2m_service"}
-						/>
-						{errors.redirectUris && redirectUris ? (
-							<p className="mt-1.5 text-xs text-red-400">
-								{errors.redirectUris}
-							</p>
-						) : (
-							<p className="mt-1.5 text-xs text-zinc-500">
-								{profile === "m2m_service"
-									? "Machine-to-machine clients do not require redirect URIs unless also using user authorization code flow."
-									: "Enter one redirect URI per line."}
-							</p>
+					<form.Field
+						name="redirectUris"
+						validators={{
+							onChangeListenTo: ["profile"],
+							onChange: validateField([
+								validators.custom((val, f: { profile?: ClientProfile }) => {
+									if (
+										f?.profile === "spa_native" &&
+										typeof val === "string" &&
+										!val.trim()
+									) {
+										return "Public clients require at least one redirect URI.";
+									}
+									return null;
+								}, "Public clients require at least one redirect URI."),
+								validators.urlList(
+									"Each line must be a valid HTTP or HTTPS URL.",
+								),
+							]),
+						}}
+					>
+						{(field) => (
+							<div>
+								<label
+									htmlFor={field.name}
+									className="mb-2 block text-sm font-medium text-zinc-300"
+								>
+									Redirect URIs{" "}
+									{form.state.values.profile === "m2m_service" && (
+										<span className="text-zinc-500 font-normal">
+											(Optional for M2M)
+										</span>
+									)}
+								</label>
+								<Textarea
+									id={field.name}
+									name={field.name}
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(event) => field.handleChange(event.target.value)}
+									disabled={form.state.isSubmitting}
+									hasError={
+										field.state.meta.isTouched &&
+										field.state.meta.errors.length > 0
+									}
+									rows={form.state.values.profile === "m2m_service" ? 2 : 3}
+									placeholder={
+										form.state.values.profile === "m2m_service"
+											? "Not required for Client Credentials grant"
+											: "https://app.example.com/oauth/callback"
+									}
+									required={form.state.values.profile !== "m2m_service"}
+								/>
+								{field.state.meta.isTouched && field.state.meta.errors[0] ? (
+									<p className="mt-1.5 text-xs text-red-400">
+										{String(field.state.meta.errors[0])}
+									</p>
+								) : (
+									<p className="mt-1.5 text-xs text-zinc-500">
+										{form.state.values.profile === "m2m_service"
+											? "Machine-to-machine clients do not require redirect URIs unless also using user authorization code flow."
+											: "Enter one redirect URI per line."}
+									</p>
+								)}
+							</div>
 						)}
-					</div>
+					</form.Field>
 
-					<div>
-						<ScopeSelector
-							profile={profile}
-							scopes={scopes}
-							onChange={setScopes}
-							disabled={saving}
-						/>
-						{errors.scopes && (
-							<p className="mt-1.5 text-xs text-red-400">{errors.scopes}</p>
+					<form.Field
+						name="scopes"
+						validators={{
+							onChange: validateField(
+								validators.minItems(
+									1,
+									"At least one scope must be assigned to the client.",
+								),
+							),
+						}}
+					>
+						{(field) => (
+							<div>
+								<ScopeSelector
+									profile={form.state.values.profile}
+									scopes={field.state.value}
+									onChange={(newScopes) => field.handleChange(newScopes)}
+									disabled={form.state.isSubmitting}
+								/>
+								{field.state.meta.isTouched && field.state.meta.errors[0] ? (
+									<p className="mt-1.5 text-xs text-red-400">
+										{String(field.state.meta.errors[0])}
+									</p>
+								) : null}
+							</div>
 						)}
-					</div>
+					</form.Field>
 
 					<div className="flex justify-end gap-3 pt-3">
 						<Button
 							type="button"
 							variant="ghost"
 							onClick={onClose}
-							disabled={saving}
+							disabled={form.state.isSubmitting}
 						>
 							Cancel
 						</Button>
 
-						<Button type="submit" loading={saving} disabled={!canSubmit}>
-							{editing ? "Save changes" : "Create client"}
-						</Button>
+						<form.Subscribe
+							selector={(state) => [state.canSubmit, state.isSubmitting]}
+						>
+							{([canSubmit, isSubmitting]) => (
+								<Button
+									type="submit"
+									loading={Boolean(isSubmitting)}
+									disabled={!canSubmit}
+								>
+									{editing ? "Save changes" : "Create client"}
+								</Button>
+							)}
+						</form.Subscribe>
 					</div>
 				</form>
 			)}

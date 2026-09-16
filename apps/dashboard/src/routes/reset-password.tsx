@@ -1,6 +1,7 @@
+import { useForm } from "@tanstack/react-form";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AlertCircle, CheckCircle2, ShieldCheck } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import PreAuthLayout from "@/components/PreAuthLayout";
 import { useToast } from "@/components/Toast";
@@ -9,11 +10,7 @@ import Input from "@/components/ui/Input";
 import InstanceLogo from "@/components/ui/InstanceLogo";
 import Spinner from "@/components/ui/Spinner";
 import { confirmPasswordReset, verifyPasswordResetToken } from "@/lib/api";
-import {
-	type FieldValidators,
-	validateForm,
-	validators,
-} from "@/lib/validation";
+import { validateField, validators } from "@/lib/validation";
 
 export interface ResetPasswordSearch {
 	token?: string;
@@ -29,26 +26,6 @@ export const Route = createFileRoute("/reset-password")({
 	component: ResetPasswordPage,
 });
 
-interface ResetPasswordForm {
-	newPassword: string;
-	confirmPassword: string;
-}
-
-const RESET_PASSWORD_VALIDATORS: FieldValidators<ResetPasswordForm> = {
-	newPassword: [
-		validators.required("New password is required."),
-		validators.password({
-			min: 8,
-			max: 128,
-			message: "Password must be between 8 and 128 characters long.",
-		}),
-	],
-	confirmPassword: [
-		validators.required("Confirm password is required."),
-		validators.matches("newPassword", "Passwords do not match."),
-	],
-};
-
 function ResetPasswordPage() {
 	const { token } = Route.useSearch();
 	const toast = useToast();
@@ -57,12 +34,6 @@ function ResetPasswordPage() {
 	const [checking, setChecking] = useState(true);
 	const [valid, setValid] = useState(false);
 	const [email, setEmail] = useState<string | null>(null);
-
-	const [form, setForm] = useState<ResetPasswordForm>({
-		newPassword: "",
-		confirmPassword: "",
-	});
-	const [submitting, setSubmitting] = useState(false);
 	const [success, setSuccess] = useState(false);
 
 	useEffect(() => {
@@ -101,50 +72,40 @@ function ResetPasswordPage() {
 		};
 	}, [token]);
 
-	const { errors, isValid } = useMemo(
-		() => validateForm(form, RESET_PASSWORD_VALIDATORS),
-		[form],
-	);
+	const form = useForm({
+		defaultValues: {
+			newPassword: "",
+			confirmPassword: "",
+		},
+		onSubmit: async ({ value }) => {
+			if (!token) {
+				return;
+			}
 
-	const passwordsMatch = Boolean(
-		form.confirmPassword && !errors.confirmPassword,
-	);
-	const canSubmit = isValid && !submitting;
-
-	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-		event.preventDefault();
-
-		if (!token || !canSubmit) {
-			return;
-		}
-
-		setSubmitting(true);
-
-		try {
-			await confirmPasswordReset(token, form.newPassword);
-			setSuccess(true);
-			toast.success("Password reset successfully. You may now log in.");
-			setTimeout(() => {
-				void navigate({ to: "/login" });
-			}, 2000);
-		} catch (error) {
-			const message =
-				error instanceof Error
-					? error.message
-					: "Failed to reset password. The link may have expired.";
-			toast.error(message);
-		} finally {
-			setSubmitting(false);
-		}
-	}
+			try {
+				await confirmPasswordReset(token, value.newPassword);
+				setSuccess(true);
+				toast.success("Password reset successfully. You may now log in.");
+				setTimeout(() => {
+					void navigate({ to: "/login" });
+				}, 2000);
+			} catch (error) {
+				const message =
+					error instanceof Error
+						? error.message
+						: "Failed to reset password. The link may have expired.";
+				toast.error(message);
+			}
+		},
+	});
 
 	if (checking) {
 		return (
 			<PreAuthLayout>
-				<div className="flex flex-col items-center justify-center py-12 space-y-4">
+				<div className="flex flex-col items-center justify-center py-12">
 					<Spinner size="lg" />
-					<p className="text-xs text-zinc-400">
-						Verifying password reset link...
+					<p className="mt-4 text-xs font-medium text-zinc-400">
+						Verifying reset token...
 					</p>
 				</div>
 			</PreAuthLayout>
@@ -242,72 +203,134 @@ function ResetPasswordPage() {
 					</p>
 				</div>
 
-				<form onSubmit={handleSubmit} className="space-y-4">
-					<div>
-						<label
-							htmlFor="new-password"
-							className="mb-1.5 block text-xs font-medium text-zinc-300"
-						>
-							New password
-						</label>
-
-						<Input
-							id="new-password"
-							type="password"
-							autoComplete="new-password"
-							value={form.newPassword}
-							onChange={(event) =>
-								setForm((current) => ({
-									...current,
-									newPassword: event.target.value,
-								}))
-							}
-							placeholder="At least 8 characters"
-							required
-							disabled={submitting}
-						/>
-					</div>
-
-					<div>
-						<label
-							htmlFor="confirm-password"
-							className="mb-1.5 block text-xs font-medium text-zinc-300"
-						>
-							Confirm password
-						</label>
-
-						<Input
-							id="confirm-password"
-							type="password"
-							autoComplete="new-password"
-							value={form.confirmPassword}
-							onChange={(event) =>
-								setForm((current) => ({
-									...current,
-									confirmPassword: event.target.value,
-								}))
-							}
-							placeholder="Re-enter new password"
-							hasError={Boolean(form.confirmPassword && !passwordsMatch)}
-							required
-							disabled={submitting}
-						/>
-					</div>
-
-					{form.confirmPassword.length > 0 && !passwordsMatch && (
-						<p className="text-[11px] text-red-400">Passwords do not match.</p>
-					)}
-
-					<Button
-						type="submit"
-						loading={submitting}
-						disabled={!canSubmit}
-						className="w-full mt-2"
-						size="lg"
-						icon={<ShieldCheck size={16} />}
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						void form.handleSubmit();
+					}}
+					className="space-y-4"
+				>
+					<form.Field
+						name="newPassword"
+						validators={{
+							onChange: validateField([
+								validators.required("New password is required."),
+								validators.password({
+									min: 8,
+									max: 128,
+									message:
+										"Password must be between 8 and 128 characters long.",
+								}),
+							]),
+						}}
 					>
-						Set New Password
-					</Button>
+						{(field) => (
+							<div>
+								<label
+									htmlFor={field.name}
+									className="mb-1.5 block text-xs font-medium text-zinc-300"
+								>
+									New password
+								</label>
+
+								<Input
+									id={field.name}
+									name={field.name}
+									type="password"
+									autoComplete="new-password"
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(event) => field.handleChange(event.target.value)}
+									placeholder="At least 8 characters"
+									required
+									disabled={form.state.isSubmitting}
+									hasError={
+										field.state.meta.isTouched &&
+										field.state.meta.errors.length > 0
+									}
+								/>
+
+								{field.state.meta.isTouched && field.state.meta.errors[0] ? (
+									<p className="mt-1 text-xs text-red-400">
+										{String(field.state.meta.errors[0])}
+									</p>
+								) : null}
+							</div>
+						)}
+					</form.Field>
+
+					<form.Field
+						name="confirmPassword"
+						validators={{
+							onChangeListenTo: ["newPassword"],
+							onChange: validateField([
+								validators.required("Confirm password is required."),
+								validators.matches("newPassword", "Passwords do not match."),
+							]),
+						}}
+					>
+						{(field) => {
+							const matches =
+								field.state.value.length > 0 &&
+								field.state.value === form.state.values.newPassword;
+
+							return (
+								<div>
+									<label
+										htmlFor={field.name}
+										className="mb-1.5 block text-xs font-medium text-zinc-300"
+									>
+										Confirm password
+									</label>
+
+									<Input
+										id={field.name}
+										name={field.name}
+										type="password"
+										autoComplete="new-password"
+										value={field.state.value}
+										onBlur={field.handleBlur}
+										onChange={(event) => field.handleChange(event.target.value)}
+										placeholder="Re-enter new password"
+										hasError={
+											Boolean(field.state.value) &&
+											(!matches || field.state.meta.errors.length > 0)
+										}
+										required
+										disabled={form.state.isSubmitting}
+									/>
+
+									{field.state.value.length > 0 && (
+										<p
+											className={`mt-1.5 text-xs ${
+												matches ? "text-emerald-400" : "text-red-400"
+											}`}
+										>
+											{matches ? "Passwords match." : "Passwords do not match."}
+										</p>
+									)}
+								</div>
+							);
+						}}
+					</form.Field>
+
+					<form.Subscribe
+						selector={(state) => [state.canSubmit, state.isSubmitting]}
+					>
+						{([canSubmit, isSubmitting]) => (
+							<Button
+								type="submit"
+								loading={Boolean(isSubmitting)}
+								disabled={!canSubmit}
+								className="w-full mt-2"
+								size="lg"
+								icon={<ShieldCheck size={16} />}
+							>
+								Set New Password
+							</Button>
+						)}
+					</form.Subscribe>
 				</form>
 			</div>
 		</PreAuthLayout>

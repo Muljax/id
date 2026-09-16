@@ -1,5 +1,5 @@
+import { useForm } from "@tanstack/react-form";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
 
 import PreAuthLayout from "@/components/PreAuthLayout";
 import { useToast } from "@/components/Toast";
@@ -9,11 +9,7 @@ import InstanceLogo from "@/components/ui/InstanceLogo";
 import { useAuth } from "@/context/AuthContext";
 import { register } from "@/lib/api";
 import { INSTANCE_NAME } from "@/lib/config";
-import {
-	type FieldValidators,
-	validateForm,
-	validators,
-} from "@/lib/validation";
+import { validateField, validators } from "@/lib/validation";
 
 export interface RegisterSearch {
 	return_to?: string;
@@ -38,89 +34,43 @@ function getSafeReturnTo(value: string | undefined) {
 	return value;
 }
 
-interface RegisterForm {
-	email: string;
-	password: string;
-	confirmPassword: string;
-}
-
-const REGISTER_VALIDATORS: FieldValidators<RegisterForm> = {
-	email: [
-		validators.required("Email address is required."),
-		validators.email(),
-	],
-	password: [
-		validators.required("Password is required."),
-		validators.password({
-			min: 12,
-			max: 128,
-			message: "Must be between 12 and 128 characters long.",
-		}),
-	],
-	confirmPassword: [
-		validators.required("Confirm password is required."),
-		validators.matches("password", "Passwords do not match."),
-	],
-};
-
 function RegisterPage() {
 	const navigate = useNavigate();
 	const { refresh } = useAuth();
 	const toast = useToast();
 	const { return_to } = Route.useSearch();
 
-	const [form, setForm] = useState<RegisterForm>({
-		email: "",
-		password: "",
-		confirmPassword: "",
-	});
-	const [loading, setLoading] = useState(false);
+	const form = useForm({
+		defaultValues: {
+			email: "",
+			password: "",
+			confirmPassword: "",
+		},
+		onSubmit: async ({ value }) => {
+			try {
+				await register(value.email.trim(), value.password);
+				await refresh();
 
-	const { errors, isValid } = useMemo(
-		() => validateForm(form, REGISTER_VALIDATORS),
-		[form],
-	);
+				toast.success("Account created successfully.");
 
-	const passwordValid = Boolean(form.password && !errors.password);
-	const passwordsMatch = Boolean(
-		form.confirmPassword && !errors.confirmPassword,
-	);
-	const canSubmit = isValid && !loading;
+				const destination = getSafeReturnTo(return_to);
 
-	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-		event.preventDefault();
+				if (destination) {
+					const url = new URL(destination, window.location.origin);
+					window.location.href = url.toString();
+					return;
+				}
 
-		if (!canSubmit) {
-			return;
-		}
-
-		setLoading(true);
-
-		try {
-			await register(form.email.trim(), form.password);
-			await refresh();
-
-			toast.success("Account created successfully.");
-
-			const destination = getSafeReturnTo(return_to);
-
-			if (destination) {
-				const url = new URL(destination, window.location.origin);
-				window.location.href = url.toString();
-				return;
+				await navigate({ to: "/" });
+			} catch (error) {
+				toast.error(
+					error instanceof Error
+						? error.message
+						: "Unable to create your account.",
+				);
 			}
-
-			await navigate({ to: "/" });
-		} catch (error) {
-			toast.error(
-				error instanceof Error
-					? error.message
-					: "Unable to create your account.",
-			);
-		} finally {
-			setLoading(false);
-		}
-	}
+		},
+	});
 
 	return (
 		<PreAuthLayout>
@@ -145,119 +95,191 @@ function RegisterPage() {
 				</div>
 
 				{/* Form */}
-				<form onSubmit={handleSubmit} className="space-y-4">
-					<div>
-						<label
-							htmlFor="email"
-							className="mb-1.5 block text-xs font-medium text-zinc-300"
-						>
-							Email address
-						</label>
-
-						<Input
-							id="email"
-							type="email"
-							value={form.email}
-							onChange={(event) =>
-								setForm((current) => ({
-									...current,
-									email: event.target.value,
-								}))
-							}
-							placeholder="you@example.com"
-							autoComplete="email"
-							autoFocus
-							disabled={loading}
-							required
-						/>
-					</div>
-
-					<div>
-						<label
-							htmlFor="password"
-							className="mb-1.5 block text-xs font-medium text-zinc-300"
-						>
-							Password
-						</label>
-
-						<Input
-							id="password"
-							type="password"
-							value={form.password}
-							onChange={(event) =>
-								setForm((current) => ({
-									...current,
-									password: event.target.value,
-								}))
-							}
-							placeholder="Create a strong password"
-							autoComplete="new-password"
-							disabled={loading}
-							required
-						/>
-
-						<p
-							className={`mt-1.5 text-xs ${
-								form.password.length === 0
-									? "text-zinc-500"
-									: passwordValid
-										? "text-emerald-400"
-										: "text-amber-400"
-							}`}
-						>
-							{passwordValid
-								? "Password meets security requirements."
-								: "Must be between 12 and 128 characters long."}
-						</p>
-					</div>
-
-					<div>
-						<label
-							htmlFor="confirm-password"
-							className="mb-1.5 block text-xs font-medium text-zinc-300"
-						>
-							Confirm password
-						</label>
-
-						<Input
-							id="confirm-password"
-							type="password"
-							value={form.confirmPassword}
-							onChange={(event) =>
-								setForm((current) => ({
-									...current,
-									confirmPassword: event.target.value,
-								}))
-							}
-							placeholder="Re-enter your password"
-							autoComplete="new-password"
-							disabled={loading}
-							hasError={Boolean(form.confirmPassword && !passwordsMatch)}
-							required
-						/>
-
-						{form.confirmPassword.length > 0 && (
-							<p
-								className={`mt-1.5 text-xs ${
-									passwordsMatch ? "text-emerald-400" : "text-red-400"
-								}`}
-							>
-								{passwordsMatch
-									? "Passwords match."
-									: "Passwords do not match."}
-							</p>
-						)}
-					</div>
-
-					<Button
-						type="submit"
-						className="w-full mt-2"
-						size="lg"
-						loading={loading}
-						disabled={!canSubmit}
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						void form.handleSubmit();
+					}}
+					className="space-y-4"
+				>
+					<form.Field
+						name="email"
+						validators={{
+							onChange: validateField([
+								validators.required("Email address is required."),
+								validators.email(),
+							]),
+						}}
 					>
-						Create account
-					</Button>
+						{(field) => (
+							<div>
+								<label
+									htmlFor={field.name}
+									className="mb-1.5 block text-xs font-medium text-zinc-300"
+								>
+									Email address
+								</label>
+
+								<Input
+									id={field.name}
+									name={field.name}
+									type="email"
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(event) => field.handleChange(event.target.value)}
+									placeholder="you@example.com"
+									autoComplete="email"
+									autoFocus
+									disabled={form.state.isSubmitting}
+									hasError={
+										field.state.meta.isTouched &&
+										field.state.meta.errors.length > 0
+									}
+									required
+								/>
+
+								{field.state.meta.isTouched && field.state.meta.errors[0] ? (
+									<p className="mt-1 text-xs text-red-400">
+										{String(field.state.meta.errors[0])}
+									</p>
+								) : null}
+							</div>
+						)}
+					</form.Field>
+
+					<form.Field
+						name="password"
+						validators={{
+							onChange: validateField([
+								validators.required("Password is required."),
+								validators.password({
+									min: 12,
+									max: 128,
+									message: "Must be between 12 and 128 characters long.",
+								}),
+							]),
+						}}
+					>
+						{(field) => {
+							const isValid =
+								field.state.value.length >= 12 &&
+								field.state.value.length <= 128;
+
+							return (
+								<div>
+									<label
+										htmlFor={field.name}
+										className="mb-1.5 block text-xs font-medium text-zinc-300"
+									>
+										Password
+									</label>
+
+									<Input
+										id={field.name}
+										name={field.name}
+										type="password"
+										value={field.state.value}
+										onBlur={field.handleBlur}
+										onChange={(event) => field.handleChange(event.target.value)}
+										placeholder="Create a strong password"
+										autoComplete="new-password"
+										disabled={form.state.isSubmitting}
+										hasError={
+											field.state.meta.isTouched &&
+											field.state.meta.errors.length > 0
+										}
+										required
+									/>
+
+									<p
+										className={`mt-1.5 text-xs ${
+											field.state.value.length === 0
+												? "text-zinc-500"
+												: isValid
+													? "text-emerald-400"
+													: "text-amber-400"
+										}`}
+									>
+										{isValid
+											? "Password meets security requirements."
+											: "Must be between 12 and 128 characters long."}
+									</p>
+								</div>
+							);
+						}}
+					</form.Field>
+
+					<form.Field
+						name="confirmPassword"
+						validators={{
+							onChangeListenTo: ["password"],
+							onChange: validateField([
+								validators.required("Confirm password is required."),
+								validators.matches("password", "Passwords do not match."),
+							]),
+						}}
+					>
+						{(field) => {
+							const matches =
+								field.state.value.length > 0 &&
+								field.state.value === form.state.values.password;
+
+							return (
+								<div>
+									<label
+										htmlFor={field.name}
+										className="mb-1.5 block text-xs font-medium text-zinc-300"
+									>
+										Confirm password
+									</label>
+
+									<Input
+										id={field.name}
+										name={field.name}
+										type="password"
+										value={field.state.value}
+										onBlur={field.handleBlur}
+										onChange={(event) => field.handleChange(event.target.value)}
+										placeholder="Re-enter your password"
+										autoComplete="new-password"
+										disabled={form.state.isSubmitting}
+										hasError={
+											Boolean(field.state.value) &&
+											(!matches || field.state.meta.errors.length > 0)
+										}
+										required
+									/>
+
+									{field.state.value.length > 0 && (
+										<p
+											className={`mt-1.5 text-xs ${
+												matches ? "text-emerald-400" : "text-red-400"
+											}`}
+										>
+											{matches ? "Passwords match." : "Passwords do not match."}
+										</p>
+									)}
+								</div>
+							);
+						}}
+					</form.Field>
+
+					<form.Subscribe
+						selector={(state) => [state.canSubmit, state.isSubmitting]}
+					>
+						{([canSubmit, isSubmitting]) => (
+							<Button
+								type="submit"
+								className="w-full mt-2"
+								size="lg"
+								loading={Boolean(isSubmitting)}
+								disabled={!canSubmit}
+							>
+								Create account
+							</Button>
+						)}
+					</form.Subscribe>
 				</form>
 
 				{/* Sign in link */}

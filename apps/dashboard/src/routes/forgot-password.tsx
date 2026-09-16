@@ -1,6 +1,7 @@
+import { useForm } from "@tanstack/react-form";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import PreAuthLayout from "@/components/PreAuthLayout";
 import { useToast } from "@/components/Toast";
@@ -8,11 +9,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import InstanceLogo from "@/components/ui/InstanceLogo";
 import { requestPasswordReset } from "@/lib/api";
-import {
-	type FieldValidators,
-	validateForm,
-	validators,
-} from "@/lib/validation";
+import { validateField, validators } from "@/lib/validation";
 
 export const Route = createFileRoute("/forgot-password")({
 	staticData: {
@@ -21,53 +18,30 @@ export const Route = createFileRoute("/forgot-password")({
 	component: ForgotPasswordPage,
 });
 
-interface ForgotPasswordForm {
-	email: string;
-}
-
-const FORGOT_PASSWORD_VALIDATORS: FieldValidators<ForgotPasswordForm> = {
-	email: [
-		validators.required("Email address is required."),
-		validators.email(),
-	],
-};
-
 function ForgotPasswordPage() {
 	const toast = useToast();
-	const [form, setForm] = useState<ForgotPasswordForm>({ email: "" });
-	const [submitting, setSubmitting] = useState(false);
 	const [submitted, setSubmitted] = useState(false);
+	const [submittedEmail, setSubmittedEmail] = useState("");
 
-	const { isValid } = useMemo(
-		() => validateForm(form, FORGOT_PASSWORD_VALIDATORS),
-		[form],
-	);
-
-	const canSubmit = isValid && !submitting;
-	const normalizedEmail = form.email.trim();
-
-	async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-		event.preventDefault();
-
-		if (!canSubmit) {
-			return;
-		}
-
-		setSubmitting(true);
-
-		try {
-			await requestPasswordReset(normalizedEmail);
-			setSubmitted(true);
-		} catch (error) {
-			const message =
-				error instanceof Error
-					? error.message
-					: "Failed to submit password reset request. Please try again.";
-			toast.error(message);
-		} finally {
-			setSubmitting(false);
-		}
-	}
+	const form = useForm({
+		defaultValues: {
+			email: "",
+		},
+		onSubmit: async ({ value }) => {
+			const normalizedEmail = value.email.trim();
+			try {
+				await requestPasswordReset(normalizedEmail);
+				setSubmittedEmail(normalizedEmail);
+				setSubmitted(true);
+			} catch (error) {
+				const message =
+					error instanceof Error
+						? error.message
+						: "Failed to submit password reset request. Please try again.";
+				toast.error(message);
+			}
+		},
+	});
 
 	return (
 		<PreAuthLayout>
@@ -100,7 +74,7 @@ function ForgotPasswordPage() {
 									<p className="text-zinc-400 leading-relaxed">
 										If an account exists for{" "}
 										<span className="font-mono text-zinc-200">
-											{normalizedEmail}
+											{submittedEmail}
 										</span>
 										, a reset request has been logged. An administrator can
 										generate a one-time link to help you regain access.
@@ -118,36 +92,73 @@ function ForgotPasswordPage() {
 						</Link>
 					</div>
 				) : (
-					<form onSubmit={handleSubmit} className="space-y-4">
-						<div>
-							<label
-								htmlFor="email"
-								className="mb-1.5 block text-xs font-medium text-zinc-300"
-							>
-								Email address
-							</label>
-
-							<Input
-								id="email"
-								type="email"
-								autoComplete="email"
-								value={form.email}
-								onChange={(event) => setForm({ email: event.target.value })}
-								placeholder="you@example.com"
-								required
-								disabled={submitting}
-							/>
-						</div>
-
-						<Button
-							type="submit"
-							loading={submitting}
-							disabled={!canSubmit}
-							className="w-full mt-2"
-							size="lg"
+					<form
+						onSubmit={(e) => {
+							e.preventDefault();
+							e.stopPropagation();
+							void form.handleSubmit();
+						}}
+						className="space-y-4"
+					>
+						<form.Field
+							name="email"
+							validators={{
+								onChange: validateField([
+									validators.required("Email address is required."),
+									validators.email(),
+								]),
+							}}
 						>
-							Request Reset
-						</Button>
+							{(field) => (
+								<div>
+									<label
+										htmlFor={field.name}
+										className="mb-1.5 block text-xs font-medium text-zinc-300"
+									>
+										Email address
+									</label>
+
+									<Input
+										id={field.name}
+										name={field.name}
+										type="email"
+										autoComplete="email"
+										value={field.state.value}
+										onBlur={field.handleBlur}
+										onChange={(event) => field.handleChange(event.target.value)}
+										placeholder="you@example.com"
+										required
+										disabled={form.state.isSubmitting}
+										hasError={
+											field.state.meta.isTouched &&
+											field.state.meta.errors.length > 0
+										}
+									/>
+
+									{field.state.meta.isTouched && field.state.meta.errors[0] ? (
+										<p className="mt-1 text-xs text-red-400">
+											{String(field.state.meta.errors[0])}
+										</p>
+									) : null}
+								</div>
+							)}
+						</form.Field>
+
+						<form.Subscribe
+							selector={(state) => [state.canSubmit, state.isSubmitting]}
+						>
+							{([canSubmit, isSubmitting]) => (
+								<Button
+									type="submit"
+									loading={Boolean(isSubmitting)}
+									disabled={!canSubmit}
+									className="w-full mt-2"
+									size="lg"
+								>
+									Request Reset
+								</Button>
+							)}
+						</form.Subscribe>
 
 						<div className="pt-2 text-center">
 							<Link

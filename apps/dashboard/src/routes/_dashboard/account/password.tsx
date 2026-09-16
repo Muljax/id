@@ -1,6 +1,6 @@
+import { useForm } from "@tanstack/react-form";
 import { createFileRoute } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
-import { type FormEvent, useMemo, useState } from "react";
 
 import { useToast } from "@/components/Toast";
 import Button from "@/components/ui/Button";
@@ -13,11 +13,7 @@ import Card, {
 import Input from "@/components/ui/Input";
 import PageHeader from "@/components/ui/PageHeader";
 import { changePassword } from "@/lib/api";
-import {
-	type FieldValidators,
-	validateForm,
-	validators,
-} from "@/lib/validation";
+import { validateField, validators } from "@/lib/validation";
 
 export const Route = createFileRoute("/_dashboard/account/password")({
 	staticData: {
@@ -29,91 +25,29 @@ export const Route = createFileRoute("/_dashboard/account/password")({
 	component: ChangePasswordPage,
 });
 
-interface ChangePasswordForm {
-	currentPassword: string;
-	newPassword: string;
-	confirmPassword: string;
-}
-
-const CHANGE_PASSWORD_VALIDATORS: FieldValidators<ChangePasswordForm> = {
-	currentPassword: [
-		validators.required("Current password is required."),
-		validators.maxLength(
-			128,
-			"Current password must be 128 characters or fewer.",
-		),
-	],
-	newPassword: [
-		validators.required("New password is required."),
-		validators.password({
-			min: 8,
-			max: 128,
-			message: "Password must be between 8 and 128 characters long.",
-		}),
-		validators.differentFrom(
-			"currentPassword",
-			"New password must be different from your current password.",
-		),
-	],
-	confirmPassword: [
-		validators.required("Confirm new password is required."),
-		validators.matches("newPassword", "Passwords do not match."),
-	],
-};
-
 function ChangePasswordPage() {
 	const toast = useToast();
 
-	const [form, setForm] = useState<ChangePasswordForm>({
-		currentPassword: "",
-		newPassword: "",
-		confirmPassword: "",
+	const form = useForm({
+		defaultValues: {
+			currentPassword: "",
+			newPassword: "",
+			confirmPassword: "",
+		},
+		onSubmit: async ({ value, formApi }) => {
+			try {
+				await changePassword(value.currentPassword, value.newPassword);
+				toast.success("Password changed successfully.");
+				formApi.reset();
+			} catch (error) {
+				toast.error(
+					error instanceof Error
+						? error.message
+						: "Unable to change your password.",
+				);
+			}
+		},
 	});
-	const [saving, setSaving] = useState(false);
-
-	const { errors, isValid } = useMemo(
-		() => validateForm(form, CHANGE_PASSWORD_VALIDATORS),
-		[form],
-	);
-
-	const passwordsMatch = Boolean(
-		form.confirmPassword && !errors.confirmPassword,
-	);
-	const isDifferent = Boolean(
-		form.newPassword &&
-			form.currentPassword &&
-			form.newPassword !== form.currentPassword,
-	);
-	const canSubmit = isValid && !saving;
-
-	async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-		event.preventDefault();
-
-		if (!canSubmit) {
-			return;
-		}
-
-		setSaving(true);
-
-		try {
-			await changePassword(form.currentPassword, form.newPassword);
-			toast.success("Password changed successfully.");
-
-			setForm({
-				currentPassword: "",
-				newPassword: "",
-				confirmPassword: "",
-			});
-		} catch (error) {
-			toast.error(
-				error instanceof Error
-					? error.message
-					: "Unable to change your password.",
-			);
-		} finally {
-			setSaving(false);
-		}
-	}
 
 	return (
 		<div className="space-y-8 max-w-2xl">
@@ -123,7 +57,13 @@ function ChangePasswordPage() {
 			/>
 
 			<Card>
-				<form onSubmit={handleSubmit}>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						void form.handleSubmit();
+					}}
+				>
 					<CardHeader>
 						<div className="flex items-center gap-3">
 							<div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-violet-400">
@@ -141,90 +81,155 @@ function ChangePasswordPage() {
 					</CardHeader>
 
 					<CardContent className="space-y-5">
-						<div>
-							<label
-								htmlFor="current-password"
-								className="mb-2 block text-sm font-medium text-zinc-300"
-							>
-								Current password
-							</label>
-							<Input
-								id="current-password"
-								type="password"
-								autoComplete="current-password"
-								value={form.currentPassword}
-								onChange={(event) =>
-									setForm((current) => ({
-										...current,
-										currentPassword: event.target.value,
-									}))
-								}
-								disabled={saving}
-								required
-							/>
-						</div>
-
-						<div>
-							<label
-								htmlFor="new-password"
-								className="mb-2 block text-sm font-medium text-zinc-300"
-							>
-								New password
-							</label>
-							<Input
-								id="new-password"
-								type="password"
-								autoComplete="new-password"
-								value={form.newPassword}
-								onChange={(event) =>
-									setForm((current) => ({
-										...current,
-										newPassword: event.target.value,
-									}))
-								}
-								disabled={saving}
-								required
-							/>
-							<p className="mt-2 text-xs text-zinc-500">
-								Password must be between 8 and 128 characters long.
-							</p>
-						</div>
-
-						<div>
-							<label
-								htmlFor="confirm-password"
-								className="mb-2 block text-sm font-medium text-zinc-300"
-							>
-								Confirm new password
-							</label>
-							<Input
-								id="confirm-password"
-								type="password"
-								autoComplete="new-password"
-								value={form.confirmPassword}
-								onChange={(event) =>
-									setForm((current) => ({
-										...current,
-										confirmPassword: event.target.value,
-									}))
-								}
-								disabled={saving}
-								hasError={Boolean(form.confirmPassword && !passwordsMatch)}
-								required
-							/>
-
-							{form.confirmPassword && !passwordsMatch && (
-								<p className="mt-2 text-xs text-red-400">
-									Passwords do not match.
-								</p>
+						<form.Field
+							name="currentPassword"
+							validators={{
+								onChange: validateField([
+									validators.required("Current password is required."),
+									validators.maxLength(
+										128,
+										"Current password must be 128 characters or fewer.",
+									),
+								]),
+							}}
+						>
+							{(field) => (
+								<div>
+									<label
+										htmlFor={field.name}
+										className="mb-2 block text-sm font-medium text-zinc-300"
+									>
+										Current password
+									</label>
+									<Input
+										id={field.name}
+										name={field.name}
+										type="password"
+										autoComplete="current-password"
+										value={field.state.value}
+										onBlur={field.handleBlur}
+										onChange={(event) => field.handleChange(event.target.value)}
+										disabled={form.state.isSubmitting}
+										hasError={
+											field.state.meta.isTouched &&
+											field.state.meta.errors.length > 0
+										}
+										required
+									/>
+									{field.state.meta.isTouched && field.state.meta.errors[0] ? (
+										<p className="mt-2 text-xs text-red-400">
+											{String(field.state.meta.errors[0])}
+										</p>
+									) : null}
+								</div>
 							)}
+						</form.Field>
 
-							{form.newPassword && form.currentPassword && !isDifferent && (
-								<p className="mt-2 text-xs text-red-400">
-									New password must be different from your current password.
-								</p>
+						<form.Field
+							name="newPassword"
+							validators={{
+								onChangeListenTo: ["currentPassword"],
+								onChange: validateField([
+									validators.required("New password is required."),
+									validators.password({
+										min: 8,
+										max: 128,
+										message:
+											"Password must be between 8 and 128 characters long.",
+									}),
+									validators.differentFrom(
+										"currentPassword",
+										"New password must be different from your current password.",
+									),
+								]),
+							}}
+						>
+							{(field) => (
+								<div>
+									<label
+										htmlFor={field.name}
+										className="mb-2 block text-sm font-medium text-zinc-300"
+									>
+										New password
+									</label>
+									<Input
+										id={field.name}
+										name={field.name}
+										type="password"
+										autoComplete="new-password"
+										value={field.state.value}
+										onBlur={field.handleBlur}
+										onChange={(event) => field.handleChange(event.target.value)}
+										disabled={form.state.isSubmitting}
+										hasError={
+											field.state.meta.isTouched &&
+											field.state.meta.errors.length > 0
+										}
+										required
+									/>
+									{field.state.meta.isTouched && field.state.meta.errors[0] ? (
+										<p className="mt-2 text-xs text-red-400">
+											{String(field.state.meta.errors[0])}
+										</p>
+									) : (
+										<p className="mt-2 text-xs text-zinc-500">
+											Password must be between 8 and 128 characters long.
+										</p>
+									)}
+								</div>
 							)}
-						</div>
+						</form.Field>
+
+						<form.Field
+							name="confirmPassword"
+							validators={{
+								onChangeListenTo: ["newPassword"],
+								onChange: validateField([
+									validators.required("Confirm new password is required."),
+									validators.matches("newPassword", "Passwords do not match."),
+								]),
+							}}
+						>
+							{(field) => {
+								const matches =
+									field.state.value.length > 0 &&
+									field.state.value === form.state.values.newPassword;
+
+								return (
+									<div>
+										<label
+											htmlFor={field.name}
+											className="mb-2 block text-sm font-medium text-zinc-300"
+										>
+											Confirm new password
+										</label>
+										<Input
+											id={field.name}
+											name={field.name}
+											type="password"
+											autoComplete="new-password"
+											value={field.state.value}
+											onBlur={field.handleBlur}
+											onChange={(event) =>
+												field.handleChange(event.target.value)
+											}
+											disabled={form.state.isSubmitting}
+											hasError={
+												Boolean(field.state.value) &&
+												(!matches || field.state.meta.errors.length > 0)
+											}
+											required
+										/>
+
+										{field.state.value.length > 0 && !matches && (
+											<p className="mt-2 text-xs text-red-400">
+												Passwords do not match.
+											</p>
+										)}
+									</div>
+								);
+							}}
+						</form.Field>
 					</CardContent>
 
 					<CardFooter className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -233,14 +238,20 @@ function ChangePasswordPage() {
 							sessions.
 						</p>
 
-						<Button
-							type="submit"
-							disabled={!canSubmit}
-							loading={saving}
-							className="w-full sm:w-auto"
+						<form.Subscribe
+							selector={(state) => [state.canSubmit, state.isSubmitting]}
 						>
-							Change password
-						</Button>
+							{([canSubmit, isSubmitting]) => (
+								<Button
+									type="submit"
+									disabled={!canSubmit}
+									loading={Boolean(isSubmitting)}
+									className="w-full sm:w-auto"
+								>
+									Change password
+								</Button>
+							)}
+						</form.Subscribe>
 					</CardFooter>
 				</form>
 			</Card>
