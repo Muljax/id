@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.25.0](https://github.com/Muljax/id/compare/v0.24.0...v0.25.0) (2026-09-16)
+
+
+### Features
+
+* **dashboard:** adopt @tanstack/react-form across all dashboard views ([#203](https://github.com/Muljax/id/issues/203)) ([27bfe44](https://github.com/Muljax/id/commit/27bfe44f41d6309168e193f58d6426783fc44f50))
+
 ## [0.24.0](https://github.com/Muljax/id/compare/v0.23.0...v0.24.0) (2026-09-15)
 
 
