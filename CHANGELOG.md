@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.26.0](https://github.com/Muljax/id/compare/v0.25.0...v0.26.0) (2026-09-16)
+
+
+### Features
+
+* **dashboard:** adopt @tanstack/react-query for state management and caching ([#205](https://github.com/Muljax/id/issues/205)) ([02a597c](https://github.com/Muljax/id/commit/02a597c14254b321ce71f972b4b8c0535fc7f006))
+
 ## [0.25.0](https://github.com/Muljax/id/compare/v0.24.0...v0.25.0) (2026-09-16)
 
 
