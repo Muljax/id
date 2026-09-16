@@ -8,9 +8,12 @@ locals {
   dashboard_url = "${local.protocol}://${local.dashboard_hostname}"
   oidc_issuer   = local.api_url
 
-  api_worker_name       = "${var.instance_name}-api"
-  dashboard_worker_name = "${var.instance_name}-dashboard"
+  _clean_instance_name     = trim(replace(replace(lower(var.instance_name), "/[^a-z0-9-]+/", "-"), "/-+/", "-"), "-")
+  normalized_instance_name = can(regex("^[a-z]", local._clean_instance_name)) ? local._clean_instance_name : (local._clean_instance_name == "" ? "id" : "id-${local._clean_instance_name}")
 
-  profile_bucket_name = "${var.instance_name}-profiles"
-  database_name       = "${var.instance_name}-api"
+  api_worker_name       = "${local.normalized_instance_name}-api"
+  dashboard_worker_name = "${local.normalized_instance_name}-dashboard"
+
+  profile_bucket_name = "${local.normalized_instance_name}-profiles"
+  database_name       = "${local.normalized_instance_name}-api"
 }
