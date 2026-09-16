@@ -144,14 +144,12 @@ function ForgotPasswordPage() {
 							)}
 						</form.Field>
 
-						<form.Subscribe
-							selector={(state) => [state.canSubmit, state.isSubmitting]}
-						>
-							{([canSubmit, isSubmitting]) => (
+						<form.Subscribe selector={(state) => [state.isSubmitting]}>
+							{([isSubmitting]) => (
 								<Button
 									type="submit"
 									loading={Boolean(isSubmitting)}
-									disabled={!canSubmit}
+									disabled={Boolean(isSubmitting)}
 									className="w-full mt-2"
 									size="lg"
 								>

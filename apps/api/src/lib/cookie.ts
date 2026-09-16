@@ -1,5 +1,6 @@
 import type { Context } from "hono";
 import { deleteCookie, setCookie } from "hono/cookie";
+import { isLocalhost } from "./env";
 
 const SESSION_COOKIE = "session";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 30;
@@ -14,14 +15,16 @@ const SESSION_MAX_AGE = 60 * 60 * 24 * 30;
  * @param maxAge The cookie lifetime in seconds.
  */
 export function setSessionCookie(
-	c: Context,
+	c: Context<{ Bindings: Env }>,
 	token: string,
 	maxAge = SESSION_MAX_AGE,
 ) {
+	const localhost = isLocalhost(c.env);
+
 	setCookie(c, SESSION_COOKIE, token, {
 		httpOnly: true,
-		secure: true,
-		sameSite: "None",
+		secure: !localhost,
+		sameSite: localhost ? "Lax" : "None",
 		path: "/",
 		maxAge,
 	});
@@ -32,11 +35,13 @@ export function setSessionCookie(
  *
  * @param c The Hono request context.
  */
-export function clearSessionCookie(c: Context) {
+export function clearSessionCookie(c: Context<{ Bindings: Env }>) {
+	const localhost = isLocalhost(c.env);
+
 	deleteCookie(c, SESSION_COOKIE, {
 		httpOnly: true,
-		secure: true,
-		sameSite: "None",
+		secure: !localhost,
+		sameSite: localhost ? "Lax" : "None",
 		path: "/",
 	});
 }

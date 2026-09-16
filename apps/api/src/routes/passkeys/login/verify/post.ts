@@ -11,7 +11,7 @@ import { setSessionCookie } from "@/lib/cookie";
 import { getDashboardOrigin } from "@/lib/env";
 import { base64ToUint8Array, consumeChallengeById } from "@/lib/passkey";
 import { createSession } from "@/lib/session";
-import { isUserDisabled } from "@/lib/user";
+import { isUserDisabled, toAuthUser } from "@/lib/user";
 
 interface CloudflareRequestProperties {
 	country?: string;
@@ -142,10 +142,7 @@ route.post("/", async (c) => {
 		setSessionCookie(c, session.token);
 
 		return c.json({
-			user: {
-				id: user.id,
-				email: user.email,
-			},
+			user: toAuthUser(user),
 		});
 	} catch (error) {
 		console.error("[Passkey] Authentication verification error:", error);

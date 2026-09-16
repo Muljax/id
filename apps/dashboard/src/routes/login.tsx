@@ -2,7 +2,7 @@ import { startAuthentication } from "@simplewebauthn/browser";
 import { useForm } from "@tanstack/react-form";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Fingerprint } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import PreAuthLayout from "@/components/PreAuthLayout";
 import { useToast } from "@/components/Toast";
@@ -10,7 +10,12 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import InstanceLogo from "@/components/ui/InstanceLogo";
 import { useAuth } from "@/context/AuthContext";
-import { getPasskeyLoginOptions, login, verifyPasskeyLogin } from "@/lib/api";
+import {
+	type AuthUser,
+	getPasskeyLoginOptions,
+	login,
+	verifyPasskeyLogin,
+} from "@/lib/api";
 import { INSTANCE_NAME } from "@/lib/config";
 import { validateField, validators } from "@/lib/validation";
 
@@ -46,11 +51,11 @@ async function loginWithPasskey() {
 		optionsJSON: options,
 	});
 
-	await verifyPasskeyLogin(response, challengeId);
+	return verifyPasskeyLogin(response, challengeId);
 }
 
 function LoginPage() {
-	const { refresh } = useAuth();
+	const { user, setUser, refresh } = useAuth();
 	const toast = useToast();
 	const navigate = useNavigate();
 	const { return_to, prompt } = Route.useSearch();
@@ -58,8 +63,23 @@ function LoginPage() {
 
 	const [passkeySubmitting, setPasskeySubmitting] = useState(false);
 
-	async function finishLogin() {
-		await refresh();
+	useEffect(() => {
+		if (user && !forceLogin) {
+			const destination = getSafeReturnTo(return_to);
+			if (destination) {
+				window.location.href = destination;
+			} else {
+				void navigate({ to: "/" });
+			}
+		}
+	}, [user, forceLogin, return_to, navigate]);
+
+	async function finishLogin(loggedInUser?: AuthUser) {
+		if (loggedInUser) {
+			setUser(loggedInUser);
+		} else {
+			await refresh();
+		}
 
 		const destination = getSafeReturnTo(return_to);
 
@@ -85,13 +105,13 @@ function LoginPage() {
 		},
 		onSubmit: async ({ value }) => {
 			try {
-				await login(
+				const response = await login(
 					value.email.trim(),
 					value.password,
 					value.rememberMe,
 					prompt,
 				);
-				await finishLogin();
+				await finishLogin(response.user);
 			} catch (error) {
 				toast.error(
 					error instanceof Error ? error.message : "Unable to sign in.",
@@ -108,8 +128,8 @@ function LoginPage() {
 		setPasskeySubmitting(true);
 
 		try {
-			await loginWithPasskey();
-			await finishLogin();
+			const response = await loginWithPasskey();
+			await finishLogin(response.user);
 		} catch (error) {
 			if (
 				error instanceof Error &&
@@ -281,14 +301,12 @@ function LoginPage() {
 						)}
 					</form.Field>
 
-					<form.Subscribe
-						selector={(state) => [state.canSubmit, state.isSubmitting]}
-					>
-						{([canSubmit, isSubmitting]) => (
+					<form.Subscribe selector={(state) => [state.isSubmitting]}>
+						{([isSubmitting]) => (
 							<Button
 								type="submit"
 								loading={Boolean(isSubmitting)}
-								disabled={!canSubmit || passkeySubmitting}
+								disabled={Boolean(isSubmitting) || passkeySubmitting}
 								className="w-full mt-2"
 								size="lg"
 							>
