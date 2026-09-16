@@ -38,17 +38,21 @@ cp .env.example .env
 
 Then fill out the required values.
 
-The `.env` file is used by the application and local development environment. Terraform configuration is provided separately through Terraform variables.
+The `.env` file serves as the single source of truth for your configuration.
 
-For Terraform, copy the example variables file:
+Once `.env` is configured, generate `terraform/terraform.tfvars` and derive your URLs and keys by running:
 
 ```sh
-cp terraform/terraform.tfvars.example terraform/terraform.tfvars
+bun run vars
 ```
 
-Then configure the Cloudflare account, domain, and other deployment values.
+This command will:
+1. Validate that all required configuration variables are present in `.env`.
+2. Generate `terraform/terraform.tfvars`.
+3. Derive `VITE_API_URL` and `OIDC_ISSUER` from your domain configuration and append them to `.env`.
+4. Generate the OIDC ES256 signing key in `terraform/terraform.tfvars` if one does not already exist.
 
-> **Important:** `terraform.tfvars` may contain sensitive values. It is ignored by Git and should never be committed.
+> **Important:** Both `.env` and `terraform/terraform.tfvars` contain sensitive secrets and credentials. They are ignored by Git and should never be committed.
 
 ## Branding & Customization
 
@@ -103,17 +107,13 @@ bun install
 
 Muljax Identity Platform requires an OIDC private key for signing tokens.
 
-Generate the key with:
+This key is automatically generated when you run `bun run vars`. If you ever need to manually regenerate or rotate the key, run:
 
 ```sh
-bun scripts/oidc-key.ts
+bun scripts/oidc-key.ts --force
 ```
 
-This generates an ES256 private key and writes it to `.env` as `OIDC_PRIVATE_KEY`.
-
-The generated private key should never be committed to the repository.
-
-When deploying with Terraform, provide the generated key to Terraform through the `oidc_private_key` variable.
+The generated private key is stored in `terraform/terraform.tfvars` and should never be committed to the repository.
 
 ## Deploy
 
