@@ -109,6 +109,12 @@ resource "cloudflare_workers_script" "api" {
       type = "secret_text"
       text = var.oidc_private_key
     },
+
+    {
+      name = "SSH_CA_PRIVATE_KEY"
+      type = "secret_text"
+      text = var.ssh_ca_private_key
+    },
   ]
 }
 

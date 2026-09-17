@@ -10,6 +10,7 @@ import oauth from "./routes/oauth";
 import wellKnown from "./routes/well-known";
 import account from "./routes/account";
 import notifications from "./routes/notifications";
+import ssh from "./routes/ssh";
 import users from "./routes/users";
 
 const app = new Hono<{ Bindings: Env }>();
@@ -28,6 +29,7 @@ app.route("/api/admin", admin);
 app.route("/api/passkeys", passkeys);
 app.route("/api/account", account);
 app.route("/api/notifications", notifications);
+app.route("/api/ssh", ssh);
 app.route("/oauth", oauth);
 app.route("/.well-known", wellKnown);
 app.route("/api/users", users);

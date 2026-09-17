@@ -2,8 +2,12 @@ import type { Context, Next } from "hono";
 import { getCookie } from "hono/cookie";
 
 import { createDb } from "../db";
+import { SYSTEM_ROLE_IDS } from "../lib/rbac/constants";
 import { hasPermission } from "../lib/rbac/matcher";
-import { getUserEffectivePermissions } from "../lib/rbac/permissions";
+import {
+	getEveryoneRolePermissions,
+	getUserEffectivePermissions,
+} from "../lib/rbac/permissions";
 import { getSessionUserWithSession } from "../lib/session";
 import { isUserDisabled } from "../lib/user";
 
@@ -29,16 +33,17 @@ export type AppEnv = {
 /**
  * Pipeline middleware: Authenticates session and resolves user identity,
  * roles, and effective permissions in a single pass.
+ * Unauthenticated callers receive the universal 'everyone' role and its read permissions.
  */
 export async function authenticate(c: Context<AppEnv>, next: Next) {
-	if (c.get("user")) {
+	if (c.get("permissions")) {
 		return next();
 	}
 
 	const sessionToken = getCookie(c, "session");
+	const db = createDb(c.env.DB);
 
 	if (sessionToken) {
-		const db = createDb(c.env.DB);
 		const record = await getSessionUserWithSession(db, sessionToken);
 
 		if (record && !isUserDisabled(record.user)) {
@@ -51,17 +56,23 @@ export async function authenticate(c: Context<AppEnv>, next: Next) {
 			c.set("session", record.session);
 			c.set("roles", roles);
 			c.set("permissions", permissions);
+			return next();
 		}
 	}
+
+	// Unauthenticated caller: apply the universal "everyone" role & read permissions
+	const everyonePerms = await getEveryoneRolePermissions(db);
+	c.set("roles", [SYSTEM_ROLE_IDS.EVERYONE]);
+	c.set("permissions", everyonePerms);
 
 	await next();
 }
 
 /**
- * Ensures user is authenticated.
+ * Ensures user is authenticated with a valid session.
  */
 export async function requireAuth(c: Context<AppEnv>, next: Next) {
-	if (!c.get("user")) {
+	if (!c.get("permissions")) {
 		await authenticate(c, async () => {});
 	}
 
@@ -79,20 +90,12 @@ export async function requireAuth(c: Context<AppEnv>, next: Next) {
 
 /**
  * Reusable middleware factory for requiring all specified permissions.
+ * Allows unauthenticated callers if their 'everyone' role satisfies all required permissions.
  */
 export function requirePermission(...requiredPermissions: string[]) {
 	return async (c: Context<AppEnv>, next: Next) => {
-		if (!c.get("user")) {
+		if (!c.get("permissions")) {
 			await authenticate(c, async () => {});
-		}
-
-		if (!c.get("user")) {
-			return c.json(
-				{
-					error: "unauthorized",
-				},
-				401,
-			);
 		}
 
 		const permissions = c.get("permissions") ?? new Set();
@@ -101,6 +104,14 @@ export function requirePermission(...requiredPermissions: string[]) {
 		);
 
 		if (!satisfied) {
+			if (!c.get("user")) {
+				return c.json(
+					{
+						error: "unauthorized",
+					},
+					401,
+				);
+			}
 			return c.json(
 				{
 					error: "forbidden",
@@ -117,20 +128,12 @@ export function requirePermission(...requiredPermissions: string[]) {
 
 /**
  * Reusable middleware factory for requiring at least one of the specified permissions.
+ * Allows unauthenticated callers if their 'everyone' role satisfies any required permission.
  */
 export function requireAnyPermission(...requiredPermissions: string[]) {
 	return async (c: Context<AppEnv>, next: Next) => {
-		if (!c.get("user")) {
+		if (!c.get("permissions")) {
 			await authenticate(c, async () => {});
-		}
-
-		if (!c.get("user")) {
-			return c.json(
-				{
-					error: "unauthorized",
-				},
-				401,
-			);
 		}
 
 		const permissions = c.get("permissions") ?? new Set();
@@ -139,6 +142,14 @@ export function requireAnyPermission(...requiredPermissions: string[]) {
 		);
 
 		if (!satisfied) {
+			if (!c.get("user")) {
+				return c.json(
+					{
+						error: "unauthorized",
+					},
+					401,
+				);
+			}
 			return c.json(
 				{
 					error: "forbidden",
@@ -157,7 +168,7 @@ export function requireAnyPermission(...requiredPermissions: string[]) {
  * Guard that ensures the user has administrative privileges ('*' permission or 'admin' role).
  */
 export async function requireAdmin(c: Context<AppEnv>, next: Next) {
-	if (!c.get("user")) {
+	if (!c.get("permissions")) {
 		await authenticate(c, async () => {});
 	}
 

@@ -55,4 +55,4 @@ if (/^oidc_private_key\s*=.*$/m.test(tfvars)) {
 
 await writeFile(TFVARS_FILE, tfvars);
 
-console.log("✅ Generated OIDC private key and updated terraform.tfvars");
+console.log("✓ Generated OIDC private key and updated terraform.tfvars");

@@ -8,7 +8,8 @@ export interface PermissionDefinition {
 		| "roles"
 		| "oauth_clients"
 		| "notifications"
-		| "settings";
+		| "settings"
+		| "ssh";
 }
 
 export const SYSTEM_PERMISSIONS: readonly PermissionDefinition[] = [
@@ -126,11 +127,57 @@ export const SYSTEM_PERMISSIONS: readonly PermissionDefinition[] = [
 		description: "Modify tenant and instance configuration",
 		resource: "settings",
 	},
+	{
+		id: "ssh:keys:manage",
+		name: "Manage Personal SSH Keys",
+		description: "Register, view, and delete personal SSH public keys",
+		resource: "ssh",
+	},
+	{
+		id: "ssh:cert:issue",
+		name: "Issue Personal SSH Certificates",
+		description: "Request and generate signed SSH user certificates",
+		resource: "ssh",
+	},
+	{
+		id: "ssh:ca:read",
+		name: "Read SSH CA Info",
+		description: "View SSH CA public keys, fingerprints, and revocation lists",
+		resource: "ssh",
+	},
+	{
+		id: "ssh:cert:list",
+		name: "List All SSH Certificates",
+		description:
+			"View global history and audit logs of issued SSH certificates across all users",
+		resource: "ssh",
+	},
+	{
+		id: "ssh:cert:revoke",
+		name: "Revoke SSH Certificates",
+		description:
+			"Revoke active OpenSSH certificates and update revocation lists",
+		resource: "ssh",
+	},
+	{
+		id: "ssh:keys:admin",
+		name: "Manage All User SSH Keys",
+		description: "View and delete SSH public keys belonging to any user",
+		resource: "ssh",
+	},
+	{
+		id: "ssh:*",
+		name: "All SSH Permissions",
+		description:
+			"Full administrative control over SSH CA, keys, certificates, and revocation",
+		resource: "ssh",
+	},
 ] as const;
 
 export const SYSTEM_ROLE_IDS = {
 	ADMIN: "admin",
 	USER: "user",
+	EVERYONE: "everyone",
 } as const;
 
 export const DEFAULT_ROLES = [
@@ -146,6 +193,22 @@ export const DEFAULT_ROLES = [
 		name: "User",
 		description: "Standard user with basic self-service access",
 		isSystem: true,
-		permissions: [],
+		permissions: ["ssh:cert:issue", "ssh:keys:manage", "ssh:ca:read"],
+	},
+	{
+		id: SYSTEM_ROLE_IDS.EVERYONE,
+		name: "Everyone",
+		description:
+			"Universal role granted to all callers, authenticated or not (strictly read-only)",
+		isSystem: true,
+		permissions: ["ssh:ca:read"],
 	},
 ] as const;
+
+/**
+ * Determines whether a permission is strictly read-only.
+ * The 'everyone' role can only be assigned read-only permissions.
+ */
+export function isReadOnlyPermission(permissionId: string): boolean {
+	return permissionId.endsWith(":read");
+}

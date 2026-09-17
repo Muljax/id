@@ -40,7 +40,14 @@ route.post("/", requirePermission("roles:write"), async (c) => {
 		return c.json({ error: "Role not found." }, 404);
 	}
 
-	const updated = await addRolePermissions(db, roleId, body.permissions);
+	let updated: Awaited<ReturnType<typeof addRolePermissions>>;
+	try {
+		updated = await addRolePermissions(db, roleId, body.permissions);
+	} catch (err) {
+		const message =
+			err instanceof Error ? err.message : "Failed to add permissions.";
+		return c.json({ error: message }, 400);
+	}
 
 	const adminUser = c.get("user");
 

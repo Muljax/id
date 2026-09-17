@@ -8,3 +8,4 @@ export * from "./sessions";
 export * from "./users";
 export * from "./passkeyChallenges";
 export * from "./rbac";
+export * from "./ssh";

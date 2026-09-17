@@ -18,7 +18,7 @@ export async function seedRbacData(db: Database) {
 				updatedAt: now,
 			})),
 		)
-		.onConflictDoNothing();
+		.onConflictDoNothing({ target: permissions.id });
 
 	await db
 		.insert(roles)
@@ -32,7 +32,7 @@ export async function seedRbacData(db: Database) {
 				updatedAt: now,
 			})),
 		)
-		.onConflictDoNothing();
+		.onConflictDoNothing({ target: roles.id });
 
 	const rolePerms = DEFAULT_ROLES.flatMap((roleDef) =>
 		roleDef.permissions.map((permId) => ({
@@ -43,6 +43,11 @@ export async function seedRbacData(db: Database) {
 	);
 
 	if (rolePerms.length > 0) {
-		await db.insert(rolePermissions).values(rolePerms).onConflictDoNothing();
+		await db
+			.insert(rolePermissions)
+			.values(rolePerms)
+			.onConflictDoNothing({
+				target: [rolePermissions.roleId, rolePermissions.permissionId],
+			});
 	}
 }

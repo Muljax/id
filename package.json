@@ -1,35 +1,35 @@
 {
-  "name": "muljax-id",
-  "version": "0.28.0",
-  "private": true,
-  "workspaces": [
-    "apps/*"
-  ],
-  "scripts": {
-    "format": "bunx biome format --write .",
-    "check": "bunx biome check .",
-    "check:fix": "bunx biome check . --fix",
-    "build": "bun run build:dashboard && bun run build:api",
-    "build:dashboard": "bun --cwd=apps/dashboard run build",
-    "vars": "bun scripts/generate-tfvars.ts && bun scripts/oidc-key.ts",
-    "deploy": "bun run vars && bun run build && terraform -chdir=terraform apply",
-    "build:api": "bun --cwd=apps/api run build",
-    "typecheck": "bun run typecheck:api && bun run typecheck:dashboard",
-    "typecheck:dashboard": "bunx tsc -p apps/dashboard/tsconfig.json --noEmit",
-    "typecheck:api": "bunx tsc -p apps/api/tsconfig.json --noEmit",
-    "prepare": "husky"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.5.14",
-    "@commitlint/cli": "21.2.2",
-    "@commitlint/config-conventional": "21.2.2",
-    "@types/bun": "1.4.2",
-    "@types/react": "19.3.0",
-    "@types/react-dom": "19.3.0",
-    "husky": "9.1.7",
-    "stylelint": "17.15.0",
-    "stylelint-config-standard": "40.0.0",
-    "typescript": "7.0.2",
-    "wrangler": "4.133.0"
-  }
+ "name": "muljax-id",
+ "version": "0.28.0",
+ "private": true,
+ "workspaces": [
+  "apps/*"
+ ],
+ "scripts": {
+  "format": "bunx biome format --write .",
+  "check": "bunx biome check .",
+  "check:fix": "bunx biome check . --fix",
+  "build": "bun run build:dashboard && bun run build:api",
+  "build:dashboard": "bun --cwd=apps/dashboard run build",
+  "vars": "bun scripts/generate-tfvars.ts && bun scripts/oidc-key.ts && bun scripts/ssh-ca-key.ts",
+  "deploy": "bun run vars && bun run build && terraform -chdir=terraform apply",
+  "build:api": "bun --cwd=apps/api run build",
+  "typecheck": "bun run typecheck:api && bun run typecheck:dashboard",
+  "typecheck:dashboard": "bunx tsc -p apps/dashboard/tsconfig.json --noEmit",
+  "typecheck:api": "bunx tsc -p apps/api/tsconfig.json --noEmit",
+  "prepare": "husky"
+ },
+ "devDependencies": {
+  "@biomejs/biome": "2.5.14",
+  "@commitlint/cli": "21.2.2",
+  "@commitlint/config-conventional": "21.2.2",
+  "@types/bun": "1.4.2",
+  "@types/react": "19.3.0",
+  "@types/react-dom": "19.3.0",
+  "husky": "9.1.7",
+  "stylelint": "17.15.0",
+  "stylelint-config-standard": "40.0.0",
+  "typescript": "7.0.2",
+  "wrangler": "4.133.0"
+ }
 }

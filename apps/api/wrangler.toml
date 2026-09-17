@@ -34,7 +34,7 @@ binding = "LIFECYCLE_WORKFLOW"
 class_name = "LifecycleWorkflow"
 
 [secrets]
-required = ["OIDC_PRIVATE_KEY", "ADMIN_BOOTSTRAP_SECRET"]
+required = ["OIDC_PRIVATE_KEY", "ADMIN_BOOTSTRAP_SECRET", "SSH_CA_PRIVATE_KEY"]
 
 [triggers]
 crons = ["0 * * * *"]

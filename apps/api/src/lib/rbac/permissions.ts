@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import type { Database } from "@/db";
 import { rolePermissions, userRoles } from "@/db/schema";
+import { SYSTEM_ROLE_IDS } from "./constants";
 import { hasPermission } from "./matcher";
 
 export async function getUserRoles(
@@ -12,7 +13,30 @@ export async function getUserRoles(
 		.from(userRoles)
 		.where(eq(userRoles.userId, userId));
 
-	return records.map((r) => r.roleId);
+	const roles = records.map((r) => r.roleId);
+	if (!roles.includes(SYSTEM_ROLE_IDS.EVERYONE)) {
+		roles.push(SYSTEM_ROLE_IDS.EVERYONE);
+	}
+	return roles;
+}
+
+export async function getEveryoneRolePermissions(
+	db: Database,
+): Promise<Set<string>> {
+	try {
+		const rows = await db
+			.select({ permissionId: rolePermissions.permissionId })
+			.from(rolePermissions)
+			.where(eq(rolePermissions.roleId, SYSTEM_ROLE_IDS.EVERYONE));
+
+		if (rows.length === 0) {
+			return new Set(["ssh:ca:read"]);
+		}
+
+		return new Set(rows.map((r) => r.permissionId));
+	} catch {
+		return new Set(["ssh:ca:read"]);
+	}
 }
 
 export async function getUserEffectivePermissions(
@@ -36,6 +60,13 @@ export async function getUserEffectivePermissions(
 		if (row.permissionId) {
 			permissionSet.add(row.permissionId);
 		}
+	}
+
+	// Always grant the universal "everyone" role & its permissions to all users
+	roleSet.add(SYSTEM_ROLE_IDS.EVERYONE);
+	const everyonePerms = await getEveryoneRolePermissions(db);
+	for (const perm of everyonePerms) {
+		permissionSet.add(perm);
 	}
 
 	return {

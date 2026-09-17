@@ -20,6 +20,12 @@ export const queryKeys = {
 		passkeys: ["account", "passkeys"] as const,
 		grants: ["account", "grants"] as const,
 	},
+	ssh: {
+		principals: ["ssh", "principals"] as const,
+		keys: ["ssh", "keys"] as const,
+		ca: ["ssh", "ca"] as const,
+		certs: (all = false) => ["ssh", "certs", { all }] as const,
+	},
 	oauth: {
 		clientDetails: (clientId?: string, redirectUri?: string) =>
 			["oauth", "clientDetails", clientId, redirectUri] as const,

@@ -124,7 +124,7 @@ oidc_private_key = ${JSON.stringify(oidcPrivateKey)}
 `;
 
 await writeFile(TFVARS_FILE, tfvarsContent);
-console.log(`✅ Successfully generated ${TFVARS_FILE} from .env`);
+console.log(`✓ Successfully generated ${TFVARS_FILE} from .env`);
 
 const protocol = localhost ? "http" : "https";
 const derivedApiUrl = `${protocol}://${apiDomain}`;
@@ -155,5 +155,5 @@ if (existsSync(ENV_FILE)) {
 
 	const updatedEnv = `${currentEnv}\n\n${autogenContent}`;
 	await writeFile(ENV_FILE, updatedEnv);
-	console.log(`✅ Updated derived variables in ${ENV_FILE}`);
+	console.log(`✓ Updated derived variables in ${ENV_FILE}`);
 }

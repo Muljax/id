@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import type { Database } from "@/db";
 import { permissions, rolePermissions, roles, userRoles } from "@/db/schema";
+import { isReadOnlyPermission, SYSTEM_ROLE_IDS } from "./constants";
 
 export async function listRoles(db: Database) {
 	const allRoles = await db.select().from(roles).orderBy(roles.createdAt);
@@ -64,16 +65,24 @@ export async function createRole(
 
 	if (input.permissions && input.permissions.length > 0) {
 		const uniquePerms = Array.from(new Set(input.permissions));
-		await db
-			.insert(rolePermissions)
-			.values(
-				uniquePerms.map((permId) => ({
-					roleId: id,
-					permissionId: permId,
-					createdAt: now,
-				})),
-			)
-			.onConflictDoNothing();
+		const allPerms = await db.select({ id: permissions.id }).from(permissions);
+		const validPermSet = new Set(allPerms.map((p) => p.id));
+		const validPerms = uniquePerms.filter((p) => validPermSet.has(p));
+
+		if (validPerms.length > 0) {
+			await db
+				.insert(rolePermissions)
+				.values(
+					validPerms.map((permId) => ({
+						roleId: id,
+						permissionId: permId,
+						createdAt: now,
+					})),
+				)
+				.onConflictDoNothing({
+					target: [rolePermissions.roleId, rolePermissions.permissionId],
+				});
+		}
 	}
 
 	return getRole(db, id);
@@ -140,19 +149,36 @@ export async function setRolePermissions(
 	const now = Date.now();
 	const uniquePerms = Array.from(new Set(permissionIds));
 
+	if (roleId === SYSTEM_ROLE_IDS.EVERYONE) {
+		const nonRead = uniquePerms.filter((p) => !isReadOnlyPermission(p));
+		if (nonRead.length > 0) {
+			throw new Error(
+				`The 'everyone' role can only be assigned read-only permissions (ending in ':read'). Invalid: ${nonRead.join(", ")}`,
+			);
+		}
+	}
+
 	await db.delete(rolePermissions).where(eq(rolePermissions.roleId, roleId));
 
 	if (uniquePerms.length > 0) {
-		await db
-			.insert(rolePermissions)
-			.values(
-				uniquePerms.map((permId) => ({
-					roleId,
-					permissionId: permId,
-					createdAt: now,
-				})),
-			)
-			.onConflictDoNothing();
+		const allPerms = await db.select({ id: permissions.id }).from(permissions);
+		const validPermSet = new Set(allPerms.map((p) => p.id));
+		const validPerms = uniquePerms.filter((id) => validPermSet.has(id));
+
+		if (validPerms.length > 0) {
+			await db
+				.insert(rolePermissions)
+				.values(
+					validPerms.map((permId) => ({
+						roleId,
+						permissionId: permId,
+						createdAt: now,
+					})),
+				)
+				.onConflictDoNothing({
+					target: [rolePermissions.roleId, rolePermissions.permissionId],
+				});
+		}
 	}
 
 	return getRole(db, roleId);
@@ -166,17 +192,34 @@ export async function addRolePermissions(
 	const now = Date.now();
 	const uniquePerms = Array.from(new Set(permissionIds));
 
+	if (roleId === SYSTEM_ROLE_IDS.EVERYONE) {
+		const nonRead = uniquePerms.filter((p) => !isReadOnlyPermission(p));
+		if (nonRead.length > 0) {
+			throw new Error(
+				`The 'everyone' role can only be assigned read-only permissions (ending in ':read'). Invalid: ${nonRead.join(", ")}`,
+			);
+		}
+	}
+
 	if (uniquePerms.length > 0) {
-		await db
-			.insert(rolePermissions)
-			.values(
-				uniquePerms.map((permId) => ({
-					roleId,
-					permissionId: permId,
-					createdAt: now,
-				})),
-			)
-			.onConflictDoNothing();
+		const allPerms = await db.select({ id: permissions.id }).from(permissions);
+		const validPermSet = new Set(allPerms.map((p) => p.id));
+		const validPerms = uniquePerms.filter((id) => validPermSet.has(id));
+
+		if (validPerms.length > 0) {
+			await db
+				.insert(rolePermissions)
+				.values(
+					validPerms.map((permId) => ({
+						roleId,
+						permissionId: permId,
+						createdAt: now,
+					})),
+				)
+				.onConflictDoNothing({
+					target: [rolePermissions.roleId, rolePermissions.permissionId],
+				});
+		}
 	}
 
 	return getRole(db, roleId);
@@ -223,6 +266,12 @@ export async function setUserRoles(
 	const now = Date.now();
 	const uniqueRoleIds = Array.from(new Set(roleIds));
 
+	if (uniqueRoleIds.includes(SYSTEM_ROLE_IDS.EVERYONE)) {
+		throw new Error(
+			"The 'everyone' role is universal and cannot be manually assigned to individual users.",
+		);
+	}
+
 	await db.delete(userRoles).where(eq(userRoles.userId, userId));
 
 	if (uniqueRoleIds.length > 0) {
@@ -248,6 +297,12 @@ export async function assignUserRole(
 	roleId: string,
 	assignedBy?: string,
 ) {
+	if (roleId === SYSTEM_ROLE_IDS.EVERYONE) {
+		throw new Error(
+			"The 'everyone' role is universal and cannot be manually assigned to individual users.",
+		);
+	}
+
 	const now = Date.now();
 
 	await db

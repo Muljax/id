@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Shield } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -36,30 +36,53 @@ const PERMISSION_DEPENDENCIES: Record<string, string[]> = {
 	"oauth_clients:write": ["oauth_clients:read"],
 	"notifications:write": ["notifications:read"],
 	"settings:write": ["settings:read"],
+	"ssh:keys:manage": ["ssh:ca:read"],
+	"ssh:cert:issue": ["ssh:ca:read"],
+	"ssh:cert:revoke": ["ssh:ca:read"],
+	"ssh:cert:list": ["ssh:ca:read"],
+	"ssh:keys:admin": ["ssh:ca:read"],
 };
 
-function getPrerequisites(permId: string): string[] {
+function getPrerequisites(
+	permId: string,
+	validPermSet?: Set<string>,
+): string[] {
 	const explicit = PERMISSION_DEPENDENCIES[permId];
 	if (explicit) {
-		return explicit;
+		return validPermSet
+			? explicit.filter((p) => validPermSet.has(p))
+			: explicit;
 	}
 	const colonIndex = permId.indexOf(":");
 	if (colonIndex !== -1) {
 		const action = permId.slice(colonIndex + 1);
 		if (action !== "read" && action !== "*") {
-			return [`${permId.slice(0, colonIndex)}:read`];
+			const candidate = `${permId.slice(0, colonIndex)}:read`;
+			if (!validPermSet || validPermSet.has(candidate)) {
+				return [candidate];
+			}
 		}
 	}
 	return [];
 }
 
-function isDependentOn(depPerm: string, targetPerm: string): boolean {
-	const prereqs = getPrerequisites(depPerm);
+function isDependentOn(
+	depPerm: string,
+	targetPerm: string,
+	validPermSet?: Set<string>,
+): boolean {
+	const prereqs = getPrerequisites(depPerm, validPermSet);
 	return prereqs.includes(targetPerm);
 }
 
-function getActiveDependents(permId: string, selected: string[]): string[] {
-	return selected.filter((selectedId) => isDependentOn(selectedId, permId));
+function getActiveDependents(
+	permId: string,
+	selected: string[],
+	validPermSet?: Set<string>,
+): string[] {
+	return selected.filter((selectedId) =>
+		isDependentOn(selectedId, permId, validPermSet),
+	);
 }
 
 export default function RoleModal({
@@ -82,6 +105,11 @@ export default function RoleModal({
 		enabled: open,
 	});
 
+	const validPermSet = useMemo(
+		() => new Set(permData?.permissions.map((p) => p.id) ?? []),
+		[permData],
+	);
+
 	useEffect(() => {
 		if (!open) return;
 		if (role) {
@@ -90,7 +118,10 @@ export default function RoleModal({
 			const perms = new Set(role.permissions ?? []);
 			// Ensure any prerequisites for existing permissions are satisfied
 			for (const p of role.permissions ?? []) {
-				for (const prereq of getPrerequisites(p)) {
+				for (const prereq of getPrerequisites(
+					p,
+					validPermSet.size > 0 ? validPermSet : undefined,
+				)) {
 					perms.add(prereq);
 				}
 			}
@@ -101,7 +132,7 @@ export default function RoleModal({
 			setSelectedPermissions([]);
 		}
 		setError(null);
-	}, [role, open]);
+	}, [role, open, validPermSet]);
 
 	function togglePermission(permId: string) {
 		setSelectedPermissions((current) => {
@@ -111,7 +142,13 @@ export default function RoleModal({
 				// Deselecting: also remove anything currently selected that depends on this permission
 				const toRemove = new Set<string>([permId]);
 				for (const id of current) {
-					if (isDependentOn(id, permId)) {
+					if (
+						isDependentOn(
+							id,
+							permId,
+							validPermSet.size > 0 ? validPermSet : undefined,
+						)
+					) {
 						toRemove.add(id);
 					}
 				}
@@ -119,7 +156,10 @@ export default function RoleModal({
 			}
 
 			// Selecting: also add all prerequisites
-			const prereqs = getPrerequisites(permId);
+			const prereqs = getPrerequisites(
+				permId,
+				validPermSet.size > 0 ? validPermSet : undefined,
+			);
 			return Array.from(new Set([...current, permId, ...prereqs]));
 		});
 	}
@@ -132,7 +172,13 @@ export default function RoleModal({
 			const toRemove = new Set<string>(categoryPermIds);
 			for (const id of categoryPermIds) {
 				for (const selectedId of selectedPermissions) {
-					if (isDependentOn(selectedId, id)) {
+					if (
+						isDependentOn(
+							selectedId,
+							id,
+							validPermSet.size > 0 ? validPermSet : undefined,
+						)
+					) {
 						toRemove.add(selectedId);
 					}
 				}
@@ -143,7 +189,10 @@ export default function RoleModal({
 		} else {
 			const toAdd = new Set<string>(categoryPermIds);
 			for (const id of categoryPermIds) {
-				for (const p of getPrerequisites(id)) {
+				for (const p of getPrerequisites(
+					id,
+					validPermSet.size > 0 ? validPermSet : undefined,
+				)) {
 					toAdd.add(p);
 				}
 			}
@@ -156,18 +205,23 @@ export default function RoleModal({
 	const saveMutation = useMutation({
 		mutationFn: async () => {
 			setError(null);
+			const sanitizedPermissions =
+				validPermSet.size > 0
+					? selectedPermissions.filter((p) => validPermSet.has(p))
+					: selectedPermissions;
+
 			if (isEditing && role) {
 				return updateRole(role.id, {
 					name: role.isSystem ? undefined : name,
 					description,
-					permissions: selectedPermissions,
+					permissions: sanitizedPermissions,
 				});
 			}
 
 			return createRole({
 				name,
 				description,
-				permissions: selectedPermissions,
+				permissions: sanitizedPermissions,
 			});
 		},
 		onSuccess: () => {

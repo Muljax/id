@@ -42,6 +42,13 @@ variable "oidc_private_key" {
   sensitive   = true
 }
 
+variable "ssh_ca_private_key" {
+  description = "SSH CA Ed25519 private key as a JSON JWK."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "api_worker_file" {
   description = "Built API Worker JavaScript module."
   type        = string
