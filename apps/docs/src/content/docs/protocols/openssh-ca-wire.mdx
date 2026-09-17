@@ -3,7 +3,7 @@ title: OpenSSH CA Wire Specification
 description: RFC 4251 and OpenSSH CERT01 binary wire format implementation details.
 ---
 
-`ID` implements a native, zero-dependency OpenSSH certificate binary serialization and deserialization engine in `apps/api/src/lib/ssh/`. This document is an exhaustive engineering deep dive into the exact binary wire layout, endianness, cryptographic signing boundaries, and host verification pipelines conforming strictly to OpenSSH's certificate specification ([IETF draft-miller-ssh-cert](https://datatracker.ietf.org/doc/draft-miller-ssh-cert/)) and RFC 4251.
+Muljax ID implements a native, zero-dependency OpenSSH certificate binary serialization and deserialization engine in `apps/api/src/lib/ssh/`. This document is an exhaustive engineering deep dive into the exact binary wire layout, endianness, cryptographic signing boundaries, and host verification pipelines conforming strictly to OpenSSH's certificate specification ([IETF draft-miller-ssh-cert](https://datatracker.ietf.org/doc/draft-miller-ssh-cert/)) and RFC 4251.
 
 ---
 
@@ -127,7 +127,7 @@ OpenSSH extensions are structured as name/data pairs:
 - **`name`**: `string` identifying the extension.
 - **`data`**: `bytes` containing extension-specific data. For standard OpenSSH permission flags, this payload is **empty** (a `uint32` of 0).
 
-`ID` mints certificates with the five standard interactive extensions enabled by default:
+Muljax ID mints certificates with the five standard interactive extensions enabled by default:
 1. `permit-X11-forwarding`
 2. `permit-agent-forwarding`
 3. `permit-port-forwarding`

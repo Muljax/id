@@ -5,7 +5,7 @@ description: How to request short-lived OpenSSH client certificates from the CA 
 
 import { Steps } from '@astrojs/starlight/components';
 
-Traditional SSH keys require manually distributing public keys into every destination host's `~/.ssh/authorized_keys`. With the `ID` Certificate Authority, your public key is signed by the CA into a temporary **certificate**, granting instant access to all hosts that trust the CA.
+Traditional SSH keys require manually distributing public keys into every destination host's `~/.ssh/authorized_keys`. With the Muljax ID Certificate Authority, your public key is signed by the CA into a temporary **certificate**, granting instant access to all hosts that trust the CA.
 
 ## Certificate Issuance Ceremony
 
@@ -84,10 +84,10 @@ Example output:
         Key ID: "alice@example.com-1773767800"
         Serial: 117284521030851699
         Valid: from 2026-09-17T12:00:00 to 2026-09-17T20:00:00
-        Principals: 
+        Principals:
                 alice
         Critical Options: (none)
-        Extensions: 
+        Extensions:
                 permit-X11-forwarding
                 permit-agent-forwarding
                 permit-port-forwarding

@@ -5,7 +5,7 @@ description: Overview and capabilities of the ID identity platform and OpenSSH C
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-`ID` is a lightweight, edge-native identity and access management system built directly on Cloudflare Workers and Cloudflare D1. It serves as both a centralized OpenID Connect (OIDC) / OAuth 2.0 provider and an enterprise-grade OpenSSH Certificate Authority (CA).
+Muljax ID is a lightweight, edge-native identity and access management system built directly on Cloudflare Workers and Cloudflare D1. It serves as both a centralized OpenID Connect (OIDC) / OAuth 2.0 provider and an enterprise-grade OpenSSH Certificate Authority (CA).
 
 ## Key Capabilities
 
@@ -38,7 +38,7 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
 flowchart TD
     Client["Web Browser<br/>(FIDO2 / Passkeys / SPA)"]
     EdgeHost["Linux SSH Target Host<br/>(/etc/ssh/revoked_keys)"]
-    
+
     subgraph Cloudflare["Cloudflare Edge Network"]
         Pages["apps/dashboard<br/>(Cloudflare Pages)"]
         Worker["apps/api<br/>(Cloudflare Workers / Hono)"]
@@ -46,7 +46,7 @@ flowchart TD
         R2[("Cloudflare R2<br/>(Profile Avatars)")]
         Workflows["Cloudflare Workflows<br/>(Durable Delays)"]
     end
-    
+
     Client -->|HTTPS / WebAuthn| Pages
     Client -->|REST / OIDC| Worker
     Worker -->|Drizzle ORM| D1

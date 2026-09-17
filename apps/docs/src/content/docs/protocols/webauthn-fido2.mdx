@@ -3,7 +3,7 @@ title: WebAuthn & FIDO2 Ceremony
 description: Comprehensive deep dive into WebAuthn Level 3, CTAP 2.1, attestation/assertion ceremonies, and D1 challenge lifecycles.
 ---
 
-`ID` implements a zero-trust, passwordless authentication subsystem adhering to the W3C Web Authentication (WebAuthn Level 3) and FIDO Alliance CTAP 2.1 specifications. It leverages hardware-bound cryptographic credentials, platform biometric authenticators (Touch ID, Windows Hello, Face ID), roaming hardware security keys (YubiKeys), and atomic challenge lifecycles in Cloudflare D1.
+Muljax ID implements a zero-trust, passwordless authentication subsystem adhering to the W3C Web Authentication (WebAuthn Level 3) and FIDO Alliance CTAP 2.1 specifications. It leverages hardware-bound cryptographic credentials, platform biometric authenticators (Touch ID, Windows Hello, Face ID), roaming hardware security keys (YubiKeys), and atomic challenge lifecycles in Cloudflare D1.
 
 ---
 
@@ -228,7 +228,7 @@ The binary `authenticatorData` buffer returned by the authenticator is structure
 
 ## 6. Threat Model & Defense Mechanisms
 
-| Threat | Attack Vector | Mitigation in `ID` |
+| Threat | Attack Vector | Mitigation in Muljax ID |
 | :--- | :--- | :--- |
 | **Phishing / Credential Harvesting** | Attacker lures user to fake domain (e.g. `id-login.com`). | Authenticators bind signatures strictly to the TLS origin. The browser refuses to sign for incorrect domains. |
 | **Replay Attacks** | Eavesdropper captures previous assertion payload and re-sends. | Challenges expire after 5 minutes and are consumed atomically via `DELETE ... RETURNING *`. |

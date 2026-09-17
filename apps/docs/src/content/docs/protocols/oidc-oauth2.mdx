@@ -3,7 +3,7 @@ title: OAuth2 & OpenID Connect
 description: Comprehensive deep dive into OIDC Core 1.0, RFC 7636 PKCE, ES256 JWT signing, and D1 token architecture.
 ---
 
-`ID` provides an edge-native OpenID Connect Core 1.0 and OAuth 2.0 (RFC 6749) authorization server engineered for Cloudflare Workers. It implements cryptographic verification at rest, zero plaintext token persistence, timing-safe PKCE validation, and ECDSA P-256 (`ES256`) JSON Web Token (JWT) signing.
+Muljax ID provides an edge-native OpenID Connect Core 1.0 and OAuth 2.0 (RFC 6749) authorization server engineered for Cloudflare Workers. It implements cryptographic verification at rest, zero plaintext token persistence, timing-safe PKCE validation, and ECDSA P-256 (`ES256`) JSON Web Token (JWT) signing.
 
 ---
 
@@ -42,7 +42,7 @@ flowchart LR
 
 | Database Table | Primary Identifier | Security Transform at Rest | Expiration / TTL |
 | :--- | :--- | :--- | :--- |
-| **`oauth_clients`** | `id` (`client_id`) | Client secrets hashed with SHA-256 (`client_secret_hash`) | Permanent until deleted |
+| **`oauth_clients`** | Muljax ID (`client_id`) | Client secrets hashed with SHA-256 (`client_secret_hash`) | Permanent until deleted |
 | **`oauth_authorization_codes`** | `code_hash` (PK) | Ephemeral codes hashed with SHA-256 | **10 minutes** (single-use enforced) |
 | **`oauth_access_tokens`** | `token_hash` (PK) | Access tokens hashed with SHA-256 | **1 hour** (3600 seconds) |
 | **`oauth_refresh_tokens`** | `token_hash` (PK) | Refresh tokens hashed with SHA-256 | **30 days** (revocable) |

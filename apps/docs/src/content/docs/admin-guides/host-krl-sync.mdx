@@ -7,7 +7,7 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 
 OpenSSH servers check incoming user certificates against a local Key Revocation List (KRL) configured via the `RevokedKeys` directive in `/etc/ssh/sshd_config`.
 
-`ID` provides an automated endpoint that formats revoked certificates into the line-separated text syntax expected by OpenSSH:
+Muljax ID provides an automated endpoint that formats revoked certificates into the line-separated text syntax expected by OpenSSH:
 
 ```http
 GET /api/ssh/ca/revoked-keys?format=raw
