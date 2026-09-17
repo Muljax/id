@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.30.0](https://github.com/Muljax/id/compare/v0.29.0...v0.30.0) (2026-09-17)
+
+
+### Features
+
+* docs, ssh ca admin ui update ([2103173](https://github.com/Muljax/id/commit/2103173d7fdca31841fad37d7f0b0bb51d5469d2))
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to v1.47.0 ([#229](https://github.com/Muljax/id/issues/229)) ([7fbb895](https://github.com/Muljax/id/commit/7fbb895cabfade2043a947ef13cfc340ea2cc87f))
+* remove assets binding in docs ([f065343](https://github.com/Muljax/id/commit/f0653431fd6d21c7154d1203442f0cfbcb76df32))
+
 ## [0.29.0](https://github.com/Muljax/id/compare/v0.28.0...v0.29.0) (2026-09-17)
 
 
