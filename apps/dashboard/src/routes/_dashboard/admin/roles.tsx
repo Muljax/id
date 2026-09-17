@@ -13,7 +13,7 @@ import DeleteRoleModal from "@/components/roles/DeleteRoleModal";
 import PermissionsCatalogModal from "@/components/roles/PermissionsCatalogModal";
 import RoleModal from "@/components/roles/RoleModal";
 import RoleRow from "@/components/roles/RoleRow";
-import { PermissionGuard } from "@/context/AuthContext";
+import { PermissionGuard, useAuth } from "@/context/AuthContext";
 import { getRoles, type Role } from "@/lib/api/rbac";
 import { INSTANCE_NAME } from "@/lib/config";
 import { queryKeys } from "@/lib/queryKeys";
@@ -38,6 +38,10 @@ function RolesPageWrapper() {
 }
 
 function RolesPage() {
+	const { hasPermission } = useAuth();
+	const canWriteRoles = hasPermission("roles:write");
+	const canReadPermissions = hasPermission("permissions:read");
+
 	const [createOpen, setCreateOpen] = useState(false);
 	const [editingRole, setEditingRole] = useState<Role | null>(null);
 	const [deletingRole, setDeletingRole] = useState<Role | null>(null);
@@ -71,15 +75,17 @@ function RolesPage() {
 				}
 				actions={
 					<div className="flex items-center gap-2.5">
-						<Button
-							type="button"
-							variant="secondary"
-							size="sm"
-							icon={<BookOpen size={14} />}
-							onClick={() => setCatalogOpen(true)}
-						>
-							Permissions Catalog
-						</Button>
+						{canReadPermissions && (
+							<Button
+								type="button"
+								variant="secondary"
+								size="sm"
+								icon={<BookOpen size={14} />}
+								onClick={() => setCatalogOpen(true)}
+							>
+								Permissions Catalog
+							</Button>
+						)}
 
 						<Button
 							type="button"
@@ -94,15 +100,17 @@ function RolesPage() {
 							Refresh
 						</Button>
 
-						<Button
-							type="button"
-							variant="primary"
-							size="sm"
-							icon={<Plus size={14} />}
-							onClick={() => setCreateOpen(true)}
-						>
-							Create role
-						</Button>
+						{canWriteRoles && (
+							<Button
+								type="button"
+								variant="primary"
+								size="sm"
+								icon={<Plus size={14} />}
+								onClick={() => setCreateOpen(true)}
+							>
+								Create role
+							</Button>
+						)}
 					</div>
 				}
 			/>
@@ -113,15 +121,17 @@ function RolesPage() {
 					title="No roles configured"
 					description="No roles exist in the database yet. Default roles will be initialized automatically."
 					action={
-						<Button
-							type="button"
-							variant="primary"
-							size="sm"
-							icon={<Plus size={14} />}
-							onClick={() => setCreateOpen(true)}
-						>
-							Create first role
-						</Button>
+						canWriteRoles ? (
+							<Button
+								type="button"
+								variant="primary"
+								size="sm"
+								icon={<Plus size={14} />}
+								onClick={() => setCreateOpen(true)}
+							>
+								Create first role
+							</Button>
+						) : undefined
 					}
 				/>
 			) : (
@@ -140,6 +150,8 @@ function RolesPage() {
 							<RoleRow
 								key={role.id}
 								role={role}
+								canEdit={canWriteRoles}
+								canDelete={canWriteRoles}
 								onEdit={(r) => setEditingRole(r)}
 								onDelete={(r) => setDeletingRole(r)}
 							/>

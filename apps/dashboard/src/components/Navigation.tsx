@@ -16,17 +16,16 @@ export default function DashboardLayout() {
 	const [loggingOut, setLoggingOut] = useState(false);
 	const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
-	const isAdmin = Boolean(user?.isAdmin);
 	const permissions = useMemo(
 		() => user?.permissions ?? [],
 		[user?.permissions],
 	);
 
 	const items = useMemo(() => {
-		return getNavigationItems(routeTree, isAdmin, permissions).filter(
+		return getNavigationItems(routeTree, permissions).filter(
 			(item) => !item.hidden,
 		);
-	}, [isAdmin, permissions]);
+	}, [permissions]);
 
 	function toggleGroup(to: string) {
 		setCollapsed((current) => ({

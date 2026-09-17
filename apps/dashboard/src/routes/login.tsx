@@ -75,7 +75,7 @@ function LoginPage() {
 	}, [user, forceLogin, return_to, navigate]);
 
 	async function finishLogin(loggedInUser?: AuthUser) {
-		if (loggedInUser) {
+		if (loggedInUser?.permissions) {
 			setUser(loggedInUser);
 		} else {
 			await refresh();

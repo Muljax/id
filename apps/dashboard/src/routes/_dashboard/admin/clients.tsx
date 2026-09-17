@@ -19,21 +19,32 @@ import {
 } from "@/lib/api";
 import { INSTANCE_NAME } from "@/lib/config";
 import { queryKeys } from "@/lib/queryKeys";
+import { PermissionGuard, useAuth } from "@/context/AuthContext";
 
 export const Route = createFileRoute("/_dashboard/admin/clients")({
 	staticData: {
 		navigation: {
 			label: "Clients",
 			order: 5,
-			adminOnly: false,
+			requiredPermission: "oauth_clients:read",
 		},
 	},
-	component: ClientsPage,
+	component: ClientsPageWrapper,
 });
+
+function ClientsPageWrapper() {
+	return (
+		<PermissionGuard permission="oauth_clients:read">
+			<ClientsPage />
+		</PermissionGuard>
+	);
+}
 
 function ClientsPage() {
 	const toast = useToast();
 	const queryClient = useQueryClient();
+	const { hasPermission } = useAuth();
+	const canWrite = hasPermission("oauth_clients:write");
 
 	const [modalOpen, setModalOpen] = useState(false);
 	const [editingClient, setEditingClient] = useState<OAuthClient | null>(null);
@@ -129,14 +140,16 @@ function ClientsPage() {
 							Refresh
 						</Button>
 
-						<Button
-							type="button"
-							size="sm"
-							onClick={openCreate}
-							icon={<Plus size={14} />}
-						>
-							Create client
-						</Button>
+						{canWrite && (
+							<Button
+								type="button"
+								size="sm"
+								onClick={openCreate}
+								icon={<Plus size={14} />}
+							>
+								Create client
+							</Button>
+						)}
 					</>
 				}
 			/>
@@ -155,13 +168,15 @@ function ClientsPage() {
 						</>
 					}
 					action={
-						<Button
-							type="button"
-							onClick={openCreate}
-							icon={<Plus size={14} />}
-						>
-							Create client
-						</Button>
+						canWrite ? (
+							<Button
+								type="button"
+								onClick={openCreate}
+								icon={<Plus size={14} />}
+							>
+								Create client
+							</Button>
+						) : undefined
 					}
 				/>
 			) : (
@@ -207,27 +222,29 @@ function ClientsPage() {
 										</p>
 									</div>
 
-									<div className="flex shrink-0 items-center gap-2 self-end sm:self-start">
-										<Button
-											type="button"
-											variant="secondary"
-											size="sm"
-											onClick={() => openEdit(client)}
-											icon={<Edit3 size={13} />}
-										>
-											Edit
-										</Button>
+									{canWrite && (
+										<div className="flex shrink-0 items-center gap-2 self-end sm:self-start">
+											<Button
+												type="button"
+												variant="secondary"
+												size="sm"
+												onClick={() => openEdit(client)}
+												icon={<Edit3 size={13} />}
+											>
+												Edit
+											</Button>
 
-										<Button
-											type="button"
-											variant="danger"
-											size="sm"
-											onClick={() => setDeletingClient(client)}
-											icon={<Trash2 size={13} />}
-										>
-											Delete
-										</Button>
-									</div>
+											<Button
+												type="button"
+												variant="danger"
+												size="sm"
+												onClick={() => setDeletingClient(client)}
+												icon={<Trash2 size={13} />}
+											>
+												Delete
+											</Button>
+										</div>
+									)}
 								</div>
 
 								<div className="grid gap-4 sm:grid-cols-2 pt-2">

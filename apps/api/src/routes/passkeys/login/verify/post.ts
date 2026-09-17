@@ -142,7 +142,7 @@ route.post("/", async (c) => {
 		setSessionCookie(c, session.token);
 
 		return c.json({
-			user: toAuthUser(user),
+			user: await toAuthUser(db, user),
 		});
 	} catch (error) {
 		console.error("[Passkey] Authentication verification error:", error);

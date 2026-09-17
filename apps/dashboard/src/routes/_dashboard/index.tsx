@@ -4,6 +4,7 @@ import {
 	ArrowRight,
 	KeyRound,
 	Lock,
+	Shield,
 	SlidersHorizontal,
 	User,
 	Users,
@@ -28,13 +29,26 @@ export const Route = createFileRoute("/_dashboard/")({
 });
 
 function DashboardPage() {
-	const { user } = useAuth();
+	const { user, hasPermission } = useAuth();
 
 	if (!user) {
 		return null;
 	}
 
 	const displayName = user.displayName || user.email.split("@")[0];
+	const isAdministrator =
+		hasPermission("*") ||
+		user.roles?.some(
+			(r) =>
+				r.toLowerCase() === "admin" ||
+				r.toLowerCase() === "administrator",
+		);
+
+	const canAccessClients = hasPermission("oauth_clients:read");
+	const canAccessUsers = hasPermission("users:read");
+	const canAccessRoles = hasPermission("roles:read");
+	const hasAnyAdminAccess =
+		canAccessClients || canAccessUsers || canAccessRoles;
 
 	return (
 		<div className="space-y-8">
@@ -42,7 +56,7 @@ function DashboardPage() {
 				title={`Welcome, ${displayName}`}
 				description="Manage your personal identity, security credentials, and connected applications."
 				badge={
-					user.isAdmin ? (
+					isAdministrator ? (
 						<Badge variant="violet">Administrator</Badge>
 					) : (
 						<Badge variant="success">Account Active</Badge>
@@ -200,8 +214,8 @@ function DashboardPage() {
 					</CardContent>
 				</Card>
 
-				{/* Admin Console Shortcut (Only shown if admin) */}
-				{user.isAdmin && (
+				{/* Admin Console Shortcut */}
+				{hasAnyAdminAccess && (
 					<Card className="border-violet-500/20 bg-violet-950/10">
 						<CardHeader>
 							<div className="flex items-center justify-between">
@@ -218,29 +232,44 @@ function DashboardPage() {
 										</p>
 									</div>
 								</div>
-								<Badge variant="violet">Admin Mode</Badge>
+								<Badge variant="violet">Admin Console</Badge>
 							</div>
 						</CardHeader>
 						<CardContent>
 							<div className="flex flex-wrap gap-2.5">
-								<Link to="/admin/clients">
-									<Button
-										variant="secondary"
-										size="sm"
-										icon={<AppWindow size={14} />}
-									>
-										OAuth Clients
-									</Button>
-								</Link>
-								<Link to="/admin/users">
-									<Button
-										variant="secondary"
-										size="sm"
-										icon={<Users size={14} />}
-									>
-										User Directory
-									</Button>
-								</Link>
+								{canAccessClients && (
+									<Link to="/admin/clients">
+										<Button
+											variant="secondary"
+											size="sm"
+											icon={<AppWindow size={14} />}
+										>
+											OAuth Clients
+										</Button>
+									</Link>
+								)}
+								{canAccessUsers && (
+									<Link to="/admin/users">
+										<Button
+											variant="secondary"
+											size="sm"
+											icon={<Users size={14} />}
+										>
+											User Directory
+										</Button>
+									</Link>
+								)}
+								{canAccessRoles && (
+									<Link to="/admin/roles">
+										<Button
+											variant="secondary"
+											size="sm"
+											icon={<Shield size={14} />}
+										>
+											Roles & Permissions
+										</Button>
+									</Link>
+								)}
 							</div>
 						</CardContent>
 					</Card>

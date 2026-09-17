@@ -2,7 +2,6 @@ import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
 
 import { createDb } from "@/db";
-import { hasPermission } from "@/lib/rbac/matcher";
 import { getUserEffectivePermissions } from "@/lib/rbac/permissions";
 import { getSessionUser } from "@/lib/session";
 
@@ -33,7 +32,6 @@ route.get("/", async (c) => {
 	}
 
 	const { roles, permissions } = await getUserEffectivePermissions(db, user.id);
-	const isAdmin = roles.includes("admin") || hasPermission(permissions, "*");
 
 	return c.json({
 		user: {
@@ -54,7 +52,6 @@ route.get("/", async (c) => {
 			locale: user.locale,
 			emailVerifiedAt: user.emailVerifiedAt,
 			createdAt: user.createdAt,
-			isAdmin,
 			roles,
 			permissions: Array.from(permissions),
 		},

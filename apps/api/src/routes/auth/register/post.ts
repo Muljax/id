@@ -147,7 +147,6 @@ route.post("/", async (c) => {
 				locale: null,
 				emailVerifiedAt: null,
 				createdAt: now,
-				isAdmin: false,
 				roles: [SYSTEM_ROLE_IDS.USER],
 				permissions: [],
 			},

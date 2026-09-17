@@ -1,6 +1,7 @@
 import { eq, inArray } from "drizzle-orm";
 import { roles, userRoles, users } from "../db/schema";
 import type { Database } from "../db";
+import { getUserEffectivePermissions } from "./rbac/permissions";
 
 export async function getUsers(db: Database) {
 	const userList = await db
@@ -66,7 +67,6 @@ export async function getUsers(db: Database) {
 			...u,
 			roles: roleNames,
 			roleIds,
-			isAdmin: roleIds.includes("admin"),
 		};
 	});
 }
@@ -87,7 +87,12 @@ export function isUserDisabled(
 	return user?.disabledAt != null && user.disabledAt <= Date.now();
 }
 
-export function toAuthUser(user: typeof users.$inferSelect) {
+export async function toAuthUser(db: Database, user: typeof users.$inferSelect) {
+	const { roles, permissions } = await getUserEffectivePermissions(
+		db,
+		user.id,
+	);
+
 	return {
 		id: user.id,
 		email: user.email,
@@ -106,5 +111,7 @@ export function toAuthUser(user: typeof users.$inferSelect) {
 		locale: user.locale,
 		emailVerifiedAt: user.emailVerifiedAt,
 		createdAt: user.createdAt,
+		roles,
+		permissions: Array.from(permissions),
 	};
 }

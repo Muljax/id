@@ -40,10 +40,6 @@ export function userHasPermission(
 		return false;
 	}
 
-	if (user.isAdmin) {
-		return true;
-	}
-
 	return checkPermission(user.permissions, required);
 }
 

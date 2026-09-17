@@ -6,13 +6,11 @@ import { checkPermission } from "./permissions";
  *
  * @property label The label displayed in the dashboard sidebar.
  * @property order The position of the route in the sidebar.
- * @property adminOnly Whether the route is only visible to administrators.
  * @property requiredPermission Specific permission slug needed to view this route.
  */
 export interface NavigationData {
 	label: string;
 	order: number;
-	adminOnly?: boolean;
 	requiredPermission?: string;
 	hidden?: boolean;
 }
@@ -23,14 +21,12 @@ export interface NavigationData {
  * @property label The label displayed in the sidebar.
  * @property to The route path used by the sidebar link.
  * @property order The position of the item within its group.
- * @property adminOnly Whether the item is only visible to administrators.
  * @property requiredPermission Specific permission slug needed to view this item.
  */
 export interface NavigationItem {
 	label: string;
 	to: string;
 	order: number;
-	adminOnly?: boolean;
 	requiredPermission?: string;
 	hidden?: boolean;
 }
@@ -54,18 +50,13 @@ function getNavigation(route: AnyRoute): NavigationData | undefined {
 
 function isVisible(
 	navigation: NavigationData,
-	isAdmin: boolean,
 	permissions: string[] = [],
 ): boolean {
 	if (navigation.hidden) {
 		return false;
 	}
 
-	if (navigation.adminOnly && !isAdmin) {
-		return false;
-	}
-
-	if (navigation.requiredPermission && !isAdmin) {
+	if (navigation.requiredPermission) {
 		if (!checkPermission(permissions, navigation.requiredPermission)) {
 			return false;
 		}
@@ -79,7 +70,6 @@ function isVisible(
  */
 function collectChildren(
 	route: AnyRoute,
-	isAdmin: boolean,
 	permissions: string[] = [],
 ): NavigationItem[] {
 	const items: NavigationItem[] = [];
@@ -88,11 +78,11 @@ function collectChildren(
 		const navigation = getNavigation(child);
 
 		if (!navigation) {
-			items.push(...collectChildren(child, isAdmin, permissions));
+			items.push(...collectChildren(child, permissions));
 			continue;
 		}
 
-		if (!isVisible(navigation, isAdmin, permissions)) {
+		if (!isVisible(navigation, permissions)) {
 			continue;
 		}
 
@@ -100,7 +90,6 @@ function collectChildren(
 			label: navigation.label,
 			to: child.fullPath,
 			order: navigation.order,
-			adminOnly: navigation.adminOnly,
 			requiredPermission: navigation.requiredPermission,
 			hidden: navigation.hidden,
 		});
@@ -114,14 +103,25 @@ function collectChildren(
  */
 function collectNavigation(
 	route: AnyRoute,
-	isAdmin: boolean,
 	permissions: string[] = [],
 	items: NavigationGroup[] = [],
 ) {
 	const navigation = getNavigation(route);
 
 	if (navigation) {
-		if (!isVisible(navigation, isAdmin, permissions)) {
+		if (!isVisible(navigation, permissions)) {
+			return items;
+		}
+
+		const children = collectChildren(route, permissions);
+
+		// If this group defines child routes in the route tree, but none are visible to the user,
+		// and the parent doesn't have a requiredPermission of its own, omit this group.
+		const hasConfiguredChildren = Boolean(
+			route.children &&
+				route.children.some((c: AnyRoute) => Boolean(getNavigation(c))),
+		);
+		if (hasConfiguredChildren && children.length === 0) {
 			return items;
 		}
 
@@ -129,17 +129,16 @@ function collectNavigation(
 			label: navigation.label,
 			to: route.fullPath,
 			order: navigation.order,
-			adminOnly: navigation.adminOnly,
 			requiredPermission: navigation.requiredPermission,
 			hidden: navigation.hidden,
-			children: collectChildren(route, isAdmin, permissions),
+			children,
 		});
 
 		return items;
 	}
 
 	for (const child of route.children ?? []) {
-		collectNavigation(child, isAdmin, permissions, items);
+		collectNavigation(child, permissions, items);
 	}
 
 	return items;
@@ -150,10 +149,9 @@ function collectNavigation(
  */
 export function getNavigationItems(
 	routeTree: AnyRoute,
-	isAdmin: boolean,
 	permissions: string[] = [],
 ): NavigationGroup[] {
-	return collectNavigation(routeTree, isAdmin, permissions).sort(
+	return collectNavigation(routeTree, permissions).sort(
 		(a, b) => a.order - b.order,
 	);
 }

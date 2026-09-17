@@ -24,7 +24,7 @@ export interface AuthUser {
 	emailVerifiedAt: number | null;
 
 	createdAt: number;
-	isAdmin: boolean;
+	isAdmin?: boolean;
 	roles?: string[];
 	permissions?: string[];
 }

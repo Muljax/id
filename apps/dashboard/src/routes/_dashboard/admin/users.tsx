@@ -13,7 +13,7 @@ import ResetPasswordModal from "@/components/users/ResetPasswordModal";
 import UserLifecycleModal from "@/components/users/UserLifecycleModal";
 import UserRolesModal from "@/components/users/UserRolesModal";
 import UserRow from "@/components/users/UserRow";
-import { useAuth } from "@/context/AuthContext";
+import { PermissionGuard, useAuth } from "@/context/AuthContext";
 import { getUsers, type AdminUser } from "@/lib/api/admin";
 import { INSTANCE_NAME } from "@/lib/config";
 import { queryKeys } from "@/lib/queryKeys";
@@ -30,10 +30,19 @@ export const Route = createFileRoute("/_dashboard/admin/users")({
 		navigation: {
 			label: "Users",
 			order: 30,
+			requiredPermission: "users:read",
 		},
 	},
-	component: UsersPage,
+	component: UsersPageWrapper,
 });
+
+function UsersPageWrapper() {
+	return (
+		<PermissionGuard permission="users:read">
+			<UsersPage />
+		</PermissionGuard>
+	);
+}
 
 function UsersPage() {
 	const { userId } = Route.useSearch();

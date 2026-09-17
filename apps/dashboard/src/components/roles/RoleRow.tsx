@@ -6,11 +6,19 @@ import type { Role } from "@/lib/api/rbac";
 
 interface RoleRowProps {
 	role: Role;
+	canEdit?: boolean;
+	canDelete?: boolean;
 	onEdit: (role: Role) => void;
 	onDelete: (role: Role) => void;
 }
 
-export default function RoleRow({ role, onEdit, onDelete }: RoleRowProps) {
+export default function RoleRow({
+	role,
+	canEdit = true,
+	canDelete = true,
+	onEdit,
+	onDelete,
+}: RoleRowProps) {
 	return (
 		<div className="p-5 sm:p-6 transition-colors hover:bg-white/[0.015]">
 			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -60,29 +68,33 @@ export default function RoleRow({ role, onEdit, onDelete }: RoleRowProps) {
 					</div>
 				</div>
 
-				<div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-					<Button
-						type="button"
-						variant="secondary"
-						size="sm"
-						icon={<Edit2 size={13} />}
-						onClick={() => onEdit(role)}
-					>
-						Edit
-					</Button>
+				{(canEdit || (canDelete && !role.isSystem)) && (
+					<div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+						{canEdit && (
+							<Button
+								type="button"
+								variant="secondary"
+								size="sm"
+								icon={<Edit2 size={13} />}
+								onClick={() => onEdit(role)}
+							>
+								Edit
+							</Button>
+						)}
 
-					{!role.isSystem && (
-						<Button
-							type="button"
-							variant="danger"
-							size="sm"
-							icon={<Trash2 size={13} />}
-							onClick={() => onDelete(role)}
-						>
-							Delete
-						</Button>
-					)}
-				</div>
+						{canDelete && !role.isSystem && (
+							<Button
+								type="button"
+								variant="danger"
+								size="sm"
+								icon={<Trash2 size={13} />}
+								onClick={() => onDelete(role)}
+							>
+								Delete
+							</Button>
+						)}
+					</div>
+				)}
 			</div>
 		</div>
 	);

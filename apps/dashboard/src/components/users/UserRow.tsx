@@ -29,6 +29,14 @@ export default function UserRow({
 }: UserRowProps) {
 	const name = user.displayName || user.email;
 	const status = getUserStatus(user);
+	const isAdministrator = Boolean(
+		user.roleIds?.includes("admin") ||
+			user.roles?.some(
+				(r) =>
+					r.toLowerCase() === "admin" ||
+					r.toLowerCase() === "administrator",
+			),
+	);
 
 	return (
 		<div
@@ -50,7 +58,7 @@ export default function UserRow({
 							<span className="truncate text-sm font-medium text-white">
 								{name}
 							</span>
-							{user.isAdmin && (
+							{isAdministrator && (
 								<Badge variant="violet" size="sm">
 									Admin
 								</Badge>

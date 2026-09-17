@@ -3,6 +3,7 @@ import { KeyRound, Shield, UserCheck, UserX } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { getUserStatus } from "@/components/users/status";
+import { useAuth } from "@/context/AuthContext";
 import type { AdminUser } from "@/lib/api/admin";
 
 export default function UserDetails({
@@ -18,6 +19,11 @@ export default function UserDetails({
 	onManageLifecycle: (user: AdminUser) => void;
 	onManageRoles: (user: AdminUser) => void;
 }) {
+	const { hasPermission } = useAuth();
+	const canManageRoles = hasPermission("roles:assign");
+	const canResetPassword = hasPermission("users:password-reset");
+	const canManageLifecycle = hasPermission("users:lifecycle");
+
 	const status = getUserStatus(user);
 	const statusText =
 		user.disabledAt != null
@@ -95,47 +101,53 @@ export default function UserDetails({
 			</div>
 
 			<div className="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-white/6 pt-4">
-				<Button
-					type="button"
-					variant="secondary"
-					size="sm"
-					icon={<Shield size={14} />}
-					onClick={() => onManageRoles(user)}
-				>
-					Manage Roles
-				</Button>
-
-				<Button
-					type="button"
-					variant="secondary"
-					size="sm"
-					icon={<KeyRound size={14} />}
-					onClick={() => onResetPassword(user)}
-				>
-					Generate Password Reset Link
-				</Button>
-
-				{status.isDisabled ? (
+				{canManageRoles && (
 					<Button
 						type="button"
 						variant="secondary"
 						size="sm"
-						icon={<UserCheck size={14} className="text-emerald-400" />}
-						onClick={() => onManageLifecycle(user)}
+						icon={<Shield size={14} />}
+						onClick={() => onManageRoles(user)}
 					>
-						Enable Account
+						Manage Roles
 					</Button>
-				) : (
+				)}
+
+				{canResetPassword && (
 					<Button
 						type="button"
-						variant="danger"
+						variant="secondary"
 						size="sm"
-						disabled={isSelf}
-						icon={<UserX size={14} />}
-						onClick={() => onManageLifecycle(user)}
+						icon={<KeyRound size={14} />}
+						onClick={() => onResetPassword(user)}
 					>
-						{status.isScheduled ? "Manage Deactivation" : "Disable Account"}
+						Generate Password Reset Link
 					</Button>
+				)}
+
+				{canManageLifecycle && (
+					status.isDisabled ? (
+						<Button
+							type="button"
+							variant="secondary"
+							size="sm"
+							icon={<UserCheck size={14} className="text-emerald-400" />}
+							onClick={() => onManageLifecycle(user)}
+						>
+							Enable Account
+						</Button>
+					) : (
+						<Button
+							type="button"
+							variant="danger"
+							size="sm"
+							disabled={isSelf}
+							icon={<UserX size={14} />}
+							onClick={() => onManageLifecycle(user)}
+						>
+							{status.isScheduled ? "Manage Deactivation" : "Disable Account"}
+						</Button>
+					)
 				)}
 			</div>
 		</div>

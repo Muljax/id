@@ -28,7 +28,7 @@ export interface AdminUser {
 	locale: string | null;
 
 	emailVerifiedAt: number | null;
-	isAdmin: boolean;
+	isAdmin?: boolean;
 	roles?: string[];
 	roleIds?: string[];
 	disabledAt: number | null;

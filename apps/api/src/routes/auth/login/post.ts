@@ -88,7 +88,7 @@ route.post("/", async (c) => {
 
 		if (existingSession && existingSession.userId === user.id) {
 			return c.json({
-				user: toAuthUser(user),
+				user: await toAuthUser(db, user),
 			});
 		}
 	}
@@ -115,7 +115,7 @@ route.post("/", async (c) => {
 	setSessionCookie(c, session.token);
 
 	return c.json({
-		user: toAuthUser(user),
+		user: await toAuthUser(db, user),
 	});
 });
 

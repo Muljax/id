@@ -81,7 +81,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	const hasPermissionFn = useCallback(
 		(permission: string) => {
 			if (!user) return false;
-			if (user.isAdmin) return true;
 			return checkPermission(permissionsSet ?? user.permissions, permission);
 		},
 		[user, permissionsSet],
@@ -154,33 +153,6 @@ export function AuthGuard({ children }: GuardProps) {
 
 	if (!user) {
 		return null;
-	}
-
-	return <>{children}</>;
-}
-
-export function AdminGuard({ children }: GuardProps) {
-	const { user, loading } = useAuth();
-
-	if (loading) {
-		return (
-			<div className="flex min-h-screen items-center justify-center bg-zinc-950">
-				<Spinner size="lg" />
-			</div>
-		);
-	}
-
-	if (!user?.isAdmin) {
-		return (
-			<div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
-				<div className="rounded-2xl border border-white/8 bg-zinc-900/50 p-8 text-center backdrop-blur-sm">
-					<h1 className="text-xl font-semibold text-white">Access denied</h1>
-					<p className="mt-2 text-sm text-zinc-400">
-						You do not have administrative privileges to access this area.
-					</p>
-				</div>
-			</div>
-		);
 	}
 
 	return <>{children}</>;
