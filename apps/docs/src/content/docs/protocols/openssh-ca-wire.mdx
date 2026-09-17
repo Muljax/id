@@ -1,6 +1,6 @@
 ---
 title: OpenSSH CA Wire Specification
-description: RFC 4251 and OpenSSH CERT01 binary wire format implementation details verified against apps/api/src/lib/ssh.
+description: RFC 4251 and OpenSSH CERT01 binary wire format implementation details.
 ---
 
 `ID` implements a native, zero-dependency OpenSSH certificate binary serialization and deserialization engine in `apps/api/src/lib/ssh/`. This document is an exhaustive engineering deep dive into the exact binary wire layout, endianness, cryptographic signing boundaries, and host verification pipelines conforming strictly to OpenSSH's certificate specification ([IETF draft-miller-ssh-cert](https://datatracker.ietf.org/doc/draft-miller-ssh-cert/)) and RFC 4251.
