@@ -6,6 +6,7 @@ import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Spinner from "@/components/ui/Spinner";
+import { useAuth } from "@/context/AuthContext";
 import type { AdminUser } from "@/lib/api/admin";
 import {
 	getRoles,
@@ -27,6 +28,7 @@ export default function UserRolesModal({
 	onSuccess,
 }: UserRolesModalProps) {
 	const queryClient = useQueryClient();
+	const { user: currentUser } = useAuth();
 	const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
 	const [showPermissions, setShowPermissions] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -73,6 +75,11 @@ export default function UserRolesModal({
 			void queryClient.invalidateQueries({
 				queryKey: queryKeys.admin.users,
 			});
+			if (currentUser && currentUser.id === user.id) {
+				void queryClient.invalidateQueries({
+					queryKey: queryKeys.auth.me,
+				});
+			}
 			onSuccess?.();
 			onClose();
 		},

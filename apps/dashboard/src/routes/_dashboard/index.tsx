@@ -39,9 +39,7 @@ function DashboardPage() {
 	const isAdministrator =
 		hasPermission("*") ||
 		user.roles?.some(
-			(r) =>
-				r.toLowerCase() === "admin" ||
-				r.toLowerCase() === "administrator",
+			(r) => r.toLowerCase() === "admin" || r.toLowerCase() === "administrator",
 		);
 
 	const canAccessClients = hasPermission("oauth_clients:read");

@@ -11,7 +11,8 @@ route.get("/", requireAuth, (c) => {
 	const user = c.get("user");
 	const roles = c.get("roles") ?? [];
 	const permissions = c.get("permissions") ?? new Set();
-	const isAdmin = roles.includes("admin") || hasPermission(permissions, "*");
+	const canAccessAdminNotifications =
+		roles.includes("admin") || hasPermission(permissions, "notifications:read");
 
 	const encoder = new TextEncoder();
 
@@ -42,7 +43,8 @@ route.get("/", requireAuth, (c) => {
 					// Check audience match
 					const isTargetedToUser = notification.userId === user.id;
 					const isBroadcast = notification.target === "all";
-					const isAdminTargeted = isAdmin && notification.target === "admins";
+					const isAdminTargeted =
+						canAccessAdminNotifications && notification.target === "admins";
 
 					if (!isTargetedToUser && !isBroadcast && !isAdminTargeted) {
 						return;

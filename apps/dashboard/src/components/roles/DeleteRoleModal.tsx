@@ -25,6 +25,7 @@ export default function DeleteRoleModal({
 		mutationFn: () => deleteRole(role.id),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: queryKeys.admin.roles });
+			void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
 			onSuccess?.();
 			onClose();
 		},

@@ -12,7 +12,9 @@ route.post("/", requireAuth, async (c) => {
 	const user = c.get("user");
 	const roles = c.get("roles") ?? [];
 	const permissions = c.get("permissions") ?? new Set();
-	const isAdmin = roles.includes("admin") || hasPermission(permissions, "*");
+	const canManageAdminNotifications =
+		roles.includes("admin") ||
+		hasPermission(permissions, "notifications:write");
 	const db = createDb(c.env.DB);
 
 	const targetConditions = [
@@ -20,7 +22,7 @@ route.post("/", requireAuth, async (c) => {
 		eq(notifications.target, "all"),
 	];
 
-	if (isAdmin) {
+	if (canManageAdminNotifications) {
 		targetConditions.push(eq(notifications.target, "admins"));
 	}
 

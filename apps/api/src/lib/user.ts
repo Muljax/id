@@ -87,11 +87,11 @@ export function isUserDisabled(
 	return user?.disabledAt != null && user.disabledAt <= Date.now();
 }
 
-export async function toAuthUser(db: Database, user: typeof users.$inferSelect) {
-	const { roles, permissions } = await getUserEffectivePermissions(
-		db,
-		user.id,
-	);
+export async function toAuthUser(
+	db: Database,
+	user: typeof users.$inferSelect,
+) {
+	const { roles, permissions } = await getUserEffectivePermissions(db, user.id);
 
 	return {
 		id: user.id,

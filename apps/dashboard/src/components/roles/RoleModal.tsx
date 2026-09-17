@@ -22,6 +22,46 @@ interface RoleModalProps {
 	onSuccess?: () => void;
 }
 
+/**
+ * Defines required prerequisite permissions for specific actions.
+ * For instance, write or deletion operations require corresponding read access.
+ */
+const PERMISSION_DEPENDENCIES: Record<string, string[]> = {
+	"users:write": ["users:read"],
+	"users:delete": ["users:read"],
+	"users:lifecycle": ["users:read"],
+	"users:password-reset": ["users:read"],
+	"roles:write": ["roles:read", "permissions:read"],
+	"roles:assign": ["roles:read"],
+	"oauth_clients:write": ["oauth_clients:read"],
+	"notifications:write": ["notifications:read"],
+	"settings:write": ["settings:read"],
+};
+
+function getPrerequisites(permId: string): string[] {
+	const explicit = PERMISSION_DEPENDENCIES[permId];
+	if (explicit) {
+		return explicit;
+	}
+	const colonIndex = permId.indexOf(":");
+	if (colonIndex !== -1) {
+		const action = permId.slice(colonIndex + 1);
+		if (action !== "read" && action !== "*") {
+			return [`${permId.slice(0, colonIndex)}:read`];
+		}
+	}
+	return [];
+}
+
+function isDependentOn(depPerm: string, targetPerm: string): boolean {
+	const prereqs = getPrerequisites(depPerm);
+	return prereqs.includes(targetPerm);
+}
+
+function getActiveDependents(permId: string, selected: string[]): string[] {
+	return selected.filter((selectedId) => isDependentOn(selectedId, permId));
+}
+
 export default function RoleModal({
 	open,
 	role,
@@ -47,7 +87,14 @@ export default function RoleModal({
 		if (role) {
 			setName(role.name);
 			setDescription(role.description ?? "");
-			setSelectedPermissions(role.permissions ?? []);
+			const perms = new Set(role.permissions ?? []);
+			// Ensure any prerequisites for existing permissions are satisfied
+			for (const p of role.permissions ?? []) {
+				for (const prereq of getPrerequisites(p)) {
+					perms.add(prereq);
+				}
+			}
+			setSelectedPermissions(Array.from(perms));
 		} else {
 			setName("");
 			setDescription("");
@@ -57,11 +104,24 @@ export default function RoleModal({
 	}, [role, open]);
 
 	function togglePermission(permId: string) {
-		setSelectedPermissions((current) =>
-			current.includes(permId)
-				? current.filter((id) => id !== permId)
-				: [...current, permId],
-		);
+		setSelectedPermissions((current) => {
+			const isSelected = current.includes(permId);
+
+			if (isSelected) {
+				// Deselecting: also remove anything currently selected that depends on this permission
+				const toRemove = new Set<string>([permId]);
+				for (const id of current) {
+					if (isDependentOn(id, permId)) {
+						toRemove.add(id);
+					}
+				}
+				return current.filter((id) => !toRemove.has(id));
+			}
+
+			// Selecting: also add all prerequisites
+			const prereqs = getPrerequisites(permId);
+			return Array.from(new Set([...current, permId, ...prereqs]));
+		});
 	}
 
 	function toggleCategory(categoryPermIds: string[]) {
@@ -69,12 +129,26 @@ export default function RoleModal({
 			selectedPermissions.includes(id),
 		);
 		if (allSelected) {
+			const toRemove = new Set<string>(categoryPermIds);
+			for (const id of categoryPermIds) {
+				for (const selectedId of selectedPermissions) {
+					if (isDependentOn(selectedId, id)) {
+						toRemove.add(selectedId);
+					}
+				}
+			}
 			setSelectedPermissions((current) =>
-				current.filter((id) => !categoryPermIds.includes(id)),
+				current.filter((id) => !toRemove.has(id)),
 			);
 		} else {
+			const toAdd = new Set<string>(categoryPermIds);
+			for (const id of categoryPermIds) {
+				for (const p of getPrerequisites(id)) {
+					toAdd.add(p);
+				}
+			}
 			setSelectedPermissions((current) =>
-				Array.from(new Set([...current, ...categoryPermIds])),
+				Array.from(new Set([...current, ...toAdd])),
 			);
 		}
 	}
@@ -98,6 +172,7 @@ export default function RoleModal({
 		},
 		onSuccess: () => {
 			void queryClient.invalidateQueries({ queryKey: queryKeys.admin.roles });
+			void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
 			onSuccess?.();
 			onClose();
 		},
@@ -173,9 +248,15 @@ export default function RoleModal({
 
 				<div className="space-y-3">
 					<div className="flex items-center justify-between">
-						<span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
-							Granted permissions ({selectedPermissions.length})
-						</span>
+						<div>
+							<span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+								Granted permissions ({selectedPermissions.length})
+							</span>
+							<p className="text-[11px] text-zinc-500 mt-0.5">
+								Write and management permissions automatically include required
+								read access.
+							</p>
+						</div>
 						<button
 							type="button"
 							onClick={() => {
@@ -185,7 +266,7 @@ export default function RoleModal({
 									setSelectedPermissions(permData.permissions.map((p) => p.id));
 								}
 							}}
-							className="text-xs text-violet-400 hover:text-violet-300 cursor-pointer transition-colors"
+							className="text-xs text-violet-400 hover:text-violet-300 cursor-pointer transition-colors shrink-0"
 						>
 							{selectedPermissions.length > 0 ? "Deselect all" : "Select all"}
 						</button>
@@ -225,6 +306,9 @@ export default function RoleModal({
 											<div className="grid gap-2 sm:grid-cols-2">
 												{categoryPerms.map((perm) => {
 													const checked = selectedPermissions.includes(perm.id);
+													const requiredBy = checked
+														? getActiveDependents(perm.id, selectedPermissions)
+														: [];
 
 													return (
 														<button
@@ -247,8 +331,18 @@ export default function RoleModal({
 																{checked && <Check size={12} strokeWidth={3} />}
 															</div>
 															<div className="min-w-0 flex-1">
-																<div className="font-mono text-xs font-medium text-white truncate">
-																	{perm.id}
+																<div className="flex items-center justify-between gap-1.5">
+																	<span className="font-mono text-xs font-medium text-white truncate">
+																		{perm.id}
+																	</span>
+																	{requiredBy.length > 0 && (
+																		<span className="text-[10px] text-violet-400 font-medium shrink-0">
+																			Required by{" "}
+																			{requiredBy
+																				.map((p) => p.split(":")[1] || p)
+																				.join(", ")}
+																		</span>
+																	)}
 																</div>
 																<div className="text-[11px] text-zinc-400 line-clamp-1 mt-0.5">
 																	{perm.name}

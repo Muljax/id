@@ -125,8 +125,8 @@ export default function UserDetails({
 					</Button>
 				)}
 
-				{canManageLifecycle && (
-					status.isDisabled ? (
+				{canManageLifecycle &&
+					(status.isDisabled ? (
 						<Button
 							type="button"
 							variant="secondary"
@@ -147,8 +147,7 @@ export default function UserDetails({
 						>
 							{status.isScheduled ? "Manage Deactivation" : "Disable Account"}
 						</Button>
-					)
-				)}
+					))}
 			</div>
 		</div>
 	);

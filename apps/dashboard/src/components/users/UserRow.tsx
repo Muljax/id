@@ -33,8 +33,7 @@ export default function UserRow({
 		user.roleIds?.includes("admin") ||
 			user.roles?.some(
 				(r) =>
-					r.toLowerCase() === "admin" ||
-					r.toLowerCase() === "administrator",
+					r.toLowerCase() === "admin" || r.toLowerCase() === "administrator",
 			),
 	);
 

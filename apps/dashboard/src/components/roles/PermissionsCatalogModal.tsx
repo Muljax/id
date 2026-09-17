@@ -43,10 +43,7 @@ export default function PermissionsCatalogModal({
 								</h3>
 								<div className="divide-y divide-white/6 rounded-xl border border-white/8 bg-zinc-900/40">
 									{permissions.map((perm) => (
-										<div
-											key={perm.id}
-											className="p-3 text-left"
-										>
+										<div key={perm.id} className="p-3 text-left">
 											<div className="min-w-0 flex-1">
 												<div className="flex items-center gap-2">
 													<span className="font-mono text-xs font-semibold text-white">
