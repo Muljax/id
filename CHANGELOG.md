@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.28.0](https://github.com/Muljax/id/compare/v0.27.0...v0.28.0) (2026-09-17)
+
+
+### Features
+
+* dashboard respects rbac ([d39ff97](https://github.com/Muljax/id/commit/d39ff976c692e99fe2e5d183c42566dde6a73dd5))
+* **rbac:** enforce permission dependencies and role cache invalidation ([8a1b349](https://github.com/Muljax/id/commit/8a1b3490fa78ddfd9cc057592537deb0b9e2af40))
+
+
+### Bug Fixes
+
+* **deps:** update tanstack-router monorepo ([#223](https://github.com/Muljax/id/issues/223)) ([a958a71](https://github.com/Muljax/id/commit/a958a719893786161fa2c742cef05a07d0c3b9cd))
+
 ## [0.27.0](https://github.com/Muljax/id/compare/v0.26.3...v0.27.0) (2026-09-16)
 
 
