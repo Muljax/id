@@ -7,16 +7,13 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 
 OpenSSH servers check incoming user certificates against a local Key Revocation List (KRL) configured via the `RevokedKeys` directive in `/etc/ssh/sshd_config`.
 
-Muljax ID provides an automated endpoint that formats revoked certificates into the line-separated text syntax expected by OpenSSH:
+Muljax ID provides an automated endpoint that outputs standard binary OpenSSH Key Revocation Lists (`PROTOCOL.krl`) ready for direct consumption by `sshd`:
 
 ```http
-GET /api/ssh/ca/revoked-keys?format=raw
+GET /api/ssh/ca/revoked-keys?format=krl
 ```
 
-```text
-serial: 117284521030851699
-serial: 117284521030851700
-```
+Alternatively, you can query `?format=raw` for newline-delimited text specifications (`serial: <id>`) or JSON (default).
 
 ---
 
@@ -37,7 +34,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/bin/sh -c 'curl -fsSL "https://api.example.com/api/ssh/ca/revoked-keys?format=raw" -o /etc/ssh/revoked_keys.tmp && chmod 644 /etc/ssh/revoked_keys.tmp && mv /etc/ssh/revoked_keys.tmp /etc/ssh/revoked_keys'
+ExecStart=/bin/sh -c 'curl -fsSL "https://api.example.com/api/ssh/ca/revoked-keys?format=krl" -o /etc/ssh/revoked_keys.tmp && chmod 644 /etc/ssh/revoked_keys.tmp && mv /etc/ssh/revoked_keys.tmp /etc/ssh/revoked_keys'
 EOF
 
 # 2. Create systemd timer (runs every 15 minutes)
@@ -75,7 +72,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/bin/sh -c 'curl -fsSL "https://api.example.com/api/ssh/ca/revoked-keys?format=raw" -o /etc/ssh/revoked_keys.tmp && chmod 644 /etc/ssh/revoked_keys.tmp && mv /etc/ssh/revoked_keys.tmp /etc/ssh/revoked_keys'
+ExecStart=/bin/sh -c 'curl -fsSL "https://api.example.com/api/ssh/ca/revoked-keys?format=krl" -o /etc/ssh/revoked_keys.tmp && chmod 644 /etc/ssh/revoked_keys.tmp && mv /etc/ssh/revoked_keys.tmp /etc/ssh/revoked_keys'
 ```
 
   </TabItem>

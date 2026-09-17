@@ -65,7 +65,7 @@ function AdminSshPage() {
 			? `${window.location.origin}${API_URL ?? ""}`
 			: (API_URL ?? "");
 
-	const revokedKeysUrl = `${apiOrigin.replace(/\/$/, "")}/api/ssh/ca/revoked-keys?format=raw`;
+	const revokedKeysUrl = `${apiOrigin.replace(/\/$/, "")}/api/ssh/ca/revoked-keys?format=krl`;
 
 	const serviceUnit = `[Unit]
 Description=Sync OpenSSH Revoked Keys
@@ -344,7 +344,7 @@ sudo systemctl reload sshd`;
 
 						<div className="space-y-1.5">
 							<div className="flex items-center justify-between text-xs text-zinc-400">
-								<span>Instance raw revocation endpoint</span>
+								<span>Instance KRL endpoint (binary)</span>
 								<Button
 									type="button"
 									variant="ghost"

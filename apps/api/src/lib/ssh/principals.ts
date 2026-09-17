@@ -27,8 +27,8 @@ export function deriveDefaultPrincipal(user: PrincipalUser): string {
 	// Replace non-alphanumeric characters with underscores, force lowercase
 	const sanitized = raw
 		.toLowerCase()
-		.replace(/[^a-z0-9_.-]/g, "_")
-		.replace(/^-+/, "");
+		.replace(/[^a-z0-9]/g, "_")
+		.replace(/^_+/, "");
 
 	return sanitized.slice(0, 32) || "user";
 }

@@ -47,6 +47,18 @@ export class SSHWriter {
 	}
 
 	/**
+	 * Writes an 8-bit unsigned integer.
+	 *
+	 * @param value 8-bit unsigned integer (byte).
+	 */
+	writeUint8(value: number): this {
+		this.ensureCapacity(1);
+		this.view.setUint8(this.offset, value);
+		this.offset += 1;
+		return this;
+	}
+
+	/**
 	 * Writes a 32-bit unsigned integer in network byte order (big-endian).
 	 *
 	 * @param value 32-bit unsigned integer.
@@ -142,6 +154,18 @@ export class SSHReader {
 	 */
 	hasRemaining(): boolean {
 		return this.offset < this.buffer.length;
+	}
+
+	/**
+	 * Reads an 8-bit unsigned integer.
+	 */
+	readUint8(): number {
+		if (this.offset + 1 > this.buffer.length) {
+			throw new Error("Unexpected end of SSH buffer while reading uint8");
+		}
+		const val = this.view.getUint8(this.offset);
+		this.offset += 1;
+		return val;
 	}
 
 	/**

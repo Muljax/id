@@ -245,3 +245,34 @@ sequenceDiagram
 4. **Temporal Bounds Check**: Verifies that the host system's current time satisfies `validAfter <= now <= validBefore`.
 5. **Principal Authorization**: Verifies that the username being authenticated matches at least one entry in the certificate's `principals` list.
 6. **Revocation Check (KRL)**: If `RevokedKeys /etc/ssh/revoked_keys` is enabled in `sshd_config`, `sshd` extracts the certificate's 64-bit `serial` and confirms that it does not appear in the revocation list.
+
+---
+
+## 8. Key Revocation List (KRL) Wire Specification (PROTOCOL.krl)
+
+OpenSSH's native binary KRL format provides maximum space efficiency when revoking certificates by serial number across host fleets. Muljax ID builds binary KRL payloads conforming directly to OpenSSH `PROTOCOL.krl` via `apps/api/src/lib/ssh/krl.ts`.
+
+### KRL File Header Layout
+
+| Field | Wire Type | Length (Bytes) | Description |
+| :--- | :--- | :--- | :--- |
+| `magic` | `uint64` | 8 | Constant `0x5353484b524c0a00ULL` (ASCII `"SSHKRL\n\0"`). |
+| `format_version` | `uint32` | 4 | Fixed integer `1`. |
+| `krl_version` | `uint64` | 8 | Monotonic version counter incremented upon list update. |
+| `generated_date` | `uint64` | 8 | UNIX timestamp in seconds when the KRL was generated. |
+| `flags` | `uint64` | 8 | Reserved bit flags (`0x0000000000000000`). |
+| `reserved` | `string` | 4 | Length-prefixed string; empty in standard KRL (`0x00000000`). |
+| `comment` | `string` | 4 + `c` | Optional UTF-8 descriptive comment. |
+
+### Certificate Revocation Section (`KRL_SECTION_CERTIFICATES = 1`)
+
+Following the 44-byte header, revoked certificates are grouped into certificate sections:
+
+1. **`section_type` (`uint8`)**: Fixed byte `0x01` (`KRL_SECTION_CERTIFICATES`).
+2. **`section_data` (`bytes blob`)**: Length-prefixed inner payload containing:
+   - **`ca_key` (`string`)**: Wire-serialized CA public key (or empty string for wildcard CA matching).
+   - **`reserved` (`string`)**: Empty wire string (`0x00000000`).
+   - **Certificate Subsections**:
+     - **`cert_section_type` (`uint8`)**: `0x20` (`KRL_SECTION_CERT_SERIAL_LIST`).
+     - **`cert_section_data` (`bytes blob`)**: Sequence of 64-bit big-endian integers (`uint64 serial`) for each revoked certificate.
+

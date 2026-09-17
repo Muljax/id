@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { describe, expect, test } from "bun:test";
 
 import {
+	buildKrl,
 	createSshCaContext,
 	DEFAULT_USER_EXTENSIONS,
 	deriveDefaultPrincipal,
@@ -12,6 +13,9 @@ import {
 	generateCaKeyPairJwk,
 	getPermittedPrincipals,
 	issueUserCertificate,
+	KRL_FORMAT_VERSION,
+	KRL_MAGIC,
+	parseKrl,
 	parseOpenSshCertificate,
 	parseOpenSshPublicKey,
 	SSHReader,
@@ -362,5 +366,170 @@ describe("Universal 'Everyone' Role & Read-Only Permissions", () => {
 		expect(everyoneRole).toBeDefined();
 		expect(everyoneRole?.permissions).toContain("ssh:ca:read");
 		expect(everyoneRole?.isSystem).toBe(true);
+	});
+});
+
+describe("OpenSSH Key Revocation List (KRL Binary Wire Format)", () => {
+	test("builds and parses empty KRL conforming to 44-byte PROTOCOL.krl header", () => {
+		const krlBytes = buildKrl({ comment: "" });
+		// Header without comment payload is exactly 44 bytes
+		expect(krlBytes.length).toBe(44);
+
+		const rawReader = new SSHReader(krlBytes);
+		expect(rawReader.readUint64()).toBe(KRL_MAGIC);
+		expect(rawReader.readUint32()).toBe(KRL_FORMAT_VERSION);
+
+		const parsed = parseKrl(krlBytes);
+		expect(parsed.version).toBe(0n);
+		expect(parsed.comment).toBe("");
+		expect(parsed.certSections).toHaveLength(0);
+
+		// Validate with native ssh-keygen -Q -l -f
+		const krlPath = resolve(
+			tmpdir(),
+			`test-empty-krl-${Date.now()}-${Math.random().toString(36).slice(2)}.krl`,
+		);
+		try {
+			writeFileSync(krlPath, krlBytes);
+			const inspectOutput = execSync(
+				`ssh-keygen -Q -l -f ${krlPath}`,
+			).toString();
+			expect(inspectOutput).toContain("# KRL version 0");
+		} finally {
+			try {
+				unlinkSync(krlPath);
+			} catch {}
+		}
+	});
+
+	test("builds and parses KRL with wildcard CA and verifies with ssh-keygen", () => {
+		const krlBytes = buildKrl({
+			serials: [100n, 200n],
+			comment: "Wildcard CA test",
+		});
+
+		const parsed = parseKrl(krlBytes);
+		expect(parsed.comment).toBe("Wildcard CA test");
+		expect(parsed.certSections).toHaveLength(1);
+		expect(parsed.certSections[0].caKey).toBeUndefined();
+		expect(parsed.certSections[0].serials).toEqual([100n, 200n]);
+
+		const krlPath = resolve(
+			tmpdir(),
+			`test-wildcard-krl-${Date.now()}-${Math.random().toString(36).slice(2)}.krl`,
+		);
+		try {
+			writeFileSync(krlPath, krlBytes);
+			const inspectOutput = execSync(
+				`ssh-keygen -Q -l -f ${krlPath}`,
+			).toString();
+			expect(inspectOutput).toContain("# Wildcard CA");
+			expect(inspectOutput).toContain("serial: 100");
+			expect(inspectOutput).toContain("serial: 200");
+		} finally {
+			try {
+				unlinkSync(krlPath);
+			} catch {}
+		}
+	});
+
+	test("builds KRL scoped to CA public key and revokes issued certificate", async () => {
+		const { privateKeyJwk } = await generateCaKeyPairJwk();
+		const ca = await createSshCaContext(privateKeyJwk);
+
+		const clientKeyA = formatOpenSshEd25519PublicKey(
+			crypto.getRandomValues(new Uint8Array(32)),
+		);
+		const clientKeyB = formatOpenSshEd25519PublicKey(
+			crypto.getRandomValues(new Uint8Array(32)),
+		);
+
+		const certA = await issueUserCertificate(ca, {
+			userPublicKey: clientKeyA,
+			keyId: "revoked-user@test.org",
+			principals: ["revoked-user"],
+			serial: 1001n,
+		});
+
+		const certB = await issueUserCertificate(ca, {
+			userPublicKey: clientKeyB,
+			keyId: "valid-user@test.org",
+			principals: ["valid-user"],
+			serial: 1002n,
+		});
+
+		const krlBytes = buildKrl({
+			caWireKey: ca.publicWire,
+			serials: [1001n],
+			comment: "Revoke certA",
+		});
+
+		const parsed = parseKrl(krlBytes);
+		expect(parsed.certSections).toHaveLength(1);
+		expect(parsed.certSections[0].caKey).toBeDefined();
+		expect(parsed.certSections[0].serials).toEqual([1001n]);
+
+		const baseTmp = `${tmpdir()}/krl-revocation-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+		const krlPath = `${baseTmp}.krl`;
+		const certAPath = `${baseTmp}-a.pub`;
+		const certBPath = `${baseTmp}-b.pub`;
+
+		try {
+			writeFileSync(krlPath, krlBytes);
+			writeFileSync(certAPath, certA.certificate);
+			writeFileSync(certBPath, certB.certificate);
+
+			// Inspect list
+			const inspectOutput = execSync(
+				`ssh-keygen -Q -l -f ${krlPath}`,
+			).toString();
+			expect(inspectOutput).toContain(ca.fingerprint);
+			expect(inspectOutput).toContain("serial: 1001");
+			expect(inspectOutput).not.toContain("serial: 1002");
+
+			// Query certA: must be detected as REVOKED (ssh-keygen returns exit status 1)
+			let certARevoked = false;
+			try {
+				execSync(`ssh-keygen -Q -f ${krlPath} ${certAPath}`);
+			} catch (err: unknown) {
+				const execErr = err as {
+					status?: number;
+					stdout?: Buffer;
+					stderr?: Buffer;
+				};
+				certARevoked =
+					execErr.status === 1 &&
+					(execErr.stdout?.toString().includes("REVOKED") ||
+						execErr.stderr?.toString().includes("REVOKED"));
+			}
+			expect(certARevoked).toBe(true);
+
+			// Query certB: must succeed (exit code 0, not revoked)
+			const queryB = execSync(
+				`ssh-keygen -Q -f ${krlPath} ${certBPath}`,
+			).toString();
+			expect(queryB).not.toContain("REVOKED");
+		} finally {
+			try {
+				unlinkSync(krlPath);
+				unlinkSync(certAPath);
+				unlinkSync(certBPath);
+			} catch {}
+		}
+	});
+
+	test("deduplicates and sorts serial numbers ascending", () => {
+		const krlBytes = buildKrl({
+			serials: ["9999", "100", 500, 100n, "500"],
+		});
+		const parsed = parseKrl(krlBytes);
+		expect(parsed.certSections[0].serials).toEqual([100n, 500n, 9999n]);
+	});
+
+	test("rejects invalid and out-of-range serial numbers", () => {
+		expect(() => buildKrl({ serials: [-1n] })).toThrow(RangeError);
+		expect(() => buildKrl({ serials: [0xffffffffffffffffn + 1n] })).toThrow(
+			RangeError,
+		);
 	});
 });

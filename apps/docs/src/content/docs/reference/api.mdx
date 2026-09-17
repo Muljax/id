@@ -43,12 +43,28 @@ Outputs the dynamic Key Revocation List (KRL).
 - **Query Parameters**:
   | Parameter | Type | Required | Description |
   | :--- | :--- | :--- | :--- |
-  | `format` | `string` | No | Set to `raw` for OpenSSH-compatible newline-delimited format (`serial: <id>`). |
-- **Response**: `200 OK` (`text/plain; charset=utf-8`)
-  ```text
-  serial: 117284521030851699
-  serial: 117284521030851700
-  ```
+  | `format` | `string` | No | `krl` (or `binary`) for native OpenSSH `PROTOCOL.krl` binary wire format; `raw` for newline-delimited serials (`serial: <id>`); default is JSON. |
+  | `includeExpired` | `boolean` | No | Set to `true` to include expired revoked certificates alongside unexpired certificates. |
+  | `wildcard` | `boolean` | No | When `format=krl`, set to `true` to omit the CA public key and apply revocations as wildcard CA. |
+- **Headers**:
+  | Header | Description |
+  | :--- | :--- |
+  | `Accept: application/octet-stream` | Automatically selects binary KRL format if `format` is unspecified. |
+- **Responses**:
+  - `format=krl`: `200 OK` (`application/octet-stream`) binary OpenSSH KRL file
+  - `format=raw`: `200 OK` (`text/plain; charset=utf-8`)
+    ```text
+    serial: 117284521030851699
+    serial: 117284521030851700
+    ```
+  - Default: `200 OK` (`application/json`)
+    ```json
+    {
+      "revoked": [
+        { "serial": "117284521030851699", "revokedAt": 1726588800 }
+      ]
+    }
+    ```
 - **Host Integration**: Synchronized periodically by `ssh-revoked-keys.service` to update `/etc/ssh/revoked_keys`.
 
 ---
