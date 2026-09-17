@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.29.0](https://github.com/Muljax/id/compare/v0.28.0...v0.29.0) (2026-09-17)
+
+
+### Features
+
+* ssh ca ([e5fbb4a](https://github.com/Muljax/id/commit/e5fbb4a98ad12e2dd18b7d9b1d5be787f42cabae))
+
 ## [0.28.0](https://github.com/Muljax/id/compare/v0.27.0...v0.28.0) (2026-09-17)
 
 
