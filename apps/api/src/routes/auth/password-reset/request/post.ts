@@ -9,7 +9,7 @@ route.post("/", async (c) => {
 	const body = await c.req.json<{ email?: string }>();
 	const email = body.email?.trim();
 
-	if (!email || !email.includes("@")) {
+	if (!email?.includes("@")) {
 		return c.json(
 			{
 				error: "A valid email address is required.",

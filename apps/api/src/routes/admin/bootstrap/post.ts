@@ -7,7 +7,6 @@ import { userRoles } from "@/db/schema";
 import { timingSafeEqual } from "@/lib/crypto";
 import { emitNotification } from "@/lib/notifications/emitter";
 import { SYSTEM_ROLE_IDS } from "@/lib/rbac/constants";
-import { seedRbacData } from "@/lib/rbac/seed";
 import { getSessionUser } from "@/lib/session";
 
 const route = new Hono<{ Bindings: Env }>();

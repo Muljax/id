@@ -118,8 +118,7 @@ function collectNavigation(
 		// If this group defines child routes in the route tree, but none are visible to the user,
 		// and the parent doesn't have a requiredPermission of its own, omit this group.
 		const hasConfiguredChildren = Boolean(
-			route.children &&
-				route.children.some((c: AnyRoute) => Boolean(getNavigation(c))),
+			route.children?.some((c: AnyRoute) => Boolean(getNavigation(c))),
 		);
 		if (hasConfiguredChildren && children.length === 0) {
 			return items;
