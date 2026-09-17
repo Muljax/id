@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.27.0](https://github.com/Muljax/id/compare/v0.26.3...v0.27.0) (2026-09-16)
+
+
+### Features
+
+* rbac ([#221](https://github.com/Muljax/id/issues/221)) ([58d517a](https://github.com/Muljax/id/commit/58d517a2793e6049967805809998dc5bd77870ec))
+
+
+### Bug Fixes
+
+* **deps:** update tanstack-router monorepo ([#219](https://github.com/Muljax/id/issues/219)) ([d0c2543](https://github.com/Muljax/id/commit/d0c254345eb3de1a200edbf0be2c3d51c37acfaf))
+
 ## [0.26.3](https://github.com/Muljax/id/compare/v0.26.2...v0.26.3) (2026-09-16)
 
 
