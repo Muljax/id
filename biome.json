@@ -16,6 +16,8 @@
    "!apps/api/drizzle",
    "!apps/dashboard/dist",
    "!apps/dashboard/src/routeTree.gen.ts",
+   "!apps/docs/dist",
+   "!apps/docs/.astro",
    "!**/.wrangler",
    "!**/.alchemy"
   ]

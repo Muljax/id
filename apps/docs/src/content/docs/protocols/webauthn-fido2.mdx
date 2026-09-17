@@ -1,0 +1,237 @@
+---
+title: WebAuthn & FIDO2 Ceremony
+description: Comprehensive deep dive into WebAuthn Level 3, CTAP 2.1, attestation/assertion ceremonies, and D1 challenge lifecycles.
+---
+
+`ID` implements a zero-trust, passwordless authentication subsystem adhering to the W3C Web Authentication (WebAuthn Level 3) and FIDO Alliance CTAP 2.1 specifications. It leverages hardware-bound cryptographic credentials, platform biometric authenticators (Touch ID, Windows Hello, Face ID), roaming hardware security keys (YubiKeys), and atomic challenge lifecycles in Cloudflare D1.
+
+---
+
+## 1. Governing Protocol Standards
+
+The WebAuthn implementation operates across the following standards:
+
+- **[W3C Web Authentication (WebAuthn Level 3)](https://www.w3.org/TR/webauthn-3/)**: Browser JavaScript APIs (`navigator.credentials.create` and `navigator.credentials.get`) and server validation rules.
+- **[FIDO Alliance CTAP 2.1](https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html)**: Client to Authenticator Protocol for communicating with USB, NFC, and Bluetooth authenticators.
+- **[RFC 8152](https://www.rfc-editor.org/rfc/rfc8152)**: *CBOR Object Signing and Encryption (COSE)*: Key representation format for public keys extracted from authenticators.
+- **[RFC 4648](https://www.rfc-editor.org/rfc/rfc4648)**: Base64URL encoding used for binary credential IDs and cryptographic challenges.
+
+---
+
+## 2. Database Schema & Challenge Lifecycle
+
+WebAuthn challenges are strictly ephemeral and single-use. The `passkey_challenges` table tracks active challenges with a hardcoded **5-minute TTL** (`CHALLENGE_DURATION = 5 * 60 * 1000`):
+
+```sql
+CREATE TABLE passkey_challenges (
+    id TEXT PRIMARY KEY,
+    user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+    challenge TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
+);
+```
+
+### Atomic Challenge Consumption
+To prevent race conditions and challenge replay attacks, challenges are consumed using SQLite's atomic `DELETE ... RETURNING *` in `apps/api/src/lib/passkey.ts`:
+
+```ts
+// Registration challenge consumption (scoped to authenticated user)
+export async function consumeChallenge(db: ReturnType<typeof createDb>, userId: string) {
+    const deleted = await db
+        .delete(passkeyChallenges)
+        .where(
+            and(
+                eq(passkeyChallenges.userId, userId),
+                gt(passkeyChallenges.expiresAt, Date.now()),
+            ),
+        )
+        .returning();
+    return deleted[0] ?? null;
+}
+
+// Userless login challenge consumption (scoped by challenge UUID)
+export async function consumeChallengeById(db: ReturnType<typeof createDb>, id: string) {
+    const deleted = await db
+        .delete(passkeyChallenges)
+        .where(
+            and(
+                eq(passkeyChallenges.id, id),
+                isNull(passkeyChallenges.userId),
+                gt(passkeyChallenges.expiresAt, Date.now()),
+            ),
+        )
+        .returning();
+    return deleted[0] ?? null;
+}
+```
+
+Because the row is deleted in the exact same query that retrieves it, a challenge can **never** be used more than once, even under concurrent requests.
+
+---
+
+## 3. Registration Ceremony (Attestation)
+
+Registration binds a new public/private keypair inside the user's authenticator to their account.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User
+    participant Browser as Browser (Client)
+    participant API as ID API Worker
+    participant D1 as Cloudflare D1
+    participant Enclave as Device Enclave / Key
+
+    Browser->>API: 1. POST /api/passkeys/register/options (Session Cookie)
+    API->>API: Verify session cookie
+    API->>D1: Select existing passkey credential IDs for user
+    API->>API: generateRegistrationOptions({ rpName, rpID, excludeCredentials, ... })
+    API->>D1: INSERT into passkey_challenges (userId, challenge, expiresAt)
+    API-->>Browser: 2. 200 OK: PublicKeyCredentialCreationOptionsJSON
+    Browser->>Enclave: 3. navigator.credentials.create({ publicKey })
+    User->>Enclave: Authorize biometric scan / tap key
+    Enclave->>Enclave: Generate asymmetric keypair & sign clientDataJSON
+    Enclave-->>Browser: Attestation response (attestationObject, clientDataJSON)
+    Browser->>API: 4. POST /api/passkeys/register/verify { response, name }
+    API->>D1: 5. consumeChallenge(userId) (atomic DELETE ... RETURNING *)
+    API->>API: 6. verifyRegistrationResponse({ expectedChallenge, expectedOrigin, expectedRPID })
+    API->>D1: 7. INSERT into passkeys (credentialId, publicKey, counter, transports)
+    API->>D1: 8. emitNotification("security.passkey_added")
+    API-->>Browser: 9. 200 OK: { success: true }
+```
+
+### Server Options Generation (`POST /api/passkeys/register/options`)
+In `apps/api/src/routes/passkeys/register/options/post.ts`:
+
+```ts
+const existingPasskeys = await db
+    .select({ credentialId: passkeys.credentialId })
+    .from(passkeys)
+    .where(eq(passkeys.userId, user.id));
+
+const options = await generateRegistrationOptions({
+    rpName: c.env.RP_NAME,
+    rpID: c.env.RP_ID,
+    userName: user.email,
+    userDisplayName: user.email,
+    excludeCredentials: existingPasskeys.map(({ credentialId }) => ({
+        id: credentialId,
+    })),
+    authenticatorSelection: {
+        residentKey: "required",       // Enforces discoverable credentials for userless login
+        userVerification: "preferred", // Requests biometric verification when available
+    },
+    attestationType: "none",          // Eliminates unnecessary privacy-invasive tracking
+});
+
+await createChallenge(db, user.id, options.challenge);
+```
+
+### Server Verification (`POST /api/passkeys/register/verify`)
+In `apps/api/src/routes/passkeys/register/verify/post.ts`:
+1. Atomically consumes the challenge from `passkey_challenges`.
+2. Validates origin matches `getDashboardOrigin(c.env)` and RP ID matches `c.env.RP_ID`.
+3. Verifies cryptographic signature in `attestationObject`.
+4. Enforces uniqueness: checks that `credential.id` is not already registered (`409 Conflict`).
+5. Persists the credential in `passkeys`:
+   - `id`: UUID v4
+   - `credentialId`: Base64URL credential string
+   - `publicKey`: Base64 encoded public key bytes (`arrayBufferToBase64(credential.publicKey)`)
+   - `counter`: Initial integer sign count
+   - `transports`: JSON array of supported transports (e.g. `["internal"]` or `["usb", "nfc"]`)
+
+---
+
+## 4. Authentication Ceremony (Assertion)
+
+The platform supports **completely userless (discoverable credential) login**: the user does not need to type their email or username. The authenticator looks up the resident key matching the RP ID and returns the credential identifier.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User
+    participant Browser as Browser (Client)
+    participant API as ID API Worker
+    participant D1 as Cloudflare D1
+    participant Enclave as Device Enclave / Key
+
+    Browser->>API: 1. POST /api/passkeys/login/options {}
+    API->>API: generateAuthenticationOptions({ rpID, userVerification: "preferred" })
+    API->>D1: INSERT into passkey_challenges (userId: null, challenge, expiresAt)
+    API-->>Browser: 2. 200 OK: { challengeId, ...options }
+    Browser->>Enclave: 3. navigator.credentials.get({ publicKey })
+    User->>Enclave: Authorize biometric scan / tap key
+    Enclave->>Enclave: Look up resident key, increment signCount, sign clientData
+    Enclave-->>Browser: Assertion response (authenticatorData, signature, credential.id)
+    Browser->>API: 4. POST /api/passkeys/login/verify { challengeId, response }
+    API->>D1: 5. consumeChallengeById(challengeId) (atomic DELETE ... RETURNING *)
+    API->>D1: 6. SELECT passkey WHERE credentialId = response.id
+    API->>D1: 7. SELECT user WHERE id = passkey.userId
+    API->>API: 8. verifyAuthenticationResponse(...)
+    API->>API: 9. isUserDisabled(user) check
+    API->>D1: 10. UPDATE passkeys SET counter = newCounter, lastUsedAt = Date.now()
+    API->>D1: 11. INSERT into sessions (tokenHash, ipAddress, geolocation, userAgent)
+    API-->>Browser: 12. 200 OK + Set-Cookie: session=... (HttpOnly, Secure)
+```
+
+### Assertion Verification Invariants (`POST /api/passkeys/login/verify`)
+In `apps/api/src/routes/passkeys/login/verify/post.ts`:
+
+1. **Challenge Validity**: Verifies that `challengeId` exists and is consumed atomically.
+2. **Credential Lookup**: Locates the public key bytes stored in `passkeys.publicKey`.
+3. **Cryptographic Signature Verification**: Validates the signature over `authenticatorData` and SHA-256 hash of `clientDataJSON`.
+4. **Origin Binding**: Rejects the assertion if the origin in `clientDataJSON` does not match the configured dashboard domain.
+5. **Account Status Guard**:
+   ```ts
+   if (isUserDisabled(user)) {
+       return c.json({ error: "Your account has been disabled." }, 403);
+   }
+   ```
+6. **Sign Counter Monotonicity**: Checks that `newCounter > storedCounter` to detect cloned authenticators.
+7. **Session Issuance**: Generates a cryptographically random session token, hashes it with SHA-256 before inserting into `sessions`, records Cloudflare edge geolocation metadata (`cf.country`, `cf.city`, `cf.region`), and sets the HttpOnly cookie.
+
+---
+
+## 5. WebAuthn Binary Data Layouts
+
+### `clientDataJSON`
+UTF-8 JSON string created by the browser and hashed by the authenticator:
+
+```json
+{
+  "type": "webauthn.get",
+  "challenge": "dGVzdC1jaGFsbGVuZ2UtMTIzNDU2",
+  "origin": "https://id.example.com",
+  "crossOrigin": false
+}
+```
+
+### `authenticatorData` Binary Layout (CTAP 2.1 § 6)
+
+The binary `authenticatorData` buffer returned by the authenticator is structured as follows:
+
+| Byte Offset | Length | Name | Description |
+| :--- | :--- | :--- | :--- |
+| `0` | 32 bytes | `rpIdHash` | SHA-256 hash of the Relying Party ID string (`c.env.RP_ID`). |
+| `32` | 1 byte | `flags` | Bitfield representing authenticator execution flags (see below). |
+| `33` | 4 bytes | `signCount` | 32-bit unsigned big-endian integer incremented on each signature. |
+| `37` | `k` bytes | `attestedCredentialData` | *(Registration only)* Contains AAGUID (16 bytes), Credential ID length (2 bytes), Credential ID (`n` bytes), and COSE Public Key. |
+
+#### Flags Bitfield Breakdown (`flags`)
+- **Bit 0 (`UP`)**: **User Present**. Set if physical presence was verified (e.g. key tap).
+- **Bit 2 (`UV`)**: **User Verified**. Set if biometric or PIN verification succeeded.
+- **Bit 6 (`AT`)**: **Attested Credential Data**. Indicates whether credential public key data is appended.
+- **Bit 7 (`ED`)**: **Extension Data**. Indicates whether authenticator extension data is appended.
+
+---
+
+## 6. Threat Model & Defense Mechanisms
+
+| Threat | Attack Vector | Mitigation in `ID` |
+| :--- | :--- | :--- |
+| **Phishing / Credential Harvesting** | Attacker lures user to fake domain (e.g. `id-login.com`). | Authenticators bind signatures strictly to the TLS origin. The browser refuses to sign for incorrect domains. |
+| **Replay Attacks** | Eavesdropper captures previous assertion payload and re-sends. | Challenges expire after 5 minutes and are consumed atomically via `DELETE ... RETURNING *`. |
+| **Cloned Authenticators** | Private key extracted or cloned from physical device. | Monotonic sign counter validation detects duplicate counter values and immediately flags clone activity. |
+| **Database Compromise** | Attacker obtains full read dump of Cloudflare D1. | Zero private keys exist in the database. Only public keys and credential IDs are stored. Sessions and tokens are stored as SHA-256 hashes. |
+| **Bypassing Disabled Accounts** | Suspended user attempts to authenticate with a valid passkey. | API checks `isUserDisabled(user)` immediately after cryptographic verification and rejects with `403 Forbidden` before creating a session. |

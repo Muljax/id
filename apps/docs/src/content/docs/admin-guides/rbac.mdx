@@ -1,0 +1,98 @@
+---
+title: Role-Based Access Control (RBAC)
+description: Permissions catalog, system roles, custom roles, and authorization policies.
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+`ID` implements a granular, resource-based access control engine. Every administrative action and sensitive API operation is guarded by permission checks.
+
+## System Roles
+
+The system initializes three immutable system roles:
+
+<table>
+<thead>
+<tr>
+  <th>Role ID</th>
+  <th>Name</th>
+  <th>Type</th>
+  <th>Description</th>
+  <th>Default Permissions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>admin</code></td>
+  <td><strong>Administrator</strong></td>
+  <td><Badge text="System" variant="danger" /></td>
+  <td>Superadministrator with unrestricted platform access</td>
+  <td><code>["*"]</code></td>
+</tr>
+<tr>
+  <td><code>user</code></td>
+  <td><strong>User</strong></td>
+  <td><Badge text="System" variant="tip" /></td>
+  <td>Standard authenticated user self-service</td>
+  <td><code>["ssh:cert:issue", "ssh:keys:manage", "ssh:ca:read"]</code></td>
+</tr>
+<tr>
+  <td><code>everyone</code></td>
+  <td><strong>Everyone</strong></td>
+  <td><Badge text="System" variant="note" /></td>
+  <td>Universal role applied to all requests (strictly read-only)</td>
+  <td><code>["ssh:ca:read"]</code></td>
+</tr>
+</tbody>
+</table>
+
+---
+
+## Permissions Catalog
+
+Permissions follow the standard `resource:action` convention. Wildcards (`*`) expand to match all actions under a given resource.
+
+### System & Users
+- `*`: Superadministrator access across the entire platform.
+- `users:read`: View user profiles and list registered accounts.
+- `users:write`: Create, edit, and update user profile attributes.
+- `users:delete`: Permanently delete user accounts.
+- `users:lifecycle`: Enable, disable, and schedule delayed account actions.
+- `users:password-reset`: Generate password reset links and tokens.
+- `users:*`: All user management actions.
+
+### Roles & Permissions
+- `roles:read`: View existing roles and their assigned permission sets.
+- `roles:write`: Create, update, or delete custom roles.
+- `roles:assign`: Bind or unbind roles to/from users.
+- `permissions:read`: View the system permissions catalog.
+- `roles:*`: Full control over roles and permissions.
+
+### OAuth Clients
+- `oauth_clients:read`: View registered OAuth 2.0 / OIDC applications.
+- `oauth_clients:write`: Create applications, update redirect URIs, and rotate client secrets.
+- `oauth_clients:*`: Full control over OAuth applications.
+
+### SSH & Certificate Authority
+- `ssh:ca:read`: View CA public keys, fingerprints, and revocation lists.
+- `ssh:keys:manage`: Register, view, and delete personal SSH public keys.
+- `ssh:cert:issue`: Request and receive signed OpenSSH user certificates.
+- `ssh:cert:list`: View global history of all issued certificates across all users.
+- `ssh:cert:revoke`: Revoke certificates and update the Key Revocation List.
+- `ssh:keys:admin`: View and delete keys belonging to other users.
+- `ssh:*`: Full control over CA, keys, certificates, and revocations.
+
+### Notifications & Settings
+- `notifications:read`: View notifications and system alerts.
+- `notifications:write`: Dismiss, mark read, or emit notifications.
+- `settings:read`: View tenant and instance configuration.
+- `settings:write`: Modify tenant and instance configuration.
+
+---
+
+## Managing Roles in the Dashboard
+
+Under **Admin** -> **Roles** (`/admin/roles`):
+- **Create Custom Role**: Specify a unique slug, name, and description, and toggle individual permissions from the catalog.
+- **Assign to Users**: Assign one or more roles per user under **Admin** -> **Users** -> **Roles**. User permissions are the union of all permissions granted across assigned roles.
+- **Read-Only Constraints**: The `everyone` role is restricted; only permissions ending with `:read` can be assigned to it.

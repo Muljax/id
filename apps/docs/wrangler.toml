@@ -1,0 +1,7 @@
+name = "maze-id-docs"
+compatibility_date = "2026-09-11"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "404-page"

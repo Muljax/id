@@ -51,6 +51,7 @@ This command will:
 2. Generate `terraform/terraform.tfvars`.
 3. Derive `VITE_API_URL` and `OIDC_ISSUER` from your domain configuration and append them to `.env`.
 4. Generate the OIDC ES256 signing key in `terraform/terraform.tfvars` if one does not already exist.
+5. Generate the Ed25519 SSH CA key in `terraform/terraform.tfvars` if one does not already exist.
 
 > **Important:** Both `.env` and `terraform/terraform.tfvars` contain sensitive secrets and credentials. They are ignored by Git and should never be committed.
 
@@ -103,17 +104,22 @@ Install the project dependencies using Bun:
 bun install
 ```
 
-## Generate the OIDC private key
+## Generate cryptographic keys
 
-Muljax Identity Platform requires an OIDC private key for signing tokens.
+Muljax Identity Platform requires an OIDC private key for signing tokens and an Ed25519 Certificate Authority key for signing SSH certificates.
 
-This key is automatically generated when you run `bun run vars`. If you ever need to manually regenerate or rotate the key, run:
+Both keys are automatically generated when you run `bun run vars`. If you ever need to manually regenerate or rotate the keys:
 
-```sh
-bun scripts/oidc-key.ts --force
-```
+* **Rotate OIDC Key**:
+  ```sh
+  bun scripts/oidc-key.ts --force
+  ```
+* **Rotate SSH CA Key**:
+  ```sh
+  bun scripts/ssh-ca-key.ts --force
+  ```
 
-The generated private key is stored in `terraform/terraform.tfvars` and should never be committed to the repository.
+The generated private keys are stored in `terraform/terraform.tfvars` and should never be committed to the repository.
 
 ## Deploy
 

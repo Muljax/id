@@ -1,0 +1,87 @@
+---
+title: OAuth2 / OIDC Clients
+description: Managing registered applications, client types, redirect URIs, and credentials in the dashboard.
+---
+
+import { Steps, Badge } from '@astrojs/starlight/components';
+
+`ID` includes a built-in OpenID Connect (OIDC) and OAuth 2.0 authorization server. Administrators manage client applications via **Admin** -> **Clients** (`/admin/clients`).
+
+## Application Profiles
+
+When creating a client application, three profiles are supported:
+
+<table>
+<thead>
+<tr>
+  <th>Profile</th>
+  <th>Client Type</th>
+  <th>Authentication Method</th>
+  <th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Web Application</strong></td>
+  <td><Badge text="confidential" variant="tip" /></td>
+  <td>PKCE (S256) + Client Secret</td>
+  <td>Traditional backend web applications (Node.js, Go, Python, Rails)</td>
+</tr>
+<tr>
+  <td><strong>SPA / Native</strong></td>
+  <td><Badge text="public" variant="note" /></td>
+  <td>PKCE (S256) strictly</td>
+  <td>Browser single-page apps (React, Vue) and mobile applications</td>
+</tr>
+<tr>
+  <td><strong>Machine-to-Machine</strong></td>
+  <td><Badge text="confidential" variant="tip" /></td>
+  <td>Client Credentials Grant</td>
+  <td>Backend microservices, CI/CD runners, and background daemons</td>
+</tr>
+</tbody>
+</table>
+
+---
+
+## Managing Applications in the Dashboard
+
+### 1. Registering an Application
+
+<Steps>
+
+1. Navigate to **Admin** -> **Clients** (`/admin/clients`).
+
+2. Click **Add Client**.
+
+3. Configure the client:
+   - **Name**: Display title shown on user consent prompts (e.g., `"Grafana Monitoring"`).
+   - **Profile**: Choose `Web Application`, `SPA / Native`, or `Machine-to-Machine`.
+   - **Redirect URIs**: Enter valid callback URLs (one per line, e.g., `https://grafana.example.com/login/generic_oauth`).
+   - **Allowed Scopes**: Toggle standard OIDC scopes (`openid`, `profile`, `email`, `offline_access`).
+
+4. Click **Create Client**.
+
+</Steps>
+
+### 2. Client Credentials View
+
+For `confidential` clients, the creation dialog presents your generated credentials:
+
+- **`client_id`**: Permanent identifier for your application.
+- **`client_secret`**: High-entropy secret string.
+
+:::danger[Copy Secret Immediately]
+The plaintext client secret is shown only once upon creation. The server hashes secrets with SHA-256 before storing them in `oauth_clients.client_secret_hash`. It cannot be retrieved later.
+:::
+
+---
+
+## Deleting an Application
+
+To delete an application:
+1. Locate the client card in the directory.
+2. Click the delete icon.
+3. Confirm deletion in the modal.
+
+All active authorization codes, refresh tokens, access tokens, and user consent grants bound to that client are deleted immediately via database cascade.

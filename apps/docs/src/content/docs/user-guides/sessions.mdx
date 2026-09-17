@@ -1,0 +1,67 @@
+---
+title: Profile, Password & Authorized Apps
+description: Managing profile details, changing passwords, and revoking third-party application access.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+The **Account** section of the dashboard provides self-service management for personal profile attributes, passwords, and third-party application permissions.
+
+## Profile Information (`/account/profile`)
+
+Your profile information populates your OpenID Connect identity claims returned to authorized applications.
+
+### Editable Fields
+- **Display Name**: Your preferred full name.
+- **Given Name & Family Name**: First and last names.
+- **Preferred Username**: Normalized POSIX identifier used as the default principal in SSH certificates.
+- **Website & Profile URL**: Public links.
+- **Gender, Birthdate, Zoneinfo, Locale**: Standard OIDC identity claims.
+
+### Profile Avatar
+- Upload JPG, PNG, or WebP images up to 5 MB.
+- Built-in interactive cropper allows squaring and centering your avatar.
+- Avatars are stored in Cloudflare R2 and served securely at `/api/account/profile/avatar`.
+
+---
+
+## Password Management (`/account/password`)
+
+To update your account password:
+
+<Steps>
+
+1. Navigate to **Account** -> **Password** (`/account/password`).
+
+2. Enter your current password.
+
+3. Enter your new password (must be at least 8 characters).
+
+4. Click **Update Password**.
+
+</Steps>
+
+:::tip[Passkeys Alternative]
+If you prefer not to use passwords, you can configure one or more biometric or hardware passkeys under **Account** -> **Passkeys** for completely passwordless authentication.
+:::
+
+---
+
+## Authorized Applications (`/account/authorized-apps`)
+
+Whenever you log in to an external service (such as Grafana, Nextcloud, or internal tools) using `ID`, an OAuth consent grant is established in the database.
+
+Under **Account** -> **Authorized Apps**:
+- **Application Title**: Name of the authorized third-party client.
+- **Approved Scopes**: Explicit list of data permissions granted to the application (e.g., `openid`, `profile`, `email`).
+- **Granted Date**: Timestamp when consent was authorized.
+- **Revocation**: Click **Revoke Access** to immediately invalidate all active access and refresh tokens held by that third-party client for your user account.
+
+---
+
+## Active Sessions (`/api/auth/sessions`)
+
+The platform tracks all active authenticated devices in the `sessions` table:
+- **IP Address & Geolocation**: Edge-derived country, city, and region metadata.
+- **Client Environment**: Operating system and browser details.
+- **Revocation**: Specific sessions can be terminated via `POST /api/auth/sessions/:id/revoke`, or all secondary sessions can be purged simultaneously via `POST /api/auth/sessions/revoke-all`.

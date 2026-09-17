@@ -1,0 +1,81 @@
+---
+title: SSH Client Configuration
+description: Configuring your local ~/.ssh/config for automatic certificate authentication.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Once you have saved your private key (`id_ed25519`) and certificate (`id_ed25519-cert.pub`) in your local `~/.ssh/` directory, you can configure the OpenSSH client for automatic, seamless server access.
+
+## Configuration Options
+
+<Tabs>
+  <TabItem label="Automatic Discovery (Default)">
+
+By default, OpenSSH automatically discovers any certificate ending in `-cert.pub` adjacent to an identity file.
+
+If your files are located at:
+- `~/.ssh/id_ed25519` (Private key)
+- `~/.ssh/id_ed25519-cert.pub` (Certificate)
+
+OpenSSH automatically presents `id_ed25519-cert.pub` whenever authenticating with `id_ed25519`:
+
+```sh
+ssh alice@server.example.com
+```
+
+You can verify certificate presentation using verbose mode (`ssh -v`):
+```text
+debug1: Offering public key: ~/.ssh/id_ed25519-cert.pub ED25519-CERT SHA256:...
+debug1: Server accepts key: ~/.ssh/id_ed25519-cert.pub ED25519-CERT SHA256:...
+debug1: Authentication succeeded (publickey).
+```
+
+  </TabItem>
+  <TabItem label="Config File (~/.ssh/config)">
+
+To explicitly bind your certificate to specific target hosts or wildcard domains, add an entry to your `~/.ssh/config`:
+
+```text
+Host *.internal.example.com
+    User alice
+    IdentityFile ~/.ssh/id_ed25519
+    CertificateFile ~/.ssh/id_ed25519-cert.pub
+    IdentitiesOnly yes
+```
+
+- **`IdentityFile`**: Path to your private key.
+- **`CertificateFile`**: Path to your signed certificate.
+- **`IdentitiesOnly yes`**: Prevents the client from presenting other keys loaded in `ssh-agent`.
+
+  </TabItem>
+  <TabItem label="Command Line Flag">
+
+You can also specify the certificate manually via command-line options:
+
+```sh
+ssh -i ~/.ssh/id_ed25519 -o CertificateFile=~/.ssh/id_ed25519-cert.pub alice@server.example.com
+```
+
+  </TabItem>
+</Tabs>
+
+---
+
+## Troubleshooting Common Errors
+
+### `Permission denied (publickey)`
+
+1. **Verify Certificate Expiration**:
+   Run `ssh-keygen -L -f ~/.ssh/id_ed25519-cert.pub` and inspect the `Valid:` window. If expired, request a fresh certificate in the dashboard (**Account** -> **SSH Keys**).
+2. **Verify Principal Matching**:
+   Ensure the username you are connecting as matches one of the **Principals** in the certificate.
+3. **Verify Host CA Configuration**:
+   Ensure the target server's `/etc/ssh/sshd_config` includes:
+   ```text
+   TrustedUserCAKeys /etc/ssh/trusted_user_ca.pub
+   ```
+
+### `Certificate revoked by file /etc/ssh/revoked_keys`
+
+The certificate's serial number was revoked by an administrator and synchronized to the server's Key Revocation List. Request a new certificate via the dashboard.

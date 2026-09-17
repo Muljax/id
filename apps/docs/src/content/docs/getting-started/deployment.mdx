@@ -1,0 +1,78 @@
+---
+title: Deployment
+description: Deploying ID to Cloudflare Workers, D1, and Pages using Terraform.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+Production deployments are managed via [Terraform](https://developer.hashicorp.com/terraform), providing repeatable, auditable infrastructure provisioning across Cloudflare.
+
+## Provisioned Infrastructure
+
+The Terraform configuration provisions:
+- **Cloudflare D1 Database**: Distributed SQLite database instance (`cloudflare_d1_database.api`).
+- **D1 Database Migrations**: Automatically applies `apps/api/drizzle/migrations/` using Wrangler during deployment.
+- **API Worker**: The Hono-powered API Worker (`cloudflare_workers_script.api`) with D1, R2, and Workflow bindings.
+- **Dashboard Worker / Assets**: Deploys the built React single-page app (`cloudflare_workers_script.dashboard`).
+- **Cloudflare R2 Bucket**: Object storage for user profile avatars (`cloudflare_r2_bucket.profile`).
+- **Cloudflare Workflows**: Background durable execution workflow for scheduled account lifecycles.
+- **DNS Records**: Custom subdomains for your API and dashboard.
+
+---
+
+## Deployment Workflow
+
+<Steps>
+
+1. **Build Artifacts**:
+   Terraform deploys built Worker and frontend bundles. Run the build command from the root:
+   ```sh
+   bun run build
+   ```
+
+2. **Initialize Terraform**:
+   ```sh
+   terraform -chdir=terraform init
+   ```
+
+3. **Generate Variables & Keys**:
+   Ensure `.env` is populated, then derive your Terraform configuration:
+   ```sh
+   bun run vars
+   ```
+   This generates `terraform/terraform.tfvars` including the OIDC signing key and Ed25519 SSH CA key.
+
+4. **Review Plan**:
+   ```sh
+   terraform -chdir=terraform plan
+   ```
+
+5. **Apply Configuration**:
+   ```sh
+   terraform -chdir=terraform apply
+   ```
+
+</Steps>
+
+---
+
+## Terraform Outputs
+
+After applying, Terraform prints output values:
+
+| Output Variable | Description |
+| :--- | :--- |
+| `api_url` | Public HTTPS URL of the API Worker |
+| `dashboard_url` | Public HTTPS URL of the web dashboard |
+| `oidc_issuer` | Canonical issuer URL for OpenID Connect clients |
+| `database_id` | Cloudflare D1 database ID |
+| `database_name` | Cloudflare D1 database name |
+| `profile_bucket_name` | Cloudflare R2 bucket name for user avatars |
+| `api_worker_name` | Deployed API Worker script name |
+| `dashboard_worker_name` | Deployed Dashboard Worker script name |
+| `instance_name` | Application brand name |
+
+View them anytime using:
+```sh
+terraform -chdir=terraform output
+```

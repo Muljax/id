@@ -203,7 +203,16 @@ sudo systemctl reload sshd`;
 		if (searchQuery.trim()) {
 			const q = searchQuery.toLowerCase().trim();
 			const matchesKeyId = cert.keyId.toLowerCase().includes(q);
-			const matchesSerial = cert.serial.includes(q);
+			let matchesSerial = cert.serial.includes(q);
+			if (!matchesSerial) {
+				try {
+					const hex = BigInt(cert.serial).toString(16);
+					const hexQ = q.startsWith("0x") ? q.slice(2) : q;
+					matchesSerial = hex.includes(hexQ);
+				} catch {
+					// ignore
+				}
+			}
 			const matchesPrincipal = cert.principals.some((p) =>
 				p.toLowerCase().includes(q),
 			);
@@ -541,18 +550,26 @@ sudo systemctl reload sshd`;
 												</Badge>
 											)}
 										</div>
-										<div className="flex flex-wrap items-center gap-1.5 text-xs text-zinc-400">
-											<span className="text-zinc-500">Principals:</span>
-											{cert.principals.map((p) => (
-												<Badge
-													key={p}
-													variant="violet"
-													size="sm"
-													className="text-[11px] font-mono"
-												>
-													{p}
-												</Badge>
-											))}
+										<div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-zinc-400">
+											<div className="flex items-center gap-1.5">
+												<span className="text-zinc-500">Serial:</span>
+												<span className="font-mono text-zinc-300 select-all">
+													{cert.serial}
+												</span>
+											</div>
+											<div className="flex flex-wrap items-center gap-1.5">
+												<span className="text-zinc-500">Principals:</span>
+												{cert.principals.map((p) => (
+													<Badge
+														key={p}
+														variant="violet"
+														size="sm"
+														className="text-[11px] font-mono"
+													>
+														{p}
+													</Badge>
+												))}
+											</div>
 										</div>
 										{isRevoked && cert.revokedReason && (
 											<p className="text-xs text-red-400/80">

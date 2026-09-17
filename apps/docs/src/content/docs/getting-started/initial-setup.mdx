@@ -1,0 +1,71 @@
+---
+title: Superadmin Bootstrap
+description: Registering the initial user account and claiming administrator privileges via the dashboard.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+When an instance is deployed for the first time, no user holds administrator rights. To prevent unauthorized takeover, claiming the initial superadmin role requires a multi-step ceremony using the dashboard and the `ADMIN_BOOTSTRAP_SECRET` configured in your `.env`.
+
+## The Bootstrap Sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as User (Browser)
+    participant UI as Dashboard (/bootstrap)
+    participant API as API Worker
+    participant DB as Cloudflare D1
+
+    Admin->>UI: Register and log in
+    Admin->>UI: Navigate to /bootstrap
+    Admin->>UI: Enter ADMIN_BOOTSTRAP_SECRET
+    UI->>API: POST /api/admin/bootstrap { secret }
+    Note over API: Verifies session cookie<br/>Timing-safe secret compare
+    API->>DB: Check if any admin exists in user_roles
+    alt Admin already exists
+        DB-->>API: Admin record found
+        API-->>UI: 409 Conflict ("Already completed")
+    else No admin exists
+        DB-->>API: Empty
+        API->>DB: INSERT into user_roles (userId, roleId='admin')
+        API->>DB: INSERT into notifications (type='admin.bootstrap_claimed')
+        API-->>UI: 200 OK { success: true }
+        UI-->>Admin: Elevation successful, reveals Admin sidebar menu
+    end
+```
+
+---
+
+## Step-by-Step Instructions
+
+<Steps>
+
+1. **Register an Account**:
+   - Open your dashboard in your browser (e.g., `https://dash.example.com`).
+   - Navigate to `/register`.
+   - Create your account using your email address and choose either a password or WebAuthn passkey.
+   - Complete login to establish an active session cookie.
+
+2. **Access the Bootstrap Form**:
+   - In your browser address bar, navigate to `/bootstrap` (e.g., `https://dash.example.com/bootstrap`).
+   - Enter the exact `ADMIN_BOOTSTRAP_SECRET` string from your `.env`.
+   - Click **Claim Administrator Privileges**.
+
+3. **Confirm Elevation**:
+   - The dashboard calls the internal `bootstrapAdmin` handler.
+   - Upon successful verification, your user account is assigned the `admin` role (`SYSTEM_ROLE_IDS.ADMIN`).
+   - An in-app notification (`admin.bootstrap_claimed`) confirms your elevation.
+   - The dashboard updates your permissions and reveals the **Admin** navigation menu in the sidebar.
+
+</Steps>
+
+:::note[One-Time Operation]
+Once any user claims the administrator role, all subsequent attempts to use the bootstrap secret are rejected with `409 Conflict` (`"Admin bootstrap has already been completed."`).
+:::
+
+:::tip[Security Guarantees]
+- **Timing-Safe Comparison**: Secret validation uses WebCrypto `timingSafeEqual` to eliminate side-channel timing analysis.
+- **Session Required**: Anonymous callers receive `401 Unauthorized`.
+- **Hidden Route**: The `/bootstrap` link is automatically hidden from standard navigation once an administrator exists.
+:::
