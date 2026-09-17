@@ -3,7 +3,7 @@ title: OpenSSH CA Wire Specification
 description: RFC 4251 and OpenSSH CERT01 binary wire format implementation details verified against apps/api/src/lib/ssh.
 ---
 
-`ID` implements a native, zero-dependency OpenSSH certificate binary serialization and deserialization engine in `apps/api/src/lib/ssh/`. This document is an exhaustive engineering deep dive into the exact binary wire layout, endianness, cryptographic signing boundaries, and host verification pipelines conforming strictly to OpenSSH's `PROTOCOL.certkeys` specification and RFC 4251.
+`ID` implements a native, zero-dependency OpenSSH certificate binary serialization and deserialization engine in `apps/api/src/lib/ssh/`. This document is an exhaustive engineering deep dive into the exact binary wire layout, endianness, cryptographic signing boundaries, and host verification pipelines conforming strictly to OpenSSH's certificate specification ([IETF draft-miller-ssh-cert](https://datatracker.ietf.org/doc/draft-miller-ssh-cert/)) and RFC 4251.
 
 ---
 
@@ -12,7 +12,7 @@ description: RFC 4251 and OpenSSH CERT01 binary wire format implementation detai
 The OpenSSH certificate implementation adheres strictly to three foundational standards:
 
 1. **[RFC 4251](https://www.rfc-editor.org/rfc/rfc4251)**: *The Secure Shell (SSH) Protocol Architecture (§ 5: Data Type Representations)*. Defines the canonical network byte order, variable-length byte arrays, and string serialization formats.
-2. **[OpenSSH PROTOCOL.certkeys](https://github.com/openssh/openssh-portable/blob/master/PROTOCOL.certkeys)**: OpenSSH certificate format version 1 (`CERT01`), covering user/host key certificates, critical options, extensions, and signature wrappers.
+2. **[OpenSSH Certificate Specification (IETF draft-miller-ssh-cert)](https://datatracker.ietf.org/doc/draft-miller-ssh-cert/)**: OpenSSH certificate format version 1 (`CERT01`), covering user/host key certificates, critical options, extensions, and signature wrappers (see also OpenSSH [`PROTOCOL`](https://github.com/openssh/openssh-portable/blob/master/PROTOCOL) § 1.3).
 3. **[RFC 8032](https://www.rfc-editor.org/rfc/rfc8032)**: *Edwards-Curve Digital Signature Algorithm (Ed25519)*. Defines the pure Ed25519 signature algorithm and 32-byte point serialization used across all user keys and CA signatures.
 
 ---
