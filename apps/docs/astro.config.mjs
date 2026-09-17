@@ -11,7 +11,7 @@ export default defineConfig({
 			autoTheme: false,
 		}),
 		starlight({
-			title: "ID Documentation",
+			title: "Muljax ID",
 			description:
 				"Edge-native Identity, OIDC Provider, and OpenSSH Certificate Authority",
 			customCss: ["./src/styles/custom.css"],
