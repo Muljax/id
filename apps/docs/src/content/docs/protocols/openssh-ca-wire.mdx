@@ -9,7 +9,7 @@ Muljax ID implements a native, zero-dependency OpenSSH certificate binary serial
 
 ## 1. Governing Protocol Standards
 
-The OpenSSH certificate implementation adheres strictly to three foundational standards:
+The OpenSSH certificate implementation adheres strictly to four foundational standards:
 
 1. **[RFC 4251](https://www.rfc-editor.org/rfc/rfc4251)**: *The Secure Shell (SSH) Protocol Architecture (§ 5: Data Type Representations)*. Defines the canonical network byte order, variable-length byte arrays, and string serialization formats.
 2. **[OpenSSH Certificate Specification (IETF draft-miller-ssh-cert)](https://datatracker.ietf.org/doc/draft-miller-ssh-cert/)**: OpenSSH certificate format version 1 (`CERT01`), covering user/host key certificates, critical options, extensions, and signature wrappers (see also OpenSSH [`PROTOCOL`](https://github.com/openssh/openssh-portable/blob/master/PROTOCOL) § 1.3).
