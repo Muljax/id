@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.31.0](https://github.com/Muljax/id/compare/v0.30.0...v0.31.0) (2026-09-17)
+
+
+### Features
+
+* add krl binary format ([f615e9f](https://github.com/Muljax/id/commit/f615e9f93e54598a8e0e57132438bc2739e42a9c))
+
 ## [0.30.0](https://github.com/Muljax/id/compare/v0.29.0...v0.30.0) (2026-09-17)
 
 
