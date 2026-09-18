@@ -15,17 +15,18 @@ route.get(
 		"*",
 	),
 	async (c) => {
-	const user = c.get("user");
-	const roles = c.get("roles") ?? [];
-	const permissions = c.get("permissions") ?? new Set();
+		const user = c.get("user");
+		const roles = c.get("roles") ?? [];
+		const permissions = c.get("permissions") ?? new Set();
 
-	const defaultPrincipal = deriveDefaultPrincipal(user);
-	const principals = getPermittedPrincipals(user, roles, permissions);
+		const defaultPrincipal = deriveDefaultPrincipal(user);
+		const principals = getPermittedPrincipals(user, roles, permissions);
 
-	return c.json({
-		principals,
-		defaultPrincipal,
-	});
-});
+		return c.json({
+			principals,
+			defaultPrincipal,
+		});
+	},
+);
 
 export default route;

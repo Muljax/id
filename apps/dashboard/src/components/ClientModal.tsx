@@ -159,7 +159,7 @@ export default function ClientModal({
 						: "Create an OAuth client for web applications, mobile apps, or Machine-to-Machine service accounts."
 			}
 			onClose={onClose}
-			size="lg"
+			size="xl"
 		>
 			{createdClientId ? (
 				<ClientCredentialsView

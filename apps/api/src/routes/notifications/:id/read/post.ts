@@ -12,40 +12,41 @@ route.post(
 	"/",
 	requireSessionOrPermission("notifications:write", "notifications:*", "*"),
 	async (c) => {
-	const user = c.get("user");
-	const roles = c.get("roles") ?? [];
-	const permissions = c.get("permissions") ?? new Set();
-	const canManageAdminNotifications =
-		roles.includes("admin") ||
-		hasPermission(permissions, "notifications:write");
-	const id = c.req.param("id");
+		const user = c.get("user");
+		const roles = c.get("roles") ?? [];
+		const permissions = c.get("permissions") ?? new Set();
+		const canManageAdminNotifications =
+			roles.includes("admin") ||
+			hasPermission(permissions, "notifications:write");
+		const id = c.req.param("id");
 
-	if (!id) {
-		return c.json({ error: "Notification not found" }, 404);
-	}
+		if (!id) {
+			return c.json({ error: "Notification not found" }, 404);
+		}
 
-	const db = createDb(c.env.DB);
+		const db = createDb(c.env.DB);
 
-	const targetConditions = [
-		eq(notifications.userId, user.id),
-		eq(notifications.target, "all"),
-	];
+		const targetConditions = [
+			eq(notifications.userId, user.id),
+			eq(notifications.target, "all"),
+		];
 
-	if (canManageAdminNotifications) {
-		targetConditions.push(eq(notifications.target, "admins"));
-	}
+		if (canManageAdminNotifications) {
+			targetConditions.push(eq(notifications.target, "admins"));
+		}
 
-	const result = await db
-		.update(notifications)
-		.set({ readAt: Date.now() })
-		.where(and(eq(notifications.id, id), or(...targetConditions)))
-		.returning({ id: notifications.id });
+		const result = await db
+			.update(notifications)
+			.set({ readAt: Date.now() })
+			.where(and(eq(notifications.id, id), or(...targetConditions)))
+			.returning({ id: notifications.id });
 
-	if (result.length === 0) {
-		return c.json({ error: "Notification not found" }, 404);
-	}
+		if (result.length === 0) {
+			return c.json({ error: "Notification not found" }, 404);
+		}
 
-	return c.json({ success: true });
-});
+		return c.json({ success: true });
+	},
+);
 
 export default route;
