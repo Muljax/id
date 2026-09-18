@@ -14,6 +14,8 @@ import {
 import { getSessionUserWithSession } from "../lib/session";
 import { isUserDisabled } from "../lib/user";
 
+export type AuthMethod = "session" | "oauth";
+
 export type AuthUser = NonNullable<
 	Awaited<ReturnType<typeof getSessionUserWithSession>>
 >["user"];
@@ -30,6 +32,8 @@ export type AppEnv = {
 		session: AuthSession;
 		roles: string[];
 		permissions: Set<string>;
+		authMethod?: AuthMethod;
+		tokenScopes?: Set<string>;
 	};
 };
 
@@ -59,6 +63,7 @@ export async function authenticate(c: Context<AppEnv>, next: Next) {
 			c.set("session", record.session);
 			c.set("roles", roles);
 			c.set("permissions", permissions);
+			c.set("authMethod", "session");
 			return next();
 		}
 	}
@@ -69,43 +74,95 @@ export async function authenticate(c: Context<AppEnv>, next: Next) {
 		const token = authHeader.slice(7).trim();
 		const accessToken = await getAccessToken(db, token);
 
-		if (accessToken?.userId) {
-			const result = await db
-				.select()
-				.from(users)
-				.where(eq(users.id, accessToken.userId))
-				.limit(1);
+		if (accessToken) {
+			if (accessToken.userId) {
+				const result = await db
+					.select()
+					.from(users)
+					.where(eq(users.id, accessToken.userId))
+					.limit(1);
 
-			const userRecord = result[0];
-			if (userRecord && !isUserDisabled(userRecord)) {
-				const { roles, permissions } = await getUserEffectivePermissions(
-					db,
-					userRecord.id,
-				);
+				const userRecord = result[0];
+				if (userRecord && !isUserDisabled(userRecord)) {
+					const userEffective = await getUserEffectivePermissions(
+						db,
+						userRecord.id,
+					);
 
-				const tokenScopes = accessToken.scope.split(" ").filter(Boolean);
-				for (const scope of tokenScopes) {
-					permissions.add(scope);
+					const tokenScopesList = accessToken.scope
+						.split(" ")
+						.filter(Boolean);
+					const tokenScopesSet = new Set(tokenScopesList);
+
+					// Scope attenuation:
+					// An OAuth access token ONLY receives permissions that were explicitly granted
+					// in its token scopes AND that the authorizing user actually possesses.
+					const permissions = new Set<string>();
+					for (const scope of tokenScopesList) {
+						if (hasPermission(userEffective.permissions, scope)) {
+							permissions.add(scope);
+						}
+					}
+
+					// Always include universal "everyone" role permissions (public discovery)
+					const everyonePerms = await getEveryoneRolePermissions(db);
+					for (const perm of everyonePerms) {
+						permissions.add(perm);
+					}
+
+					// Roles for OAuth token:
+					// Only grant 'admin' role if authorizing user is admin AND the token has '*' scope.
+					const roles: string[] = [SYSTEM_ROLE_IDS.EVERYONE];
+					if (
+						userEffective.roles.includes(SYSTEM_ROLE_IDS.ADMIN) &&
+						tokenScopesSet.has("*")
+					) {
+						roles.push(SYSTEM_ROLE_IDS.ADMIN);
+					}
+					if (userEffective.roles.includes(SYSTEM_ROLE_IDS.USER)) {
+						roles.push(SYSTEM_ROLE_IDS.USER);
+					}
+
+					c.set("user", userRecord);
+					c.set("session", {
+						id: accessToken.id,
+						userId: userRecord.id,
+						tokenHash: accessToken.tokenHash,
+						ipAddress: null,
+						country: null,
+						city: null,
+						region: null,
+						userAgent: null,
+						browser: null,
+						os: null,
+						expiresAt: accessToken.expiresAt,
+						createdAt: accessToken.createdAt,
+						lastUsedAt: null,
+					});
+					c.set("roles", roles);
+					c.set("permissions", permissions);
+					c.set("authMethod", "oauth");
+					c.set("tokenScopes", tokenScopesSet);
+					return next();
 				}
+			} else {
+				// M2M client credentials token
+				const tokenScopesList = accessToken.scope
+					.split(" ")
+					.filter(Boolean);
+				const permissions = new Set(tokenScopesList);
+				const everyonePerms = await getEveryoneRolePermissions(db);
+				for (const perm of everyonePerms) {
+					permissions.add(perm);
+				}
+				const roles = permissions.has("*")
+					? [SYSTEM_ROLE_IDS.EVERYONE, SYSTEM_ROLE_IDS.ADMIN]
+					: [SYSTEM_ROLE_IDS.EVERYONE];
 
-				c.set("user", userRecord);
-				c.set("session", {
-					id: accessToken.id,
-					userId: userRecord.id,
-					tokenHash: accessToken.tokenHash,
-					ipAddress: null,
-					country: null,
-					city: null,
-					region: null,
-					userAgent: null,
-					browser: null,
-					os: null,
-					expiresAt: accessToken.expiresAt,
-					createdAt: accessToken.createdAt,
-					lastUsedAt: null,
-				});
 				c.set("roles", roles);
 				c.set("permissions", permissions);
+				c.set("authMethod", "oauth");
+				c.set("tokenScopes", new Set(tokenScopesList));
 				return next();
 			}
 		}
@@ -120,7 +177,7 @@ export async function authenticate(c: Context<AppEnv>, next: Next) {
 }
 
 /**
- * Ensures user is authenticated with a valid session.
+ * Ensures user is authenticated with a valid session or token.
  */
 export async function requireAuth(c: Context<AppEnv>, next: Next) {
 	if (!c.get("permissions")) {
@@ -137,6 +194,90 @@ export async function requireAuth(c: Context<AppEnv>, next: Next) {
 	}
 
 	await next();
+}
+
+/**
+ * Ensures user is authenticated with an interactive first-party session (cookie),
+ * or an OAuth access token explicitly granted administrative write access ('users:write' or '*').
+ * Protects account self-service management, password changes, passkeys, sessions, and avatar modification.
+ */
+export async function requireSessionAuth(c: Context<AppEnv>, next: Next) {
+	if (!c.get("permissions")) {
+		await authenticate(c, async () => {});
+	}
+
+	if (!c.get("user")) {
+		return c.json(
+			{
+				error: "unauthorized",
+			},
+			401,
+		);
+	}
+
+	const authMethod = c.get("authMethod");
+	if (authMethod === "oauth") {
+		const permissions = c.get("permissions") ?? new Set();
+		if (
+			!hasPermission(permissions, "users:write") &&
+			!hasPermission(permissions, "*")
+		) {
+			return c.json(
+				{
+					error: "forbidden",
+					message:
+						"Account management requires an interactive user session or administrative write scope.",
+				},
+				403,
+			);
+		}
+	}
+
+	await next();
+}
+
+/**
+ * Reusable middleware factory that permits access if the user is authenticated via
+ * an interactive cookie session, OR via an OAuth token with at least one of the specified permissions.
+ */
+export function requireSessionOrPermission(...requiredPermissions: string[]) {
+	return async (c: Context<AppEnv>, next: Next) => {
+		if (!c.get("permissions")) {
+			await authenticate(c, async () => {});
+		}
+
+		if (!c.get("user")) {
+			return c.json(
+				{
+					error: "unauthorized",
+				},
+				401,
+			);
+		}
+
+		const authMethod = c.get("authMethod");
+		if (authMethod === "session") {
+			return next();
+		}
+
+		const permissions = c.get("permissions") ?? new Set();
+		const satisfied = requiredPermissions.some((p) =>
+			hasPermission(permissions, p),
+		);
+
+		if (!satisfied) {
+			return c.json(
+				{
+					error: "forbidden",
+					message: "Insufficient permissions to perform this action.",
+					required: requiredPermissions,
+				},
+				403,
+			);
+		}
+
+		await next();
+	};
 }
 
 /**

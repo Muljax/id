@@ -4,11 +4,14 @@ import { Hono } from "hono";
 import { createDb } from "@/db";
 import { notifications } from "@/db/schema";
 import { hasPermission } from "@/lib/rbac/matcher";
-import { type AppEnv, requireAuth } from "@/middleware/auth";
+import { type AppEnv, requireSessionOrPermission } from "@/middleware/auth";
 
 const route = new Hono<AppEnv>();
 
-route.post("/", requireAuth, async (c) => {
+route.post(
+	"/",
+	requireSessionOrPermission("notifications:write", "notifications:*", "*"),
+	async (c) => {
 	const user = c.get("user");
 	const roles = c.get("roles") ?? [];
 	const permissions = c.get("permissions") ?? new Set();

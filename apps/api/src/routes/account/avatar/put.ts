@@ -4,7 +4,7 @@ import { Hono } from "hono";
 import { createDb } from "@/db";
 import { users } from "@/db/schema";
 import { emitNotification } from "@/lib/notifications/emitter";
-import { requireAuth } from "@/middleware/auth";
+import { requireSessionAuth } from "@/middleware/auth";
 
 const route = new Hono<{ Bindings: Env }>();
 
@@ -12,7 +12,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
-route.put("/", requireAuth, async (c) => {
+route.put("/", requireSessionAuth, async (c) => {
 	const contentType = c.req.header("Content-Type");
 
 	if (!contentType?.startsWith("multipart/form-data")) {
