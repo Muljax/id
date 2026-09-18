@@ -4,11 +4,11 @@ import { Hono } from "hono";
 import { createDb } from "@/db";
 import { users } from "@/db/schema";
 import { emitNotification } from "@/lib/notifications/emitter";
-import { requireAuth } from "@/middleware/auth";
+import { requireSessionAuth } from "@/middleware/auth";
 
 const route = new Hono<{ Bindings: Env }>();
 
-route.delete("/", requireAuth, async (c) => {
+route.delete("/", requireSessionAuth, async (c) => {
 	const user = c.get("user");
 	const db = createDb(c.env.DB);
 	if (user.profileImageKey) {

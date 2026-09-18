@@ -3,11 +3,11 @@ import { Hono } from "hono";
 
 import { createDb } from "@/db";
 import { oauthClients, oauthGrants } from "@/db/schema";
-import { requireAuth } from "@/middleware/auth";
+import { requireSessionAuth } from "@/middleware/auth";
 
 const route = new Hono<{ Bindings: Env }>();
 
-route.get("/", requireAuth, async (c) => {
+route.get("/", requireSessionAuth, async (c) => {
 	const user = c.get("user");
 	const db = createDb(c.env.DB);
 

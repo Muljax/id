@@ -4,11 +4,21 @@ import { Hono } from "hono";
 import { createDb } from "@/db";
 import { userSshKeys } from "@/db/schema";
 import { hasPermission } from "@/lib/rbac/matcher";
-import { type AppEnv, requireAuth } from "@/middleware/auth";
+import { type AppEnv, requireSessionOrPermission } from "@/middleware/auth";
 
 const route = new Hono<AppEnv>();
 
-route.get("/", requireAuth, async (c) => {
+route.get(
+	"/",
+	requireSessionOrPermission(
+		"ssh:keys:manage",
+		"ssh:keys:admin",
+		"ssh:ca:read",
+		"ssh:cert:issue",
+		"ssh:*",
+		"*",
+	),
+	async (c) => {
 	const user = c.get("user");
 	const roles = c.get("roles") ?? [];
 	const permissions = c.get("permissions") ?? new Set();

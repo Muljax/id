@@ -5,11 +5,11 @@ import { createDb } from "@/db";
 import { sessions } from "@/db/schema";
 import { emitNotification } from "@/lib/notifications/emitter";
 import { getUserSession } from "@/lib/session";
-import { requireAuth } from "@/middleware/auth";
+import { requireSessionAuth } from "@/middleware/auth";
 
 const route = new Hono<{ Bindings: Env }>();
 
-route.post("/", requireAuth, async (c) => {
+route.post("/", requireSessionAuth, async (c) => {
 	const user = c.get("user");
 	const db = createDb(c.env.DB);
 	const sessionId = c.req.param("id");

@@ -3,11 +3,11 @@ import { Hono } from "hono";
 import { createDb } from "@/db";
 import { emitNotification } from "@/lib/notifications/emitter";
 import { revokeOAuthAccess } from "@/lib/oauth/grant";
-import { requireAuth } from "@/middleware/auth";
+import { requireSessionAuth } from "@/middleware/auth";
 
 const route = new Hono<{ Bindings: Env }>();
 
-route.delete("/", requireAuth, async (c) => {
+route.delete("/", requireSessionAuth, async (c) => {
 	const user = c.get("user");
 	const clientId = c.req.param("clientId");
 

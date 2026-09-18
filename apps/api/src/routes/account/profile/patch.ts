@@ -4,11 +4,11 @@ import { Hono } from "hono";
 import { createDb } from "@/db";
 import { users } from "@/db/schema";
 import { emitNotification } from "@/lib/notifications/emitter";
-import { requireAuth } from "@/middleware/auth";
+import { requireSessionAuth } from "@/middleware/auth";
 
 const route = new Hono<{ Bindings: Env }>();
 
-route.patch("/", requireAuth, async (c) => {
+route.patch("/", requireSessionAuth, async (c) => {
 	const body = await c.req.json();
 
 	if (typeof body !== "object" || body === null) {
