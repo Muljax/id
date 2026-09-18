@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.32.1](https://github.com/Muljax/id/compare/v0.32.0...v0.32.1) (2026-09-18)
+
+
+### Bug Fixes
+
+* add the UI for selecting and adding custom scopes to clients ([#236](https://github.com/Muljax/id/issues/236)) ([50812af](https://github.com/Muljax/id/commit/50812af626c538206eb99555a92b66297c299c51))
+* **auth:** restrict OAuth tokens to granted scopes and guard account mutations ([#233](https://github.com/Muljax/id/issues/233)) ([feec962](https://github.com/Muljax/id/commit/feec962de4dfa3a8ef590718d5dadd081b57d01a))
+
 ## [0.32.0](https://github.com/Muljax/id/compare/v0.31.0...v0.32.0) (2026-09-18)
 
 
