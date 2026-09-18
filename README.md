@@ -78,10 +78,13 @@ apps/dashboard/
 │   ├── api/          # Hono API
 │   └── dashboard/    # React + Vite dashboard
 ├── scripts/
-│   └── oidc-key.ts   # OIDC signing key generator
-├── terraform/        # Cloudflare infrastructure
+│   ├── generate-tfvars.ts # Terraform variables generator
+│   ├── oidc-key.ts        # OIDC signing key generator
+│   ├── ssh-ca-key.ts      # SSH CA key generator
+│   └── seed-d1.ts         # D1 database seeder for standard values
+├── terraform/             # Cloudflare infrastructure
 ├── README.md
-└── SETUP.md          # Setup and deployment instructions
+└── SETUP.md               # Setup and deployment instructions
 ```
 
 ## Development
@@ -102,7 +105,13 @@ bun install
 
 ## Setup and Deployment
 
-For environment configuration, OIDC key generation, Terraform configuration, Cloudflare setup, database migrations, and deployment instructions, see the [setup guide](./SETUP.md).
+Deploy the entire platform—including configuration derivation, Worker compilation, Terraform provisioning, D1 migrations, and standard database seeding—using:
+
+```sh
+bun run deploy
+```
+
+For complete step-by-step instructions, cryptographic key management, D1 database seeding, and Cloudflare configuration, see the [setup guide](./SETUP.md).
 
 ## License
 

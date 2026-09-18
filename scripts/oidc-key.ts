@@ -20,7 +20,7 @@ const hasValidKey =
 
 if (hasValidKey && !process.argv.includes("--force")) {
 	console.log(
-		"ℹ️  OIDC private key already exists in terraform.tfvars (use --force to regenerate)",
+		"ℹ  OIDC private key already exists in terraform.tfvars (use --force to regenerate)",
 	);
 	process.exit(0);
 }

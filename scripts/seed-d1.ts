@@ -55,12 +55,35 @@ for (const role of DEFAULT_ROLES) {
 	}
 }
 
+// Seed the official Muljax CLI OAuth client
+const cliRedirectUris = JSON.stringify([
+	"http://127.0.0.1/callback",
+	"http://localhost/callback",
+]);
+const cliScopes = JSON.stringify([
+	"openid",
+	"profile",
+	"email",
+	"offline_access",
+	"ssh:cert:issue",
+	"ssh:ca:read",
+	"ssh:keys:manage",
+]);
+
+sqlStatements.push(
+	`INSERT INTO oauth_clients (id, name, client_type, client_secret_hash, redirect_uris, scopes, created_at, updated_at) VALUES ('muljax-cli', 'Muljax CLI', 'public', NULL, '${cliRedirectUris.replace(/'/g, "''")}', '${cliScopes.replace(/'/g, "''")}', ${now}, ${now}) ON CONFLICT (id) DO UPDATE SET redirect_uris = excluded.redirect_uris, scopes = excluded.scopes, updated_at = excluded.updated_at;`,
+);
+
 const seedSqlPath = resolve(tmpdir(), `muljax-d1-seed-${Date.now()}.sql`);
 writeFileSync(seedSqlPath, sqlStatements.join("\n"), "utf8");
 
+const isLocal =
+	process.argv.includes("--local") || process.env.LOCAL === "true";
+const targetFlag = isLocal ? "--local" : "--remote";
+
 try {
 	execSync(
-		`bunx wrangler d1 execute ${dbName} --remote --config "${configFile}" --file="${seedSqlPath}" -y`,
+		`bunx wrangler d1 execute ${dbName} ${targetFlag} --config "${configFile}" --file="${seedSqlPath}" -y`,
 		{ stdio: "inherit" },
 	);
 } finally {

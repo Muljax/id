@@ -62,6 +62,7 @@ const apiDomain = cleanDomain(getEnv("API_DOMAIN"));
 const localhost = getEnv("LOCALHOST")?.toLowerCase() === "true";
 const adminBootstrapSecret = getEnv("ADMIN_BOOTSTRAP_SECRET")?.trim();
 const oidcPrivateKeyEnv = getEnv("OIDC_PRIVATE_KEY")?.trim();
+const sshCaPrivateKeyEnv = getEnv("SSH_CA_PRIVATE_KEY")?.trim();
 
 const missing: string[] = [];
 if (!cloudflareAccountId) missing.push("CLOUDFLARE_ACCOUNT_ID");
@@ -80,23 +81,46 @@ if (missing.length > 0) {
 
 // Preserve existing oidc_private_key if already generated
 let oidcPrivateKey = oidcPrivateKeyEnv || "replace-me";
+let sshCaPrivateKey = sshCaPrivateKeyEnv || "replace-me";
 
-if (!oidcPrivateKeyEnv && existsSync(TFVARS_FILE)) {
+if (existsSync(TFVARS_FILE)) {
 	try {
 		const existingTfvars = readFileSync(TFVARS_FILE, "utf8");
-		const match = existingTfvars.match(/^oidc_private_key\s*=\s*(.*)$/m);
-		if (match?.[1]) {
-			const val = match[1].trim();
-			if (
-				val &&
-				val !== '""' &&
-				val !== '"replace-me"' &&
-				val !== "replace-me"
-			) {
-				try {
-					oidcPrivateKey = JSON.parse(val);
-				} catch {
-					oidcPrivateKey = val;
+
+		if (!oidcPrivateKeyEnv) {
+			const match = existingTfvars.match(/^oidc_private_key\s*=\s*(.*)$/m);
+			if (match?.[1]) {
+				const val = match[1].trim();
+				if (
+					val &&
+					val !== '""' &&
+					val !== '"replace-me"' &&
+					val !== "replace-me"
+				) {
+					try {
+						oidcPrivateKey = JSON.parse(val);
+					} catch {
+						oidcPrivateKey = val;
+					}
+				}
+			}
+		}
+
+		if (!sshCaPrivateKeyEnv) {
+			const match = existingTfvars.match(/^ssh_ca_private_key\s*=\s*(.*)$/m);
+			if (match?.[1]) {
+				const val = match[1].trim();
+				if (
+					val &&
+					val !== '""' &&
+					val !== '"replace-me"' &&
+					val !== "replace-me"
+				) {
+					try {
+						sshCaPrivateKey = JSON.parse(val);
+					} catch {
+						sshCaPrivateKey = val;
+					}
 				}
 			}
 		}
@@ -120,7 +144,8 @@ localhost = ${localhost}
 
 admin_bootstrap_secret = ${JSON.stringify(adminBootstrapSecret)}
 
-oidc_private_key = ${JSON.stringify(oidcPrivateKey)}
+oidc_private_key   = ${JSON.stringify(oidcPrivateKey)}
+ssh_ca_private_key = ${JSON.stringify(sshCaPrivateKey)}
 `;
 
 await writeFile(TFVARS_FILE, tfvarsContent);

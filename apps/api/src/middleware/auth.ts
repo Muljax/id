@@ -1,7 +1,10 @@
+import { eq } from "drizzle-orm";
 import type { Context, Next } from "hono";
 import { getCookie } from "hono/cookie";
 
 import { createDb } from "../db";
+import { users } from "../db/schema";
+import { getAccessToken } from "../lib/oauth/tokens";
 import { SYSTEM_ROLE_IDS } from "../lib/rbac/constants";
 import { hasPermission } from "../lib/rbac/matcher";
 import {
@@ -57,6 +60,54 @@ export async function authenticate(c: Context<AppEnv>, next: Next) {
 			c.set("roles", roles);
 			c.set("permissions", permissions);
 			return next();
+		}
+	}
+
+	// OAuth 2.0 Bearer access token support (for CLI and API clients)
+	const authHeader = c.req.header("Authorization");
+	if (authHeader?.toLowerCase().startsWith("bearer ")) {
+		const token = authHeader.slice(7).trim();
+		const accessToken = await getAccessToken(db, token);
+
+		if (accessToken?.userId) {
+			const result = await db
+				.select()
+				.from(users)
+				.where(eq(users.id, accessToken.userId))
+				.limit(1);
+
+			const userRecord = result[0];
+			if (userRecord && !isUserDisabled(userRecord)) {
+				const { roles, permissions } = await getUserEffectivePermissions(
+					db,
+					userRecord.id,
+				);
+
+				const tokenScopes = accessToken.scope.split(" ").filter(Boolean);
+				for (const scope of tokenScopes) {
+					permissions.add(scope);
+				}
+
+				c.set("user", userRecord);
+				c.set("session", {
+					id: accessToken.id,
+					userId: userRecord.id,
+					tokenHash: accessToken.tokenHash,
+					ipAddress: null,
+					country: null,
+					city: null,
+					region: null,
+					userAgent: null,
+					browser: null,
+					os: null,
+					expiresAt: accessToken.expiresAt,
+					createdAt: accessToken.createdAt,
+					lastUsedAt: null,
+				});
+				c.set("roles", roles);
+				c.set("permissions", permissions);
+				return next();
+			}
 		}
 	}
 

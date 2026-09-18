@@ -173,6 +173,8 @@ Comprehensive audit ledger of all issued OpenSSH certificates.
 
 ## 4. Role-Based Access Control (RBAC)
 
+> **Standard Seeding**: D1 is pre-seeded on deployment with system permissions (`SYSTEM_PERMISSIONS`), default roles (`admin`, `user`, `everyone`), and their baseline associations (`role_permissions`) via `scripts/seed-d1.ts`.
+
 ### `roles` (`apps/api/src/db/schema/rbac.ts`)
 
 | Column | SQL Type | Modifiers | Description |
@@ -224,6 +226,8 @@ Composite primary key join table linking roles to users.
 ---
 
 ## 5. OAuth 2.0 & OIDC
+
+> **Standard Seeding**: D1 is pre-seeded on deployment with the official `muljax-cli` public OAuth client (configured with RFC 8252 loopback callbacks and SSH/OIDC scopes) via `scripts/seed-d1.ts`.
 
 ### `oauth_clients` (`apps/api/src/db/schema/oauth.ts`)
 

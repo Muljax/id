@@ -123,4 +123,17 @@ bun scripts/ssh-ca-key.ts --force
 Regenerates the Ed25519 SSH CA keypair and updates `terraform/terraform.tfvars`. Prints the new CA fingerprint and public key.
 
   </TabItem>
+  <TabItem label="Seed D1 Database">
+
+```sh
+# Remote D1 (executed automatically during bun run deploy)
+bun run seed
+
+# Local development D1
+bun run seed:local
+```
+
+Seeds canonical system permissions, default roles (`admin`, `user`, `everyone`), role-permission links, and the official `muljax-cli` OAuth client into Cloudflare D1.
+
+  </TabItem>
 </Tabs>

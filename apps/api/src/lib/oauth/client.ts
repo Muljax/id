@@ -97,7 +97,39 @@ export function validateRedirectUri(
 		return false;
 	}
 
-	return client.redirectUris.includes(redirectUri);
+	if (client.redirectUris.includes(redirectUri)) {
+		return true;
+	}
+
+	// RFC 8252 §7.3: Loopback redirect URIs may use dynamic ports for native clients.
+	try {
+		const reqUrl = new URL(redirectUri);
+		if (
+			reqUrl.protocol === "http:" &&
+			(reqUrl.hostname === "127.0.0.1" ||
+				reqUrl.hostname === "localhost" ||
+				reqUrl.hostname === "[::1]")
+		) {
+			for (const registered of client.redirectUris) {
+				try {
+					const regUrl = new URL(registered);
+					if (
+						regUrl.protocol === "http:" &&
+						regUrl.hostname === reqUrl.hostname &&
+						regUrl.pathname === reqUrl.pathname
+					) {
+						return true;
+					}
+				} catch {
+					// Ignore invalid registered URI
+				}
+			}
+		}
+	} catch {
+		// Ignore invalid requested URI
+	}
+
+	return false;
 }
 
 /**

@@ -60,7 +60,9 @@ sequenceDiagram
 
 </Steps>
 
-:::note[One-Time Operation]
+:::note[Pre-Seeded Roles & One-Time Operation]
+The `admin`, `user`, and `everyone` roles, along with system permissions and the official `muljax-cli` OAuth client, are automatically pre-seeded into Cloudflare D1 during deployment (`bun run deploy` / `bun run seed`).
+
 Once any user claims the administrator role, all subsequent attempts to use the bootstrap secret are rejected with `409 Conflict` (`"Admin bootstrap has already been completed."`).
 :::
 

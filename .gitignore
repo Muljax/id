@@ -6,3 +6,4 @@ terraform.tfvars
 .terraform
 *.tfstate*
 .wrangler-d1-migrations.toml
+*.wrangler

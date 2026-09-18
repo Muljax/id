@@ -21,7 +21,7 @@ const hasValidKey =
 
 if (hasValidKey && !process.argv.includes("--force")) {
 	console.log(
-		"ℹ️  SSH CA private key already exists in terraform.tfvars (use --force to regenerate)",
+		"ℹ  SSH CA private key already exists in terraform.tfvars (use --force to regenerate)",
 	);
 	process.exit(0);
 }

@@ -46,6 +46,10 @@ The system initializes three immutable system roles:
 </tbody>
 </table>
 
+:::tip[Automatic D1 Seeding]
+These three immutable system roles and all canonical permissions are seeded into Cloudflare D1 automatically on every deployment via `bun run deploy` (or explicitly with `bun run seed`). Existing roles and custom assignments are preserved safely using idempotent SQLite `INSERT OR IGNORE` clauses.
+:::
+
 ---
 
 ## Permissions Catalog

@@ -159,15 +159,27 @@ terraform -chdir=terraform init
 terraform -chdir=terraform plan
 ```
 
-### Apply the infrastructure
+### Deploy with the unified deploy script
+
+You can deploy the entire stack—validating vars, building API & dashboard bundles, applying Terraform infrastructure, running D1 migrations, and seeding standard database values—with a single command:
 
 ```sh
+bun run deploy
+```
+
+Alternatively, to run individual steps manually:
+
+```sh
+bun run vars
+bun run build
+terraform -chdir=terraform init
 terraform -chdir=terraform apply
+bun run seed
 ```
 
 Terraform will provision and configure the required Cloudflare infrastructure.
 
-D1 migrations are automatically applied to the remote database during deployment. The migration system uses the Drizzle 1.0 migration layout under:
+D1 migrations are automatically applied to the remote database during deployment, followed by automatic database seeding. The migration system uses the Drizzle 1.0 migration layout under:
 
 ```text
 apps/api/drizzle/migrations/
@@ -175,7 +187,7 @@ apps/api/drizzle/migrations/
 
 Each migration is stored in its own directory containing a `migration.sql` file.
 
-## D1 migrations
+## D1 migrations & standard seeding
 
 D1 migrations are managed by Drizzle and applied to the remote Cloudflare D1 database during Terraform deployment.
 
@@ -190,20 +202,38 @@ apps/api/drizzle/migrations/
 └── ...
 ```
 
-Terraform detects changes to the migration files and runs:
+Terraform detects changes to the migration files and automatically applies them:
 
 ```sh
 bunx wrangler d1 migrations apply <database> --remote
 ```
 
-You normally do not need to apply migrations manually.
+### Standard Database Values (Seeding)
 
-If you add or modify a migration, rebuild and run Terraform:
+On every deployment, `scripts/seed-d1.ts` runs automatically (or manually via `bun run seed` / `bun run seed:local`). The seeding script is fully idempotent and initializes several standard values required for platform operations:
+
+1. **System Permissions (`SYSTEM_PERMISSIONS`)**: Inserts all canonical system permissions (`*`, `users:*`, `roles:*`, `oauth_clients:*`, `notifications:*`, `settings:*`, and `ssh:*` including `ssh:cert:issue`, `ssh:ca:read`, and `ssh:keys:manage`).
+2. **Default System Roles (`DEFAULT_ROLES`)**:
+   - `admin` (*Administrator*): Superadministrator with unrestricted platform access (`*`).
+   - `user` (*User*): Standard authenticated user with self-service SSH certificate and key management permissions (`ssh:cert:issue`, `ssh:keys:manage`, `ssh:ca:read`).
+   - `everyone` (*Everyone*): Universal role granted to all callers, including unauthenticated requests for public CA discovery (`ssh:ca:read`).
+3. **Role-Permission Mappings**: Binds default permissions to system roles using composite primary keys (`role_permissions`).
+4. **Official Muljax CLI Client (`muljax-cli`)**: Pre-registers the official public OAuth client with loopback redirect URIs (`http://127.0.0.1/callback`, `http://localhost/callback`) and verified scopes (`openid profile email offline_access ssh:cert:issue ssh:ca:read ssh:keys:manage`).
+
+To manually trigger seeding at any time:
 
 ```sh
-bun run build
-terraform -chdir=terraform plan
-terraform -chdir=terraform apply
+# Remote D1 database
+bun run seed
+
+# Local development D1 database
+bun run seed:local
+```
+
+If you add or modify a migration, rebuild and run deploy:
+
+```sh
+bun run deploy
 ```
 
 The Terraform configuration generates a temporary Wrangler configuration containing the D1 migration settings required to locate the Drizzle migrations.

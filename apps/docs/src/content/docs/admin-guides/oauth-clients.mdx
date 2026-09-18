@@ -44,6 +44,24 @@ When creating a client application, three profiles are supported:
 
 ---
 
+## Pre-Seeded Clients: Muljax CLI
+
+Muljax ID automatically provisions the official CLI client into Cloudflare D1 upon deployment via `bun run deploy` (or `bun run seed`):
+
+- **Client ID**: `muljax-cli`
+- **Name**: `Muljax CLI`
+- **Client Type**: `public` (PKCE `S256` strictly enforced; no client secret required)
+- **Redirect URIs**:
+  - `http://127.0.0.1/callback` (permits dynamic ephemeral loopback ports per RFC 8252 §7.3)
+  - `http://localhost/callback`
+- **Allowed Scopes**:
+  - Standard OIDC: `openid`, `profile`, `email`, `offline_access`
+  - SSH Capabilities: `ssh:cert:issue`, `ssh:ca:read`, `ssh:keys:manage`
+
+This record is maintained idempotently across deployments by `scripts/seed-d1.ts` (`ON CONFLICT (id) DO UPDATE`), ensuring redirect URIs and scopes stay aligned with the latest CLI capabilities.
+
+---
+
 ## Managing Applications in the Dashboard
 
 ### 1. Registering an Application
