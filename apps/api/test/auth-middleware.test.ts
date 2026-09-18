@@ -2,10 +2,6 @@ import { describe, expect, test } from "bun:test";
 import { Hono } from "hono";
 import type { AppEnv } from "../src/middleware/auth";
 import {
-	requireAdmin,
-	requireAnyPermission,
-	requireAuth,
-	requirePermission,
 	requireSessionAuth,
 	requireSessionOrPermission,
 } from "../src/middleware/auth";
@@ -89,7 +85,9 @@ describe("Auth Middleware & Scope Attenuation Protection", () => {
 		expect(res.status).toBe(403);
 		const body = (await res.json()) as { error: string; message: string };
 		expect(body.error).toBe("forbidden");
-		expect(body.message).toContain("Account management requires an interactive user session");
+		expect(body.message).toContain(
+			"Account management requires an interactive user session",
+		);
 	});
 
 	test("requireSessionAuth rejects OAuth bearer tokens with ssh:keys:manage scope", async () => {
@@ -118,7 +116,10 @@ describe("Auth Middleware & Scope Attenuation Protection", () => {
 				updatedAt: Date.now(),
 			});
 			c.set("roles", ["user"]);
-			c.set("permissions", new Set(["ssh:keys:manage", "ssh:cert:issue", "ssh:ca:read"]));
+			c.set(
+				"permissions",
+				new Set(["ssh:keys:manage", "ssh:cert:issue", "ssh:ca:read"]),
+			);
 			c.set("authMethod", "oauth");
 			c.set("tokenScopes", new Set(["ssh:keys:manage"]));
 			await next();

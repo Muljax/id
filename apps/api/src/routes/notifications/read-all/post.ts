@@ -12,29 +12,30 @@ route.post(
 	"/",
 	requireSessionOrPermission("notifications:write", "notifications:*", "*"),
 	async (c) => {
-	const user = c.get("user");
-	const roles = c.get("roles") ?? [];
-	const permissions = c.get("permissions") ?? new Set();
-	const canManageAdminNotifications =
-		roles.includes("admin") ||
-		hasPermission(permissions, "notifications:write");
-	const db = createDb(c.env.DB);
+		const user = c.get("user");
+		const roles = c.get("roles") ?? [];
+		const permissions = c.get("permissions") ?? new Set();
+		const canManageAdminNotifications =
+			roles.includes("admin") ||
+			hasPermission(permissions, "notifications:write");
+		const db = createDb(c.env.DB);
 
-	const targetConditions = [
-		eq(notifications.userId, user.id),
-		eq(notifications.target, "all"),
-	];
+		const targetConditions = [
+			eq(notifications.userId, user.id),
+			eq(notifications.target, "all"),
+		];
 
-	if (canManageAdminNotifications) {
-		targetConditions.push(eq(notifications.target, "admins"));
-	}
+		if (canManageAdminNotifications) {
+			targetConditions.push(eq(notifications.target, "admins"));
+		}
 
-	await db
-		.update(notifications)
-		.set({ readAt: Date.now() })
-		.where(and(or(...targetConditions), isNull(notifications.readAt)));
+		await db
+			.update(notifications)
+			.set({ readAt: Date.now() })
+			.where(and(or(...targetConditions), isNull(notifications.readAt)));
 
-	return c.json({ success: true });
-});
+		return c.json({ success: true });
+	},
+);
 
 export default route;

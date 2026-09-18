@@ -89,9 +89,7 @@ export async function authenticate(c: Context<AppEnv>, next: Next) {
 						userRecord.id,
 					);
 
-					const tokenScopesList = accessToken.scope
-						.split(" ")
-						.filter(Boolean);
+					const tokenScopesList = accessToken.scope.split(" ").filter(Boolean);
 					const tokenScopesSet = new Set(tokenScopesList);
 
 					// Scope attenuation:
@@ -147,9 +145,7 @@ export async function authenticate(c: Context<AppEnv>, next: Next) {
 				}
 			} else {
 				// M2M client credentials token
-				const tokenScopesList = accessToken.scope
-					.split(" ")
-					.filter(Boolean);
+				const tokenScopesList = accessToken.scope.split(" ").filter(Boolean);
 				const permissions = new Set(tokenScopesList);
 				const everyonePerms = await getEveryoneRolePermissions(db);
 				for (const perm of everyonePerms) {
