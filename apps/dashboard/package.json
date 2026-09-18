@@ -20,7 +20,7 @@
   "tailwindcss": "4.3.3"
  },
  "devDependencies": {
-  "@cloudflare/workers-types": "5.20260917.1",
+  "@cloudflare/workers-types": "5.20260918.1",
   "@tanstack/router-plugin": "1.168.40",
   "@types/node": "26.6.1",
   "@types/react": "19.3.0",
