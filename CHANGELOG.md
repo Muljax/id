@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.32.0](https://github.com/Muljax/id/compare/v0.31.0...v0.32.0) (2026-09-18)
+
+
+### Features
+
+* seeding docs, seed cli client, allow loopback redirect URIs on any port ([a77f92d](https://github.com/Muljax/id/commit/a77f92de3b797a857cd77f9dbf990888a18f4a56))
+
 ## [0.31.0](https://github.com/Muljax/id/compare/v0.30.0...v0.31.0) (2026-09-17)
 
 
