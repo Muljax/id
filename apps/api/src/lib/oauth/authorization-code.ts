@@ -2,7 +2,11 @@ import { and, eq, isNull } from "drizzle-orm";
 import type { Context } from "hono";
 
 import { createDb } from "../../db";
-import { oauthAccessTokens, oauthAuthorizationCodes } from "../../db/schema";
+import {
+	oauthAccessTokens,
+	oauthAuthorizationCodes,
+	oauthRefreshTokens,
+} from "../../db/schema";
 import { validateRedirectUri } from "../../lib/oauth/client";
 import { createIdToken } from "../../lib/oauth/id-token";
 import { verifyCodeChallenge } from "../../lib/oauth/pkce";
@@ -81,6 +85,19 @@ export async function exchangeAuthorizationCode(
 			})
 			.where(eq(oauthAccessTokens.authorizationCodeId, authorizationCode.id));
 
+		await db
+			.update(oauthRefreshTokens)
+			.set({
+				revokedAt: now,
+			})
+			.where(
+				and(
+					eq(oauthRefreshTokens.userId, authorizationCode.userId),
+					eq(oauthRefreshTokens.clientId, authorizationCode.clientId),
+					isNull(oauthRefreshTokens.revokedAt),
+				),
+			);
+
 		return invalidGrant(c);
 	}
 
@@ -147,23 +164,28 @@ export async function exchangeAuthorizationCode(
 		authorizationCode.scope,
 	);
 
-	const idToken = await createIdToken({
-		privateKey: c.env.OIDC_PRIVATE_KEY,
-		issuer: c.env.OIDC_ISSUER,
-		clientId: client.id,
-		userId: authorizationCode.userId,
-		nonce: authorizationCode.nonce ?? undefined,
-		authTime: authorizationCode.authTime ?? undefined,
-		acr: authorizationCode.acr ?? undefined,
-		expiresIn: ACCESS_TOKEN_DURATION / 1000,
-	});
+	const grantedScopes = authorizationCode.scope.split(" ").filter(Boolean);
+	let idToken: string | undefined;
+
+	if (grantedScopes.includes("openid")) {
+		idToken = await createIdToken({
+			privateKey: c.env.OIDC_PRIVATE_KEY,
+			issuer: c.env.OIDC_ISSUER,
+			clientId: client.id,
+			userId: authorizationCode.userId,
+			nonce: authorizationCode.nonce ?? undefined,
+			authTime: authorizationCode.authTime ?? undefined,
+			acr: authorizationCode.acr ?? undefined,
+			expiresIn: ACCESS_TOKEN_DURATION / 1000,
+		});
+	}
 
 	return c.json({
 		access_token: accessToken.token,
 		token_type: "Bearer",
 		expires_in: ACCESS_TOKEN_DURATION / 1000,
 		refresh_token: refreshToken.token,
-		id_token: idToken,
+		...(idToken ? { id_token: idToken } : {}),
 		scope: authorizationCode.scope,
 	});
 }
