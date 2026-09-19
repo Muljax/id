@@ -101,3 +101,14 @@ If a user device or private key is compromised:
 :::note[Revocation Propagation]
 Revocation is instantaneous in the database. Within seconds, the serial number is served by `/api/ssh/ca/revoked-keys?format=raw` and synchronized by host systemd timers.
 :::
+
+---
+
+## Certificate Expiration & Automated Cleanup
+
+OpenSSH servers inherently validate certificate timestamps and reject expired credentials against the host system clock. 
+
+To prevent unbounded database growth and maintain compact KRL payloads, Muljax ID executes an automated scheduled background cleanup job (`cleanupExpiredCertificates` / `cleanupExpiredAuthData`):
+- **Execution Interval**: Runs periodically (hourly) via Cloudflare Workers Cron Triggers.
+- **Scope**: Purges all certificates where `validBefore <= current_timestamp`, regardless of whether the certificate was previously revoked or unrevoked.
+- **KRL Pruning**: Expired revoked serials are omitted from active KRL generation since expired certs are rejected automatically by OpenSSH without needing explicit KRL entries.

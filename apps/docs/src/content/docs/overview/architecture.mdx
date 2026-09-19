@@ -54,7 +54,7 @@ The API service runs within Cloudflare Workers using the [Hono](https://hono.dev
   - Session verification middleware validating token hashes against `sessions` table.
   - Role-based authorization middleware verifying user permission flags.
 - **Scheduled Workers**:
-  - Cloudflare Workers `scheduled()` cron handler runs `cleanupExpiredAuthData` to purge expired sessions, authorization codes, and stale challenges from D1.
+  - Cloudflare Workers `scheduled()` cron handler runs `cleanupExpiredAuthData` to purge expired sessions, authorization codes, stale passkey challenges, password reset tokens, and expired SSH certificates (whether or not revoked) from D1.
 - **Durable Workflows**:
   - `LifecycleWorkflow` extends Cloudflare `WorkflowEntrypoint` to manage asynchronous delays (e.g., executing account deactivation after a grace period).
 
