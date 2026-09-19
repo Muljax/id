@@ -38,7 +38,7 @@
       "name": "@muljax/id-dashboard",
       "version": "1.0.0",
       "dependencies": {
-        "@muljax/id-api": "github:Muljax/api",
+        "@muljax/id-api": "workspace:*",
         "@simplewebauthn/browser": "14.0.0",
         "@tailwindcss/vite": "4.3.3",
         "@tanstack/react-form": "^1.33.5",
@@ -1614,8 +1614,6 @@
     "@jridgewell/gen-mapping/@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
     "@jridgewell/remapping/@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
-
-    "@muljax/id-dashboard/@muljax/id-api": ["@muljax/id-api@github:Muljax/api#6d6fd0e", { "dependencies": { "@simplewebauthn/server": "14.0.2", "argon2-wasm-edge": "1.0.23", "drizzle-orm": "1.0.0-rc.5-ab785fc", "hono": "4.13.8" } }, "Muljax-api-6d6fd0e", "sha512-en9kYwsGgi9AXlh++Vsudrabo/k2kGL4wjTprX1CFzTtiae9UZjzR2yVsGOWfRAHTwBdQHqr00HvoLMYmaZuqQ=="],
 
     "@muljax/id-docs/typescript": ["typescript@5.7.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw=="],
 
