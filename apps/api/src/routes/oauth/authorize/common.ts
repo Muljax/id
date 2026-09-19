@@ -6,6 +6,7 @@ import {
 	type AuthorizationRequest,
 	validateAuthorizationRequest,
 } from "@/lib/oauth/authorization";
+import { hasOAuthGrant } from "@/lib/oauth/grant";
 import { base64UrlDecode } from "@/lib/base64";
 import { getDashboardOrigin } from "@/lib/env";
 import { isUserAdmin } from "@/lib/rbac/permissions";
@@ -248,12 +249,30 @@ export async function handleAuthorizationRequest(
 			}
 		}
 
-		if (requiresLogin && prompt === "none") {
-			return redirectWithError(
-				request.redirect_uri,
-				"login_required",
-				request.state,
+		if (prompt === "none") {
+			if (requiresLogin || !sessionRecord) {
+				return redirectWithError(
+					request.redirect_uri,
+					"login_required",
+					request.state,
+				);
+			}
+
+			const hasGrant = await hasOAuthGrant(
+				db,
+				sessionRecord.user.id,
+				validation.client.id,
+				validation.scopes,
 			);
+
+			if (!hasGrant) {
+				return redirectWithError(
+					request.redirect_uri,
+					"consent_required",
+					request.state,
+					"Consent is required for prompt=none.",
+				);
+			}
 		}
 
 		const authorizeUrl = new URL(`${getDashboardOrigin(c.env)}/authorize`);

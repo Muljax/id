@@ -210,7 +210,11 @@ function AuthorizePage() {
 				return;
 			}
 
-			url.searchParams.set("error", "login_required");
+			url.searchParams.set("error", "consent_required");
+			url.searchParams.set(
+				"error_description",
+				"Consent is required for prompt=none.",
+			);
 
 			if (search.state) {
 				url.searchParams.set("state", search.state);
