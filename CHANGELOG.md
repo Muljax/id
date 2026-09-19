@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.33.1](https://github.com/Muljax/id/compare/v0.33.0...v0.33.1) (2026-09-19)
+
+
+### Bug Fixes
+
+* **oauth:** respect sign in policy ([efc9c67](https://github.com/Muljax/id/commit/efc9c67d6e33c573258d77651f6c6fc5947c8279))
+
 ## [0.33.0](https://github.com/Muljax/id/compare/v0.32.1...v0.33.0) (2026-09-19)
 
 
