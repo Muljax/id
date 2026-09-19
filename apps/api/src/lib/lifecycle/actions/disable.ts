@@ -6,12 +6,13 @@ import {
 	oauthGrants,
 	oauthRefreshTokens,
 	sessions,
+	sshCertificates,
 	users,
 } from "../../../db/schema";
 
 /**
  * Disables a user by setting their disabled timestamp and
- * revoking all active sessions, OAuth tokens, and grants.
+ * revoking all active sessions, OAuth tokens, grants, and SSH certificates.
  *
  * @param db The database connection.
  * @param userId The ID of the user to disable.
@@ -53,4 +54,17 @@ export async function disableUser(db: Database, userId: string) {
 		.update(oauthGrants)
 		.set({ revokedAt: now })
 		.where(and(eq(oauthGrants.userId, userId), isNull(oauthGrants.revokedAt)));
+
+	await db
+		.update(sshCertificates)
+		.set({
+			revokedAt: now,
+			revokedReason: "User account deactivated via lifecycle",
+		})
+		.where(
+			and(
+				eq(sshCertificates.userId, userId),
+				isNull(sshCertificates.revokedAt),
+			),
+		);
 }
