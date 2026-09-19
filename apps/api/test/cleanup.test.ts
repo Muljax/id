@@ -7,11 +7,11 @@ import {
 describe("Expired Data & Certificate Cleanup", () => {
 	test("cleanupExpiredCertificates deletes expired certificates regardless of revocation status", async () => {
 		let deleteCalled = false;
-		let capturedWhere: any = null;
+		let capturedWhere: unknown = null;
 
 		const mockDb = {
-			delete: (table: any) => ({
-				where: (condition: any) => {
+			delete: (_table: unknown) => ({
+				where: (condition: unknown) => {
 					deleteCalled = true;
 					capturedWhere = condition;
 					return Promise.resolve({
@@ -23,9 +23,7 @@ describe("Expired Data & Certificate Cleanup", () => {
 			}),
 		};
 
-		const beforeSec = Math.floor(Date.now() / 1000);
 		const deletedCount = await cleanupExpiredCertificates(mockDb as never);
-		const afterSec = Math.floor(Date.now() / 1000);
 
 		expect(deleteCalled).toBe(true);
 		expect(deletedCount).toBe(5);
@@ -36,9 +34,10 @@ describe("Expired Data & Certificate Cleanup", () => {
 		const deletedTables: string[] = [];
 
 		const mockDb = {
-			delete: (table: any) => ({
-				where: (condition: any) => {
-					deletedTables.push(table?._?.name ?? "unknown");
+			delete: (table: unknown) => ({
+				where: (_condition: unknown) => {
+					const tbl = table as { _?: { name?: string } };
+					deletedTables.push(tbl?._?.name ?? "unknown");
 					return Promise.resolve({
 						meta: {
 							changes: 1,
