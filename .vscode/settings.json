@@ -21,6 +21,7 @@
 
  "json.schemaDownload.trustedDomains": {
   "https://docs.renovatebot.com": true,
-  "https://biomejs.dev": true
+  "https://biomejs.dev": true,
+  "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json": true
  }
 }
