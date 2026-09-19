@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/Muljax/id/compare/v1.0.0...v1.1.0) (2026-09-19)
+
+
+### Features
+
+* **ssh:** add cleanup job that removes expired certificates whether or not they are revoked ([c97a509](https://github.com/Muljax/id/commit/c97a509edd9b44ef8a15ca6a34dfe763a2d2cc76))
+
 ## [1.0.0](https://github.com/Muljax/id/compare/v0.33.2...v1.0.0) (2026-09-19)
 
 
