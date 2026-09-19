@@ -4,7 +4,8 @@ import { Hono } from "hono";
 import { createDb } from "@/db";
 import { roles } from "@/db/schema";
 import { emitNotification } from "@/lib/notifications/emitter";
-import { getRole, updateRole } from "@/lib/rbac/roles";
+import { getUserPermissions } from "@/lib/rbac/permissions";
+import { canUserGrantPermissions, getRole, updateRole } from "@/lib/rbac/roles";
 import { type AppEnv, requirePermission } from "@/middleware/auth";
 
 const route = new Hono<AppEnv>();
@@ -67,22 +68,51 @@ route.patch("/", requirePermission("roles:write"), async (c) => {
 		}
 	}
 
-	if (body.permissions !== undefined && !Array.isArray(body.permissions)) {
-		return c.json(
-			{
-				error: "Permissions must be an array of strings.",
-			},
-			400,
-		);
+	const adminUser = c.get("user");
+
+	if (body.permissions !== undefined) {
+		if (!Array.isArray(body.permissions)) {
+			return c.json(
+				{
+					error: "Permissions must be an array of strings.",
+				},
+				400,
+			);
+		}
+
+		if (existing.isSystem) {
+			return c.json(
+				{
+					error: "System role permissions cannot be modified.",
+				},
+				400,
+			);
+		}
+
+		const callerPermissions = await getUserPermissions(db, adminUser.id);
+		if (!canUserGrantPermissions(callerPermissions, body.permissions)) {
+			return c.json(
+				{
+					error:
+						"Cannot update role: you do not possess all permissions being granted.",
+				},
+				403,
+			);
+		}
 	}
 
-	const updated = await updateRole(db, roleId, {
-		name: body.name,
-		description: body.description,
-		permissions: body.permissions,
-	});
-
-	const adminUser = c.get("user");
+	let updated: Awaited<ReturnType<typeof updateRole>>;
+	try {
+		updated = await updateRole(db, roleId, {
+			name: body.name,
+			description: body.description,
+			permissions: body.permissions,
+		});
+	} catch (err) {
+		const message =
+			err instanceof Error ? err.message : "Failed to update role.";
+		return c.json({ error: message }, 400);
+	}
 
 	await emitNotification(db, {
 		target: "admins",

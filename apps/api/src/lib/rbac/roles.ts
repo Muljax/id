@@ -1,7 +1,57 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import type { Database } from "@/db";
 import { permissions, rolePermissions, roles, userRoles } from "@/db/schema";
 import { isReadOnlyPermission, SYSTEM_ROLE_IDS } from "./constants";
+import { hasPermission } from "./matcher";
+
+export function canUserGrantPermissions(
+	callerPermissions: ReadonlySet<string>,
+	permissionsToGrant: string[],
+): boolean {
+	if (hasPermission(callerPermissions, "*")) {
+		return true;
+	}
+	return permissionsToGrant.every((p) => hasPermission(callerPermissions, p));
+}
+
+export async function canUserAssignRoles(
+	db: Database,
+	callerPermissions: ReadonlySet<string>,
+	roleIds: string[],
+): Promise<{ allowed: boolean; missingPermissions?: string[] }> {
+	if (hasPermission(callerPermissions, "*")) {
+		return { allowed: true };
+	}
+
+	if (roleIds.includes(SYSTEM_ROLE_IDS.ADMIN)) {
+		return { allowed: false, missingPermissions: ["*"] };
+	}
+
+	if (roleIds.length === 0) {
+		return { allowed: true };
+	}
+
+	const rolePermRows = await db
+		.select({ permissionId: rolePermissions.permissionId })
+		.from(rolePermissions)
+		.where(inArray(rolePermissions.roleId, roleIds));
+
+	const missing = new Set<string>();
+	for (const row of rolePermRows) {
+		if (!hasPermission(callerPermissions, row.permissionId)) {
+			missing.add(row.permissionId);
+		}
+	}
+
+	if (missing.size > 0) {
+		return {
+			allowed: false,
+			missingPermissions: Array.from(missing),
+		};
+	}
+
+	return { allowed: true };
+}
 
 export async function listRoles(db: Database) {
 	const allRoles = await db.select().from(roles).orderBy(roles.createdAt);
@@ -102,6 +152,10 @@ export async function updateRole(
 		return null;
 	}
 
+	if (existing.isSystem && input.permissions !== undefined) {
+		throw new Error("System role permissions cannot be modified.");
+	}
+
 	const now = Date.now();
 	const updates: Partial<typeof roles.$inferInsert> = {
 		updatedAt: now,
@@ -146,6 +200,15 @@ export async function setRolePermissions(
 	roleId: string,
 	permissionIds: string[],
 ) {
+	const role = await getRole(db, roleId);
+	if (!role) {
+		throw new Error("Role not found");
+	}
+
+	if (role.isSystem && roleId !== SYSTEM_ROLE_IDS.EVERYONE) {
+		throw new Error("System role permissions cannot be modified.");
+	}
+
 	const now = Date.now();
 	const uniquePerms = Array.from(new Set(permissionIds));
 
@@ -189,6 +252,15 @@ export async function addRolePermissions(
 	roleId: string,
 	permissionIds: string[],
 ) {
+	const role = await getRole(db, roleId);
+	if (!role) {
+		throw new Error("Role not found");
+	}
+
+	if (role.isSystem && roleId !== SYSTEM_ROLE_IDS.EVERYONE) {
+		throw new Error("System role permissions cannot be modified.");
+	}
+
 	const now = Date.now();
 	const uniquePerms = Array.from(new Set(permissionIds));
 
@@ -230,6 +302,15 @@ export async function removeRolePermission(
 	roleId: string,
 	permissionId: string,
 ) {
+	const role = await getRole(db, roleId);
+	if (!role) {
+		throw new Error("Role not found");
+	}
+
+	if (role.isSystem && roleId !== SYSTEM_ROLE_IDS.EVERYONE) {
+		throw new Error("System role permissions cannot be modified.");
+	}
+
 	await db
 		.delete(rolePermissions)
 		.where(

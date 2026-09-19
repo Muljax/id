@@ -4,7 +4,8 @@ import { Hono } from "hono";
 import { createDb } from "@/db";
 import { roles } from "@/db/schema";
 import { emitNotification } from "@/lib/notifications/emitter";
-import { createRole } from "@/lib/rbac/roles";
+import { getUserPermissions } from "@/lib/rbac/permissions";
+import { canUserGrantPermissions, createRole } from "@/lib/rbac/roles";
 import { type AppEnv, requirePermission } from "@/middleware/auth";
 
 const route = new Hono<AppEnv>();
@@ -64,13 +65,25 @@ route.post("/", requirePermission("roles:write"), async (c) => {
 		);
 	}
 
+	const adminUser = c.get("user");
+	if (body.permissions && body.permissions.length > 0) {
+		const callerPermissions = await getUserPermissions(db, adminUser.id);
+		if (!canUserGrantPermissions(callerPermissions, body.permissions)) {
+			return c.json(
+				{
+					error:
+						"Cannot create role: you do not possess all permissions being granted.",
+				},
+				403,
+			);
+		}
+	}
+
 	const newRole = await createRole(db, {
 		name: roleName,
 		description: body.description,
 		permissions: body.permissions,
 	});
-
-	const adminUser = c.get("user");
 
 	await emitNotification(db, {
 		target: "admins",

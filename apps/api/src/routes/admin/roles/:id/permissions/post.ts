@@ -2,7 +2,13 @@ import { Hono } from "hono";
 
 import { createDb } from "@/db";
 import { emitNotification } from "@/lib/notifications/emitter";
-import { addRolePermissions, getRole } from "@/lib/rbac/roles";
+import { SYSTEM_ROLE_IDS } from "@/lib/rbac/constants";
+import { getUserPermissions } from "@/lib/rbac/permissions";
+import {
+	addRolePermissions,
+	canUserGrantPermissions,
+	getRole,
+} from "@/lib/rbac/roles";
 import { type AppEnv, requirePermission } from "@/middleware/auth";
 
 const route = new Hono<AppEnv>();
@@ -40,6 +46,27 @@ route.post("/", requirePermission("roles:write"), async (c) => {
 		return c.json({ error: "Role not found." }, 404);
 	}
 
+	if (role.isSystem && role.id !== SYSTEM_ROLE_IDS.EVERYONE) {
+		return c.json(
+			{
+				error: "System role permissions cannot be modified.",
+			},
+			400,
+		);
+	}
+
+	const adminUser = c.get("user");
+	const callerPermissions = await getUserPermissions(db, adminUser.id);
+	if (!canUserGrantPermissions(callerPermissions, body.permissions)) {
+		return c.json(
+			{
+				error:
+					"Cannot add permissions: you do not possess all permissions being granted.",
+			},
+			403,
+		);
+	}
+
 	let updated: Awaited<ReturnType<typeof addRolePermissions>>;
 	try {
 		updated = await addRolePermissions(db, roleId, body.permissions);
@@ -48,8 +75,6 @@ route.post("/", requirePermission("roles:write"), async (c) => {
 			err instanceof Error ? err.message : "Failed to add permissions.";
 		return c.json({ error: message }, 400);
 	}
-
-	const adminUser = c.get("user");
 
 	await emitNotification(db, {
 		target: "admins",

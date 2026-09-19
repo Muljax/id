@@ -2,6 +2,7 @@ import { Hono } from "hono";
 
 import { createDb } from "@/db";
 import { emitNotification } from "@/lib/notifications/emitter";
+import { SYSTEM_ROLE_IDS } from "@/lib/rbac/constants";
 import { getRole, removeRolePermission } from "@/lib/rbac/roles";
 import { type AppEnv, requirePermission } from "@/middleware/auth";
 
@@ -20,6 +21,15 @@ route.delete("/", requirePermission("roles:write"), async (c) => {
 
 	if (!role) {
 		return c.json({ error: "Role not found." }, 404);
+	}
+
+	if (role.isSystem && role.id !== SYSTEM_ROLE_IDS.EVERYONE) {
+		return c.json(
+			{
+				error: "System role permissions cannot be modified.",
+			},
+			400,
+		);
 	}
 
 	const updated = await removeRolePermission(db, roleId, permissionId);

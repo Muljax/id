@@ -4,7 +4,8 @@ import { Hono } from "hono";
 import { createDb } from "@/db";
 import { roles, users } from "@/db/schema";
 import { emitNotification } from "@/lib/notifications/emitter";
-import { assignUserRole } from "@/lib/rbac/roles";
+import { getUserPermissions } from "@/lib/rbac/permissions";
+import { assignUserRole, canUserAssignRoles } from "@/lib/rbac/roles";
 import { type AppEnv, requirePermission } from "@/middleware/auth";
 
 const route = new Hono<AppEnv>();
@@ -55,6 +56,19 @@ route.post("/", requirePermission("roles:assign"), async (c) => {
 	}
 
 	const adminUser = c.get("user");
+	const callerPermissions = await getUserPermissions(db, adminUser.id);
+	const check = await canUserAssignRoles(db, callerPermissions, [roleId]);
+	if (!check.allowed) {
+		return c.json(
+			{
+				error:
+					"Cannot assign role: you do not possess all permissions granted by this role.",
+				missingPermissions: check.missingPermissions,
+			},
+			403,
+		);
+	}
+
 	const updatedRoles = await assignUserRole(db, userId, roleId, adminUser?.id);
 
 	await emitNotification(db, {
