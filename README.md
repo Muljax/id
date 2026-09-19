@@ -28,7 +28,7 @@ An open-source identity platform built on Cloudflare Workers.
 
 ## Documentation
 
-Full documentation, protocol specifications, administration manuals, and architecture guides are available in the [Documentation Site](./apps/docs) and online at your configured docs domain.
+Full documentation, protocol specifications, administration manuals, and architecture guides are available in the [Documentation Site](./apps/docs). The documentation is also published online at [docs.muljax.dev](https://docs.muljax.dev), which tracks the `main` branch of this repository.
 
 ## Overview
 
