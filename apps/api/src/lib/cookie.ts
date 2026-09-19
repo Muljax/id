@@ -24,7 +24,7 @@ export function setSessionCookie(
 	setCookie(c, SESSION_COOKIE, token, {
 		httpOnly: true,
 		secure: !localhost,
-		sameSite: localhost ? "Lax" : "None",
+		sameSite: "Lax",
 		path: "/",
 		maxAge,
 	});
@@ -41,7 +41,7 @@ export function clearSessionCookie(c: Context<{ Bindings: Env }>) {
 	deleteCookie(c, SESSION_COOKIE, {
 		httpOnly: true,
 		secure: !localhost,
-		sameSite: localhost ? "Lax" : "None",
+		sameSite: "Lax",
 		path: "/",
 	});
 }

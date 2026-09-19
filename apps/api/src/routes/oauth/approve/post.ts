@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
 
 import { createDb } from "@/db";
+import { getDashboardOrigin, isLocalhost } from "@/lib/env";
 import {
 	createAuthorizationCode,
 	validateAuthorizationRequest,
@@ -14,6 +15,29 @@ import { isUserDisabled } from "@/lib/user";
 const route = new Hono<{ Bindings: Env }>();
 
 route.post("/", async (c) => {
+	const origin = c.req.header("Origin");
+	const secFetchSite = c.req.header("Sec-Fetch-Site");
+	if (c.env && !isLocalhost(c.env)) {
+		if (secFetchSite === "cross-site") {
+			return c.json(
+				{
+					error: "access_denied",
+					error_description: "Cross-site request blocked.",
+				},
+				403,
+			);
+		}
+		if (origin && origin !== getDashboardOrigin(c.env)) {
+			return c.json(
+				{
+					error: "access_denied",
+					error_description: "Invalid request origin.",
+				},
+				403,
+			);
+		}
+	}
+
 	const body = await c.req.json<{
 		client_id: string;
 		redirect_uri: string;
