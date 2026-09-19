@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 
+import packageJson from "../package.json" with { type: "json" };
 import { createDb } from "./db";
 import { cleanupExpiredAuthData } from "./lib/cleanup";
 import { dashboardCors } from "./middleware/cors";
@@ -20,6 +21,7 @@ app.use("/api/*", dashboardCors());
 app.get("/api/health", (c) => {
 	return c.json({
 		status: "ok",
+		version: packageJson.version,
 		database: "connected",
 	});
 });
