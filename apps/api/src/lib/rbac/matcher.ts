@@ -22,11 +22,13 @@ export function hasPermission(
 		return true;
 	}
 
-	const colonIndex = required.indexOf(":");
-	if (colonIndex !== -1) {
-		const resourceWildcard = `${required.slice(0, colonIndex)}:*`;
-		if (set.has(resourceWildcard)) {
-			return true;
+	if (required.includes(":")) {
+		const parts = required.split(":");
+		for (let i = 1; i < parts.length; i++) {
+			const prefixWildcard = `${parts.slice(0, i).join(":")}:*`;
+			if (set.has(prefixWildcard)) {
+				return true;
+			}
 		}
 	}
 
