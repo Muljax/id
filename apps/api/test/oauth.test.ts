@@ -166,3 +166,48 @@ describe("OAuth Authorization Request Validation & Error Redirection (RFC 6749)"
 		}
 	});
 });
+
+describe("OpenID Discovery Metadata (RFC 8414, RFC 7009, RFC 7662)", () => {
+	test("includes revocation and introspection endpoints and auth methods", async () => {
+		const openidConfigRoute = (
+			await import("../src/routes/well-known/openid-configuration/get")
+		).default;
+		const { Hono } = await import("hono");
+
+		const app = new Hono<{ Bindings: Env }>();
+		app.route("/.well-known/openid-configuration", openidConfigRoute);
+
+		const res = await app.request("/.well-known/openid-configuration", {}, {
+			OIDC_ISSUER: "https://id.example.com",
+		} as Env);
+
+		expect(res.status).toBe(200);
+		const json = (await res.json()) as Record<string, unknown>;
+
+		expect(json.issuer).toBe("https://id.example.com");
+		expect(json.authorization_endpoint).toBe(
+			"https://id.example.com/oauth/authorize",
+		);
+		expect(json.token_endpoint).toBe("https://id.example.com/oauth/token");
+		expect(json.userinfo_endpoint).toBe(
+			"https://id.example.com/oauth/userinfo",
+		);
+		expect(json.revocation_endpoint).toBe(
+			"https://id.example.com/oauth/revoke",
+		);
+		expect(json.introspection_endpoint).toBe(
+			"https://id.example.com/oauth/introspect",
+		);
+		expect(json.jwks_uri).toBe("https://id.example.com/.well-known/jwks.json");
+		expect(json.revocation_endpoint_auth_methods_supported).toEqual([
+			"client_secret_basic",
+			"client_secret_post",
+			"none",
+		]);
+		expect(json.introspection_endpoint_auth_methods_supported).toEqual([
+			"client_secret_basic",
+			"client_secret_post",
+			"none",
+		]);
+	});
+});

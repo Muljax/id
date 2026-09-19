@@ -11,6 +11,8 @@ route.get("/", (c) => {
 		authorization_endpoint: `${issuer}/oauth/authorize`,
 		token_endpoint: `${issuer}/oauth/token`,
 		userinfo_endpoint: `${issuer}/oauth/userinfo`,
+		revocation_endpoint: `${issuer}/oauth/revoke`,
+		introspection_endpoint: `${issuer}/oauth/introspect`,
 		jwks_uri: `${issuer}/.well-known/jwks.json`,
 
 		response_types_supported: ["code"],
@@ -57,6 +59,18 @@ route.get("/", (c) => {
 		],
 
 		token_endpoint_auth_methods_supported: [
+			"client_secret_basic",
+			"client_secret_post",
+			"none",
+		],
+
+		revocation_endpoint_auth_methods_supported: [
+			"client_secret_basic",
+			"client_secret_post",
+			"none",
+		],
+
+		introspection_endpoint_auth_methods_supported: [
 			"client_secret_basic",
 			"client_secret_post",
 			"none",
