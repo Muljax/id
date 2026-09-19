@@ -5,6 +5,8 @@ import { createDb } from "@/db";
 import { roles } from "@/db/schema";
 import { createInviteToken } from "@/lib/invites";
 import { emitNotification } from "@/lib/notifications/emitter";
+import { getUserPermissions } from "@/lib/rbac/permissions";
+import { canUserAssignRoles } from "@/lib/rbac/roles";
 import { type AppEnv, requirePermission } from "@/middleware/auth";
 
 const route = new Hono<AppEnv>();
@@ -41,6 +43,19 @@ route.post("/", requirePermission("users:write"), async (c) => {
 	}
 
 	const currentUser = c.get("user");
+	const callerPermissions = await getUserPermissions(db, currentUser.id);
+	const check = await canUserAssignRoles(db, callerPermissions, [roleId]);
+	if (!check.allowed) {
+		return c.json(
+			{
+				error:
+					"Cannot create invite: you do not possess all permissions granted by this role.",
+				missingPermissions: check.missingPermissions,
+			},
+			403,
+		);
+	}
+
 	const invite = await createInviteToken(db, {
 		email,
 		roleId,
