@@ -116,26 +116,44 @@ export function buildCertificateToSign(
 
 	const critWriter = new SSHWriter();
 	if (data.criticalOptions) {
-		for (const [name, val] of Object.entries(data.criticalOptions)) {
+		const sortedOptions = Object.entries(data.criticalOptions).sort(([a], [b]) =>
+			a.localeCompare(b),
+		);
+		for (const [name, val] of sortedOptions) {
 			critWriter.writeString(name);
-			critWriter.writeString(val);
+			const innerWriter = new SSHWriter();
+			innerWriter.writeString(val);
+			critWriter.writeBytes(innerWriter.toUint8Array());
 		}
 	}
 	writer.writeBytes(critWriter.toUint8Array());
 
 	const extWriter = new SSHWriter();
 	if (Array.isArray(data.extensions)) {
-		for (const extName of data.extensions) {
+		const sortedExts = [...data.extensions].sort((a, b) => a.localeCompare(b));
+		for (const extName of sortedExts) {
 			extWriter.writeString(extName);
 			extWriter.writeBytes(new Uint8Array(0));
 		}
 	} else if (data.extensions) {
-		for (const [name, val] of Object.entries(data.extensions)) {
+		const sortedExts = Object.entries(data.extensions).sort(([a], [b]) =>
+			a.localeCompare(b),
+		);
+		for (const [name, val] of sortedExts) {
 			extWriter.writeString(name);
-			extWriter.writeString(val);
+			if (val) {
+				const innerWriter = new SSHWriter();
+				innerWriter.writeString(val);
+				extWriter.writeBytes(innerWriter.toUint8Array());
+			} else {
+				extWriter.writeBytes(new Uint8Array(0));
+			}
 		}
 	} else {
-		for (const extName of DEFAULT_USER_EXTENSIONS) {
+		const sortedExts = [...DEFAULT_USER_EXTENSIONS].sort((a, b) =>
+			a.localeCompare(b),
+		);
+		for (const extName of sortedExts) {
 			extWriter.writeString(extName);
 			extWriter.writeBytes(new Uint8Array(0));
 		}
@@ -148,14 +166,6 @@ export function buildCertificateToSign(
 	return writer.toUint8Array();
 }
 
-/**
- * Combines the certificate payload with the CA's signature into a complete OpenSSH certificate wire blob.
- *
- * @param toSign The certificate payload signed by the CA.
- * @param rawSignature Raw cryptographic signature bytes.
- * @param sigAlgorithm Signature algorithm identifier (defaults to "ssh-ed25519").
- * @returns Complete binary certificate wire bytes.
- */
 export function buildSignedCertificateWire(
 	toSign: Uint8Array,
 	rawSignature: Uint8Array,
@@ -191,11 +201,10 @@ export function formatOpenSshCertificate(
 }
 
 /**
- * Deserializes and validates an OpenSSH certificate from wire bytes or a single-line string.
+ * Parses and deserializes a binary OpenSSH certificate wire blob (or base64 string).
  *
- * @param input Single-line certificate string or raw binary wire bytes.
- * @returns Deserialized certificate fields.
- * @throws Error if the certificate structure or algorithm is invalid.
+ * @param input The OpenSSH certificate string (or raw Uint8Array wire bytes).
+ * @returns Deserialized certificate fields and public key data.
  */
 export function parseOpenSshCertificate(
 	input: string | Uint8Array,
@@ -239,8 +248,17 @@ export function parseOpenSshCertificate(
 	const criticalOptions: Record<string, string> = {};
 	while (critReader.hasRemaining()) {
 		const name = critReader.readString();
-		const val = critReader.readString();
-		criticalOptions[name] = val;
+		const valBytes = critReader.readBytes();
+		if (valBytes.length > 0) {
+			try {
+				const valReader = new SSHReader(valBytes);
+				criticalOptions[name] = valReader.readString();
+			} catch {
+				criticalOptions[name] = new TextDecoder().decode(valBytes);
+			}
+		} else {
+			criticalOptions[name] = "";
+		}
 	}
 
 	const extBytes = reader.readBytes();
@@ -248,8 +266,17 @@ export function parseOpenSshCertificate(
 	const extensions: Record<string, string> = {};
 	while (extReader.hasRemaining()) {
 		const name = extReader.readString();
-		const val = extReader.readString();
-		extensions[name] = val;
+		const valBytes = extReader.readBytes();
+		if (valBytes.length > 0) {
+			try {
+				const valReader = new SSHReader(valBytes);
+				extensions[name] = valReader.readString();
+			} catch {
+				extensions[name] = new TextDecoder().decode(valBytes);
+			}
+		} else {
+			extensions[name] = "";
+		}
 	}
 
 	reader.readBytes();
