@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.0.0](https://github.com/Muljax/id/compare/v0.33.2...v1.0.0) (2026-09-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* release 1.0.0 and update core repository documentation
+
+### Features
+
+* release 1.0.0 and update core repository documentation ([b7781a1](https://github.com/Muljax/id/commit/b7781a16222c57ec3b1ca8c020b4207ddf767e98))
+
+
+### Bug Fixes
+
+* **auth:** make password reset token consumption atomic to prevent replay and race conditions ([86ab445](https://github.com/Muljax/id/commit/86ab445cfcc6b4b3cb06b0a7b59936c5ec8dc9fd))
+* **auth:** prevent race conditions in single-use invite token registration ([42d69b2](https://github.com/Muljax/id/commit/42d69b28e8d0b2aea45fed498adde816a50ba28f))
+* **auth:** tighten cookie sameSite to Lax and add origin validation on oauth consent ([daf2d74](https://github.com/Muljax/id/commit/daf2d74fa3e43fb7277bb1007b7932cf86317ab1))
+* **invites:** enforce caller permission ceiling on invite token creation ([b1a6999](https://github.com/Muljax/id/commit/b1a6999ed46476ede79ef985c1d7beb828e58a0c))
+* **lifecycle:** revoke active ssh certificates upon user deactivation ([48061c3](https://github.com/Muljax/id/commit/48061c323e6cd8d8f1db8e49cc192f537f22028b))
+* **oauth:** redirect authorization errors to valid redirect_uri per rfc6749 ([908fd75](https://github.com/Muljax/id/commit/908fd75ccba2844409726b88c4cc2b37e4103c08))
+* **oauth:** revoke refresh tokens on code reuse and gate id_token on openid scope ([04d3a72](https://github.com/Muljax/id/commit/04d3a72254c657493e954bb53ee3f04e0d4df5e3))
+* **oidc:** add revocation and introspection endpoints to openid discovery ([7947a41](https://github.com/Muljax/id/commit/7947a41ddfe61d84c88730bc14ba2244a277056b))
+* **oidc:** enforce openid scope requirement on userinfo endpoint ([5bd5da9](https://github.com/Muljax/id/commit/5bd5da9e582255ab0d8531085d131556e86f1548))
+* **oidc:** return consent_required on prompt=none when consent is missing ([85ca299](https://github.com/Muljax/id/commit/85ca29973fad7b0a2f6855b7f37ac779f4dd9a6b))
+* **rbac:** enforce permission ceiling on role assignment and role modification ([321ef98](https://github.com/Muljax/id/commit/321ef98dfd00b1de324bb5edb7c9f838e54ae435))
+* **rbac:** reference SYSTEM_ROLE_IDS.ADMIN constant consistently ([0042f2a](https://github.com/Muljax/id/commit/0042f2a2be04cacf36aa1b98d266cb931debc750))
+* **rbac:** support multi-level hierarchical wildcards in permission matcher ([6ac2a06](https://github.com/Muljax/id/commit/6ac2a06fd1e1dde360ee04a70fedeae0e2c83edd))
+* **ssh:** sort critical options lexicographically and wrap inner option strings ([d907376](https://github.com/Muljax/id/commit/d907376297ced442e1e0283ea4a1017e071f450d))
+
 ## [0.33.2](https://github.com/Muljax/id/compare/v0.33.1...v0.33.2) (2026-09-19)
 
 
