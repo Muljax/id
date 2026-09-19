@@ -7,7 +7,7 @@ import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import { defineConfig } from "vite";
 
 const packageJson = JSON.parse(
-	readFileSync(resolve(__dirname, "../../package.json"), "utf8"),
+	readFileSync(resolve(__dirname, "./package.json"), "utf8"),
 ) as {
 	version: string;
 };
