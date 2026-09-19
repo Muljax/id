@@ -27,22 +27,19 @@ export async function validateAuthorizationRequest(
 	db: Database,
 	request: AuthorizationRequest,
 ) {
-	if (
-		!request.client_id ||
-		!request.redirect_uri ||
-		!request.response_type ||
-		!request.scope
-	) {
+	if (!request.client_id) {
 		return {
 			error: "invalid_request" as const,
-			error_description: "Missing required parameters.",
+			error_description: "Missing client_id.",
+			redirectable: false,
 		};
 	}
 
-	if (request.response_type !== "code") {
+	if (!request.redirect_uri) {
 		return {
-			error: "unsupported_response_type" as const,
-			error_description: "Only the authorization code flow is supported.",
+			error: "invalid_request" as const,
+			error_description: "Missing redirect_uri.",
+			redirectable: false,
 		};
 	}
 
@@ -52,6 +49,7 @@ export async function validateAuthorizationRequest(
 		return {
 			error: "invalid_request" as const,
 			error_description: "Unknown client.",
+			redirectable: false,
 		};
 	}
 
@@ -59,6 +57,23 @@ export async function validateAuthorizationRequest(
 		return {
 			error: "invalid_request" as const,
 			error_description: "Invalid redirect URI.",
+			redirectable: false,
+		};
+	}
+
+	if (!request.response_type) {
+		return {
+			error: "invalid_request" as const,
+			error_description: "The response_type parameter is required.",
+			redirectable: true,
+		};
+	}
+
+	if (request.response_type !== "code") {
+		return {
+			error: "unsupported_response_type" as const,
+			error_description: "Only the authorization code flow is supported.",
+			redirectable: true,
 		};
 	}
 
@@ -75,6 +90,7 @@ export async function validateAuthorizationRequest(
 					client.clientType === "public"
 						? "Public clients must use PKCE (code_challenge is required)."
 						: "The code_challenge parameter is required.",
+				redirectable: true,
 			};
 		}
 
@@ -82,6 +98,7 @@ export async function validateAuthorizationRequest(
 			return {
 				error: "invalid_request" as const,
 				error_description: "The code_challenge_method parameter is required.",
+				redirectable: true,
 			};
 		}
 
@@ -89,6 +106,7 @@ export async function validateAuthorizationRequest(
 			return {
 				error: "invalid_request" as const,
 				error_description: "Only S256 PKCE is supported.",
+				redirectable: true,
 			};
 		}
 
@@ -96,8 +114,17 @@ export async function validateAuthorizationRequest(
 			return {
 				error: "invalid_request" as const,
 				error_description: "Invalid PKCE code challenge.",
+				redirectable: true,
 			};
 		}
+	}
+
+	if (!request.scope) {
+		return {
+			error: "invalid_scope" as const,
+			error_description: "The scope parameter is required.",
+			redirectable: true,
+		};
 	}
 
 	const scopes = [...new Set(request.scope.split(" ").filter(Boolean))];
@@ -106,6 +133,7 @@ export async function validateAuthorizationRequest(
 		return {
 			error: "invalid_scope" as const,
 			error_description: "At least one scope is required.",
+			redirectable: true,
 		};
 	}
 
@@ -113,6 +141,7 @@ export async function validateAuthorizationRequest(
 		return {
 			error: "invalid_scope" as const,
 			error_description: "The openid scope is required.",
+			redirectable: true,
 		};
 	}
 
@@ -120,6 +149,7 @@ export async function validateAuthorizationRequest(
 		return {
 			error: "invalid_scope" as const,
 			error_description: "One or more requested scopes are not allowed.",
+			redirectable: true,
 		};
 	}
 

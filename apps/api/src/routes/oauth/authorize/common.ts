@@ -173,42 +173,28 @@ export async function handleAuthorizationRequest(
 			claims,
 		};
 
-		if (!request.client_id || !request.redirect_uri || !request.scope) {
-			return c.json(
-				{
-					error: "invalid_request",
-					error_description: "client_id, redirect_uri, and scope are required.",
-				},
-				400,
-			);
-		}
+		const db = createDb(c.env.DB);
+		const validation = await validateAuthorizationRequest(db, request);
 
-		if (!request.response_type) {
-			return c.json(
-				{
-					error: "invalid_request",
-					error_description: "The response_type parameter is required.",
-				},
-				400,
-			);
-		}
-
-		if (maxAge !== undefined) {
-			const parsedMaxAge = Number(maxAge);
-
-			if (!Number.isInteger(parsedMaxAge) || parsedMaxAge < 0) {
-				return c.json(
-					{
-						error: "invalid_request",
-						error_description:
-							"The max_age parameter must be a non-negative integer.",
-					},
-					400,
+		if ("error" in validation) {
+			if (validation.redirectable) {
+				return redirectWithError(
+					request.redirect_uri,
+					validation.error,
+					request.state,
+					validation.error_description,
 				);
 			}
+
+			return c.json(
+				{
+					error: validation.error,
+					error_description: validation.error_description,
+				},
+				400,
+			);
 		}
 
-		const db = createDb(c.env.DB);
 		const settings = await getOrCreateInstanceSettings(db);
 
 		if (settings.signinMode === "disabled") {
@@ -220,16 +206,17 @@ export async function handleAuthorizationRequest(
 			);
 		}
 
-		const validation = await validateAuthorizationRequest(db, request);
+		if (maxAge !== undefined) {
+			const parsedMaxAge = Number(maxAge);
 
-		if ("error" in validation) {
-			return c.json(
-				{
-					error: validation.error,
-					error_description: validation.error_description,
-				},
-				400,
-			);
+			if (!Number.isInteger(parsedMaxAge) || parsedMaxAge < 0) {
+				return redirectWithError(
+					request.redirect_uri,
+					"invalid_request",
+					request.state,
+					"The max_age parameter must be a non-negative integer.",
+				);
+			}
 		}
 
 		const sessionToken = getCookie(c, "session");
