@@ -9,7 +9,7 @@
 		"format": "bunx biome format --write . && bun --cwd=apps/api run format && bun --cwd=apps/dashboard run format && bun --cwd=apps/docs run format",
 		"check": "bunx biome check . && bun --cwd=apps/api run check && bun --cwd=apps/dashboard run check && bun --cwd=apps/docs run check",
 		"check:fix": "bunx biome check . --fix && bun --cwd=apps/api run check:fix && bun --cwd=apps/dashboard run check:fix && bun --cwd=apps/docs run check:fix",
-		"build": "bun run build:dashboard && bun run build:api",
+		"build": "bun run build:api && bun run build:dashboard",
 		"build:dashboard": "bun --cwd=apps/dashboard run build",
 		"build:api": "bun --cwd=apps/api run build",
 		"build:docs": "bun --cwd=apps/docs run build",
