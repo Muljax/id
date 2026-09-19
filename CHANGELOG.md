@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.33.2](https://github.com/Muljax/id/compare/v0.33.1...v0.33.2) (2026-09-19)
+
+
+### Bug Fixes
+
+* extract error description ([4f0812d](https://github.com/Muljax/id/commit/4f0812dc20ef96d4e547963b6671f34d8bad77cb))
+
 ## [0.33.1](https://github.com/Muljax/id/compare/v0.33.0...v0.33.1) (2026-09-19)
 
 
