@@ -3,6 +3,7 @@ import { Hono } from "hono";
 
 import { createDb } from "@/db";
 import { userSshKeys } from "@/db/schema";
+import { SYSTEM_ROLE_IDS } from "@/lib/rbac/constants";
 import { hasPermission } from "@/lib/rbac/matcher";
 import {
 	calculateFingerprint,
@@ -36,7 +37,10 @@ route.post(
 
 		const keyName = body.name.trim();
 		if (keyName.length > 100) {
-			return c.json({ error: "Key name must not exceed 100 characters." }, 400);
+			return c.json(
+				{ error: "Key name must not exceed 100 characters." },
+				400,
+			);
 		}
 
 		let parsed: ReturnType<typeof parseOpenSshPublicKey>;
@@ -58,7 +62,7 @@ route.post(
 		const permissions = c.get("permissions") ?? new Set();
 
 		const canAdminKeys =
-			roles.includes("admin") ||
+			roles.includes(SYSTEM_ROLE_IDS.ADMIN) ||
 			hasPermission(permissions, "ssh:keys:admin") ||
 			hasPermission(permissions, "ssh:*") ||
 			hasPermission(permissions, "*");

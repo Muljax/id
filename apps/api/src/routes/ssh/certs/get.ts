@@ -3,6 +3,7 @@ import { Hono } from "hono";
 
 import { createDb } from "@/db";
 import { sshCertificates } from "@/db/schema";
+import { SYSTEM_ROLE_IDS } from "@/lib/rbac/constants";
 import { hasPermission } from "@/lib/rbac/matcher";
 import { type AppEnv, requireSessionOrPermission } from "@/middleware/auth";
 
@@ -17,7 +18,7 @@ route.get(
 		const permissions = c.get("permissions") ?? new Set();
 
 		const canListAll =
-			roles.includes("admin") ||
+			roles.includes(SYSTEM_ROLE_IDS.ADMIN) ||
 			hasPermission(permissions, "ssh:cert:list") ||
 			hasPermission(permissions, "ssh:*") ||
 			hasPermission(permissions, "*");

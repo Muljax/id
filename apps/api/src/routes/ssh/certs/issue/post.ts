@@ -9,6 +9,7 @@ import {
 	issueUserCertificate,
 	SshValidationError,
 } from "@/lib/ssh";
+import { SYSTEM_ROLE_IDS } from "@/lib/rbac/constants";
 import { hasPermission } from "@/lib/rbac/matcher";
 import { type AppEnv, requirePermission } from "@/middleware/auth";
 
@@ -46,7 +47,7 @@ route.post("/", requirePermission("ssh:cert:issue"), async (c) => {
 	const db = createDb(c.env.DB);
 
 	const isAdmin =
-		roles.includes("admin") ||
+		roles.includes(SYSTEM_ROLE_IDS.ADMIN) ||
 		hasPermission(permissions, "ssh:keys:admin") ||
 		hasPermission(permissions, "ssh:*") ||
 		hasPermission(permissions, "*");

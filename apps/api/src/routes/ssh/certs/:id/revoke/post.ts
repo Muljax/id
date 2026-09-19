@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import { createDb } from "@/db";
 import { sshCertificates } from "@/db/schema";
 import { emitNotification } from "@/lib/notifications/emitter";
+import { SYSTEM_ROLE_IDS } from "@/lib/rbac/constants";
 import { hasPermission } from "@/lib/rbac/matcher";
 import { type AppEnv, requireAuth } from "@/middleware/auth";
 
@@ -48,7 +49,7 @@ route.post("/", requireAuth, async (c) => {
 	}
 
 	const canRevokeAny =
-		roles.includes("admin") ||
+		roles.includes(SYSTEM_ROLE_IDS.ADMIN) ||
 		hasPermission(permissions, "ssh:cert:revoke") ||
 		hasPermission(permissions, "ssh:*") ||
 		hasPermission(permissions, "*");

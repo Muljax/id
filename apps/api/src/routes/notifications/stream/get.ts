@@ -2,6 +2,7 @@ import { Hono } from "hono";
 
 import { notificationBus } from "@/lib/notifications/bus";
 import type { NotificationPayload } from "@/lib/notifications/types";
+import { SYSTEM_ROLE_IDS } from "@/lib/rbac/constants";
 import { hasPermission } from "@/lib/rbac/matcher";
 import { type AppEnv, requireSessionOrPermission } from "@/middleware/auth";
 
@@ -15,7 +16,7 @@ route.get(
 		const roles = c.get("roles") ?? [];
 		const permissions = c.get("permissions") ?? new Set();
 		const canAccessAdminNotifications =
-			roles.includes("admin") ||
+			roles.includes(SYSTEM_ROLE_IDS.ADMIN) ||
 			hasPermission(permissions, "notifications:read");
 
 		const encoder = new TextEncoder();

@@ -3,6 +3,7 @@ import { Hono } from "hono";
 
 import { createDb } from "@/db";
 import { notifications } from "@/db/schema";
+import { SYSTEM_ROLE_IDS } from "@/lib/rbac/constants";
 import { hasPermission } from "@/lib/rbac/matcher";
 import { type AppEnv, requireSessionOrPermission } from "@/middleware/auth";
 
@@ -16,7 +17,7 @@ route.delete(
 		const roles = c.get("roles") ?? [];
 		const permissions = c.get("permissions") ?? new Set();
 		const canManageAdminNotifications =
-			roles.includes("admin") ||
+			roles.includes(SYSTEM_ROLE_IDS.ADMIN) ||
 			hasPermission(permissions, "notifications:write");
 		const id = c.req.param("id");
 

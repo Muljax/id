@@ -1,3 +1,4 @@
+import { SYSTEM_ROLE_IDS } from "../rbac/constants";
 import { hasPermission } from "../rbac/matcher";
 import { validatePrincipals } from "./validation";
 
@@ -55,7 +56,7 @@ export function getPermittedPrincipals(
 	const permitted = [defaultPrincipal];
 
 	const isAdministrator =
-		roles.includes("admin") ||
+		roles.includes(SYSTEM_ROLE_IDS.ADMIN) ||
 		hasPermission(permissions, "*") ||
 		hasPermission(permissions, "ssh:*");
 

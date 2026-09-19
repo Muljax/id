@@ -3,6 +3,7 @@ import { Hono } from "hono";
 
 import { createDb } from "@/db";
 import { userSshKeys } from "@/db/schema";
+import { SYSTEM_ROLE_IDS } from "@/lib/rbac/constants";
 import { hasPermission } from "@/lib/rbac/matcher";
 import { type AppEnv, requireSessionOrPermission } from "@/middleware/auth";
 
@@ -25,7 +26,7 @@ route.get(
 		const db = createDb(c.env.DB);
 
 		const canAdminKeys =
-			roles.includes("admin") ||
+			roles.includes(SYSTEM_ROLE_IDS.ADMIN) ||
 			hasPermission(permissions, "ssh:keys:admin") ||
 			hasPermission(permissions, "ssh:*") ||
 			hasPermission(permissions, "*");

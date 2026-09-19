@@ -88,5 +88,7 @@ export async function isUserAdmin(
 	userId: string,
 ): Promise<boolean> {
 	const { roles, permissions } = await getUserEffectivePermissions(db, userId);
-	return hasPermission(permissions, "*") || roles.includes("admin");
+	return (
+		hasPermission(permissions, "*") || roles.includes(SYSTEM_ROLE_IDS.ADMIN)
+	);
 }
