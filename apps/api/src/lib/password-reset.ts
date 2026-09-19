@@ -113,14 +113,46 @@ export async function consumePasswordResetToken(
 	token: string,
 	newPassword: string,
 ): Promise<{ success: boolean; userId: string; email: string }> {
-	const validRecord = await verifyPasswordResetToken(db, token);
+	if (!token || typeof token !== "string") {
+		throw new Error("Invalid or expired password reset token");
+	}
 
-	if (!validRecord) {
+	const tokenHash = await hashToken(token);
+	const now = Date.now();
+
+	// Atomically delete and claim the specific token to prevent replay/race conditions
+	const deleted = await db
+		.delete(passwordResetTokens)
+		.where(
+			and(
+				eq(passwordResetTokens.tokenHash, tokenHash),
+				gt(passwordResetTokens.expiresAt, now),
+			),
+		)
+		.returning();
+
+	const claimedToken = deleted[0];
+	if (!claimedToken) {
+		throw new Error("Invalid or expired password reset token");
+	}
+
+	// Verify user is valid and active
+	const userRecords = await db
+		.select({
+			id: users.id,
+			email: users.email,
+			disabledAt: users.disabledAt,
+		})
+		.from(users)
+		.where(eq(users.id, claimedToken.userId))
+		.limit(1);
+
+	const user = userRecords[0];
+	if (!user || isUserDisabled(user)) {
 		throw new Error("Invalid or expired password reset token");
 	}
 
 	const passwordHash = await hashPassword(newPassword);
-	const now = Date.now();
 
 	// Update user password
 	await db
@@ -129,19 +161,19 @@ export async function consumePasswordResetToken(
 			passwordHash,
 			updatedAt: now,
 		})
-		.where(eq(users.id, validRecord.userId));
+		.where(eq(users.id, user.id));
 
-	// Delete all password reset tokens for this user
+	// Delete all other password reset tokens for this user
 	await db
 		.delete(passwordResetTokens)
-		.where(eq(passwordResetTokens.userId, validRecord.userId));
+		.where(eq(passwordResetTokens.userId, user.id));
 
 	// Terminate all active sessions for security
-	await deleteAllSessions(db, validRecord.userId);
+	await deleteAllSessions(db, user.id);
 
 	// Notify user
 	await emitNotification(db, {
-		userId: validRecord.userId,
+		userId: user.id,
 		type: "security.password_reset_completed",
 		category: "security",
 		severity: "warning",
@@ -158,14 +190,14 @@ export async function consumePasswordResetToken(
 		category: "security",
 		severity: "info",
 		title: "User Password Reset",
-		message: `Password reset was completed for user "${validRecord.userEmail}".`,
-		actionUrl: `/admin/users?userId=${validRecord.userId}`,
+		message: `Password reset was completed for user "${user.email}".`,
+		actionUrl: `/admin/users?userId=${user.id}`,
 	});
 
 	return {
 		success: true,
-		userId: validRecord.userId,
-		email: validRecord.userEmail,
+		userId: user.id,
+		email: user.email,
 	};
 }
 

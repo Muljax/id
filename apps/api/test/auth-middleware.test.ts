@@ -234,3 +234,95 @@ describe("Auth Middleware & Scope Attenuation Protection", () => {
 		expect(invalidTokenRes.status).toBe(403);
 	});
 });
+
+describe("Password Reset Atomic Consumption & Session Invalidation", () => {
+	test("consumePasswordResetToken atomically consumes token and invalidates sessions", async () => {
+		const { consumePasswordResetToken } = await import(
+			"../src/lib/password-reset"
+		);
+		const { hashToken } = await import("../src/lib/token");
+
+		let tokenDeleted = false;
+		let sessionsDeleted = false;
+		let passwordUpdated = false;
+
+		const plainToken = "test-reset-token-123";
+		const expectedHash = await hashToken(plainToken);
+
+		const mockDb = {
+			delete: () => {
+				const queryPromise = Promise.resolve().then(() => {
+					sessionsDeleted = true;
+				});
+				return {
+					where: () =>
+						Object.assign(queryPromise, {
+							returning: async () => {
+								if (tokenDeleted) {
+									return [];
+								}
+								tokenDeleted = true;
+								return [
+									{
+										id: "token-1",
+										userId: "user-1",
+										tokenHash: expectedHash,
+										expiresAt: Date.now() + 3600000,
+										createdAt: Date.now(),
+									},
+								];
+							},
+						}),
+				};
+			},
+			select: () => ({
+				from: () => ({
+					where: () => ({
+						limit: () => [
+							{
+								id: "user-1",
+								email: "user@example.com",
+								disabledAt: null,
+							},
+						],
+					}),
+				}),
+			}),
+			update: () => ({
+				set: () => ({
+					where: () => {
+						passwordUpdated = true;
+						return Promise.resolve();
+					},
+				}),
+			}),
+			insert: () => ({
+				values: () =>
+					Object.assign(Promise.resolve(), {
+						returning: () => Promise.resolve([{ id: "notif-1" }]),
+					}),
+			}),
+		};
+
+		const result = await consumePasswordResetToken(
+			mockDb as never,
+			plainToken,
+			"newStrongPassword123!",
+		);
+
+		expect(result.success).toBe(true);
+		expect(result.userId).toBe("user-1");
+		expect(tokenDeleted).toBe(true);
+		expect(passwordUpdated).toBe(true);
+		expect(sessionsDeleted).toBe(true);
+
+		// Second consumption attempt must fail immediately
+		expect(
+			consumePasswordResetToken(
+				mockDb as never,
+				plainToken,
+				"anotherPassword123!",
+			),
+		).rejects.toThrow("Invalid or expired password reset token");
+	});
+});

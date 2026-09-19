@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { argon2id, argon2Verify, setWASMModules } from "argon2-wasm-edge";
 
 // @ts-expect-error Cloudflare Workers WASM module import
@@ -6,10 +8,38 @@ import argon2WASM from "argon2-wasm-edge/wasm/argon2.wasm";
 // @ts-expect-error Cloudflare Workers WASM module import
 import blake2bWASM from "argon2-wasm-edge/wasm/blake2b.wasm";
 
-setWASMModules({
-	argon2WASM,
-	blake2bWASM,
-});
+try {
+	if (
+		argon2WASM instanceof Uint8Array ||
+		argon2WASM instanceof ArrayBuffer ||
+		argon2WASM instanceof WebAssembly.Module
+	) {
+		setWASMModules({
+			argon2WASM,
+			blake2bWASM,
+		});
+	} else {
+		const require = createRequire(import.meta.url);
+		const argon2Path = require.resolve("argon2-wasm-edge/wasm/argon2.wasm");
+		const blake2bPath = require.resolve("argon2-wasm-edge/wasm/blake2b.wasm");
+		if (existsSync(argon2Path) && existsSync(blake2bPath)) {
+			setWASMModules({
+				argon2WASM: new (
+					WebAssembly.Module as unknown as new (
+						buffer: Buffer,
+					) => WebAssembly.Module
+				)(readFileSync(argon2Path)),
+				blake2bWASM: new (
+					WebAssembly.Module as unknown as new (
+						buffer: Buffer,
+					) => WebAssembly.Module
+				)(readFileSync(blake2bPath)),
+			});
+		}
+	}
+} catch {
+	// Custom loader or fallback
+}
 
 const SALT_LENGTH = 16;
 const ARGON2_MEMORY_SIZE = 19 * 1024;
