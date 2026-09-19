@@ -1,6 +1,6 @@
 {
- "apps/api": "1.1.1",
- "apps/dashboard": "1.1.0",
+ "apps/api": "1.2.0",
+ "apps/dashboard": "1.2.0",
  "apps/docs": "1.1.0",
- ".": "1.1.1"
+ ".": "1.2.0"
 }

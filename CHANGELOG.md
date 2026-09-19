@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/Muljax/id/compare/root-v1.1.1...root-v1.2.0) (2026-09-19)
+
+
+### Features
+
+* **api:** return package version on health endpoint ([b7f7dde](https://github.com/Muljax/id/commit/b7f7dde8380bb7be339c27779083193d86fca30d))
+* **dashboard:** read app version from dashboard package.json ([439b8c8](https://github.com/Muljax/id/commit/439b8c89f17fe7523acf914a09c37cd461268099))
+
 ## [1.1.1](https://github.com/Muljax/id/compare/root-v1.1.0...root-v1.1.1) (2026-09-19)
 
 
