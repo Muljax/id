@@ -1,49 +1,45 @@
-# Starlight Starter Kit: Basics
+# Muljax ID Documentation Portal
 
-[![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
+Documentation portal for the **Muljax Identity Platform**, built with [Astro](https://astro.build) and [Starlight](https://starlight.astro.build).
 
+## Development
+
+Start the local documentation development server:
+
+```sh
+bun run dev
 ```
-bun create astro@latest -- --template starlight
+
+The site will be available at `http://localhost:4321`.
+
+## Building for Production
+
+Compile static assets and generate the search index:
+
+```sh
+bun run build
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+The static output will be generated in `./dist/`.
 
-## 🚀 Project Structure
+## Structure
 
-Inside of your Astro + Starlight project, you'll see the following folders and files:
-
-```
-.
-├── public/
+```text
+apps/docs/
 ├── src/
-│   ├── assets/
-│   ├── content/
-│   │   └── docs/
-│   └── content.config.ts
-├── astro.config.mjs
-├── package.json
-└── tsconfig.json
+│   ├── assets/       # Media and diagrams
+│   └── content/
+│       └── docs/     # Markdown and MDX documentation pages
+│           ├── admin-guides/
+│           ├── getting-started/
+│           ├── overview/
+│           ├── protocols/
+│           ├── reference/
+│           └── user-guides/
+├── astro.config.mjs  # Astro and Starlight configuration
+└── package.json
 ```
 
-Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name.
+## Adding and Editing Documentation
 
-Images can be added to `src/assets/` and embedded in Markdown with a relative link.
-
-Static assets, like favicons, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `bun install`             | Installs dependencies                            |
-| `bun dev`             | Starts local dev server at `localhost:4321`      |
-| `bun build`           | Build your production site to `./dist/`          |
-| `bun preview`         | Preview your build locally, before deploying     |
-| `bun astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `bun astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Check out [Starlight’s docs](https://starlight.astro.build/), read [the Astro documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).
+Documentation pages are written in `.md` or `.mdx` under `src/content/docs/`. Starlight automatically maps file paths to web routes with built-in search, syntax highlighting, and Mermaid diagram rendering.

@@ -23,14 +23,21 @@ An open-source identity platform built on Cloudflare Workers.
 
 ---
 
-> [!WARNING]
-> Muljax Identity Platform is pre-1.0 and, as such, may ship breaking releases without a major semver bump.
+> [!NOTE]
+> Muljax Identity Platform is **1.0 (GA)** and adheres to [Semantic Versioning](https://semver.org/). Breaking changes are strictly limited to major semver releases.
+
+## Documentation
+
+Full documentation, protocol specifications, administration manuals, and architecture guides are available in the [Documentation Site](./apps/docs) and online at your configured docs domain.
 
 ## Overview
 
-The project consists of two main applications, the [API](./apps/api) and the [dashboard](./apps/dashboard).
+The project is a monorepo consisting of three primary applications:
+- **[API](./apps/api)**: High-performance Hono API Worker with D1 SQLite storage, WebAuthn/Passkeys, OIDC/OAuth 2.0 provider, and OpenSSH CA engine.
+- **[Dashboard](./apps/dashboard)**: Modern Single-Page Application (SPA) built with React, Vite, and TanStack Router/Query/Form for identity and instance management.
+- **[Docs](./apps/docs)**: Comprehensive documentation portal powered by Astro and Starlight.
 
-Infrastructure is managed with [Terraform](https://developer.hashicorp.com/terraform), while application code is built with Bun.
+Infrastructure is fully automated with [Terraform](https://developer.hashicorp.com/terraform), while development and compilation are powered by [Bun](https://bun.sh/).
 
 ## API
 
@@ -44,8 +51,9 @@ The API uses [Cloudflare D1](https://developers.cloudflare.com/d1/) as its datab
 apps/api/
 ├── src/
 │   ├── db/           # Database schema and queries
-│   ├── middleware/   # API middleware
-│   ├── routes/       # API routes
+│   ├── lib/          # Core auth, crypto, ssh, and lifecycle logic
+│   ├── middleware/   # API middleware (auth, rbac, rate limiting)
+│   ├── routes/       # API routes (auth, oauth, passkeys, admin, ssh, well-known)
 │   └── index.ts      # Worker entrypoint
 ├── drizzle/
 │   └── migrations/   # D1 database migrations
@@ -64,8 +72,8 @@ The dashboard is compiled into a Cloudflare Worker with its static assets manage
 apps/dashboard/
 ├── src/
 │   ├── components/   # Reusable UI components
-│   ├── lib/          # Client-side utilities
-│   └── routes/       # Dashboard routes
+│   ├── lib/          # Client-side utilities and API client
+│   └── routes/       # Dashboard routes (auth, directory, settings, audit, ssh)
 ├── worker.ts         # Dashboard Worker entrypoint
 └── vite.config.ts
 ```
@@ -75,15 +83,18 @@ apps/dashboard/
 ```text
 .
 ├── apps/
-│   ├── api/          # Hono API
-│   └── dashboard/    # React + Vite dashboard
+│   ├── api/          # Hono API Worker
+│   ├── dashboard/    # React + Vite dashboard
+│   └── docs/         # Astro + Starlight documentation site
 ├── scripts/
 │   ├── generate-tfvars.ts # Terraform variables generator
-│   ├── oidc-key.ts        # OIDC signing key generator
-│   ├── ssh-ca-key.ts      # SSH CA key generator
+│   ├── oidc-key.ts        # OIDC ES256 signing key generator
+│   ├── ssh-ca-key.ts      # SSH CA Ed25519 key generator
 │   └── seed-d1.ts         # D1 database seeder for standard values
-├── terraform/             # Cloudflare infrastructure
+├── terraform/             # Cloudflare infrastructure as code
 ├── README.md
+├── SECURITY.md
+├── CONTRIBUTING.md
 └── SETUP.md               # Setup and deployment instructions
 ```
 

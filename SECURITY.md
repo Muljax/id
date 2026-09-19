@@ -3,13 +3,13 @@
 Muljax ID takes security seriously. If you believe you have found a security vulnerability, please report it responsibly through GitHub's private vulnerability reporting.
 
 ## Supported Versions
-
-Muljax ID is currently pre-1.0. Only the **latest released version** is supported with security updates.
-
-| Version                | Supported          |
-| ---------------------- | ------------------ |
-| Latest pre-1.0 release | :white_check_mark: |
-| Older releases         | :x:                |
+ 
+Muljax ID follows [Semantic Versioning](https://semver.org/). The current `1.x` release series is actively supported with security updates and patches.
+ 
+| Version | Supported          |
+| ------- | ------------------ |
+| 1.x     | :white_check_mark: |
+| < 1.0   | :x:                |
 
 ## Reporting a Vulnerability
 

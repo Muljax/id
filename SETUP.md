@@ -256,9 +256,13 @@ Refer to the application's development output for the URLs of the dashboard and 
 │   ├── api/                 # Hono API Worker
 │   │   └── drizzle/
 │   │       └── migrations/  # Drizzle D1 migrations
-│   └── dashboard/           # React + Vite dashboard
+│   ├── dashboard/           # React + Vite dashboard
+│   └── docs/                # Astro + Starlight documentation portal
 ├── scripts/
-│   └── oidc-key.ts          # OIDC signing key generator
+│   ├── generate-tfvars.ts   # Terraform variables generator
+│   ├── oidc-key.ts          # OIDC signing key generator
+│   ├── ssh-ca-key.ts        # SSH CA key generator
+│   └── seed-d1.ts           # D1 database seeder
 ├── terraform/               # Cloudflare infrastructure
 ├── biome.json               # Biome configuration
 ├── package.json

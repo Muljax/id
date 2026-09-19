@@ -27,17 +27,18 @@ Muljax ID is a TypeScript monorepo managed with Bun.
 For installation, environment configuration, local development, and deployment instructions, see the [setup guide](./SETUP.md).
 
 ## Repository Structure
-
+ 
 ```text
 .
 ├── apps/
-│   ├── api/          # API Worker
-│   └── dashboard/    # Dashboard application
-├── scripts/          # Project scripts
-├── terraform/        # Infrastructure configuration
-├── .github/          # GitHub configuration
+│   ├── api/          # API Worker (Hono + D1 SQLite)
+│   ├── dashboard/    # Dashboard application (React + Vite)
+│   └── docs/         # Documentation portal (Astro + Starlight)
+├── scripts/          # Project keygen, seed, and provisioning scripts
+├── terraform/        # Cloudflare infrastructure configuration
+├── .github/          # GitHub Actions workflows and configuration
 ├── .vscode/          # VS Code configuration
-├── biome.json        # Biome configuration
+├── biome.json        # Biome linter and formatter configuration
 ├── package.json
 ├── tsconfig.json
 └── bun.lock
@@ -190,3 +191,6 @@ Common types include:
 - `refactor` — code restructuring without changing behavior
 - `docs` — documentation changes
 - `chore` — maintenance
+- `perf` — performance improvements
+- `test` — adding or correcting tests
+- `feat!:` or `fix!:` (or `BREAKING CHANGE:` footer) — breaking changes signaling a major SemVer bump (2.0.0+)
