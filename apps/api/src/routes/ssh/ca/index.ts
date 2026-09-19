@@ -7,6 +7,7 @@ import revokedKeys from "./revoked-keys";
 const route = new Hono<AppEnv>();
 
 route.route("/public-key", publicKey);
+route.route("/pubkey", publicKey);
 route.route("/revoked-keys", revokedKeys);
 
 export default route;

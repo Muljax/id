@@ -19,8 +19,16 @@ route.get("/", requirePermission("ssh:ca:read"), async (c) => {
 	try {
 		const caContext = await createSshCaContext(caPrivateKeyJwk);
 		const format = c.req.query("format");
+		const accept = c.req.header("accept");
 
-		if (format === "raw") {
+		const isText =
+			format === "raw" ||
+			format === "text" ||
+			(format === undefined &&
+				accept?.includes("text/plain") &&
+				!accept?.includes("application/json"));
+
+		if (isText) {
 			return c.text(caContext.publicOpenSsh, 200, {
 				"content-type": "text/plain; charset=utf-8",
 			});

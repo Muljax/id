@@ -533,3 +533,61 @@ describe("OpenSSH Key Revocation List (KRL Binary Wire Format)", () => {
 		);
 	});
 });
+
+describe("SSH CA Public Key Content Negotiation", () => {
+	test("serves raw OpenSSH key on format=raw, format=text, or Accept: text/plain", async () => {
+		const { default: caPublicKeyRoute } = await import(
+			"../src/routes/ssh/ca/public-key/get"
+		);
+		const { privateKeyJwk } = await generateCaKeyPairJwk();
+
+		const app = caPublicKeyRoute;
+
+		// 1. JSON default
+		const resJson = await app.request(
+			"http://localhost/",
+			{
+				headers: {
+					accept: "application/json",
+				},
+			},
+			{
+				SSH_CA_PRIVATE_KEY: privateKeyJwk,
+			} as never,
+		);
+		expect(resJson.status).toBe(200);
+		const jsonData = (await resJson.json()) as {
+			algorithm: string;
+			publicKey: string;
+			fingerprint: string;
+		};
+		expect(jsonData.algorithm).toBe("ssh-ed25519");
+		expect(jsonData.publicKey.startsWith("ssh-ed25519 ")).toBe(true);
+
+		// 2. Query param ?format=raw
+		const resRaw = await app.request("http://localhost/?format=raw", {}, {
+			SSH_CA_PRIVATE_KEY: privateKeyJwk,
+		} as never);
+		expect(resRaw.status).toBe(200);
+		expect(resRaw.headers.get("content-type")).toContain("text/plain");
+		const rawText = await resRaw.text();
+		expect(rawText.startsWith("ssh-ed25519 ")).toBe(true);
+
+		// 3. Header Accept: text/plain
+		const resAcceptText = await app.request(
+			"http://localhost/",
+			{
+				headers: {
+					accept: "text/plain",
+				},
+			},
+			{
+				SSH_CA_PRIVATE_KEY: privateKeyJwk,
+			} as never,
+		);
+		expect(resAcceptText.status).toBe(200);
+		expect(resAcceptText.headers.get("content-type")).toContain("text/plain");
+		const acceptText = await resAcceptText.text();
+		expect(acceptText.startsWith("ssh-ed25519 ")).toBe(true);
+	});
+});
