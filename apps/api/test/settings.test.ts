@@ -144,12 +144,16 @@ describe("Settings & Signup Policy", () => {
 
 		// Helper mimicking approve route with signinMode checks
 		app.post("/oauth/approve", async (c) => {
-			const body = (await c.req.json()) as { signinMode: string; isAdmin: boolean };
+			const body = (await c.req.json()) as {
+				signinMode: string;
+				isAdmin: boolean;
+			};
 			if (body.signinMode === "disabled") {
 				return c.json(
 					{
 						error: "temporarily_unavailable",
-						error_description: "Authentication and OAuth authorizations are currently disabled on this instance.",
+						error_description:
+							"Authentication and OAuth authorizations are currently disabled on this instance.",
 					},
 					503,
 				);
@@ -158,12 +162,15 @@ describe("Settings & Signup Policy", () => {
 				return c.json(
 					{
 						error: "access_denied",
-						error_description: "Maintenance mode active: Approving OAuth authorizations requires administrator privileges.",
+						error_description:
+							"Maintenance mode active: Approving OAuth authorizations requires administrator privileges.",
 					},
 					403,
 				);
 			}
-			return c.json({ redirect_uri: "https://example.com/callback?code=test-code" });
+			return c.json({
+				redirect_uri: "https://example.com/callback?code=test-code",
+			});
 		});
 
 		// Disabled mode: rejects with 503 temporarily_unavailable
@@ -183,7 +190,9 @@ describe("Settings & Signup Policy", () => {
 			body: JSON.stringify({ signinMode: "admin_key", isAdmin: false }),
 		});
 		expect(resAdminKeyUser.status).toBe(403);
-		const bodyAdminKeyUser = (await resAdminKeyUser.json()) as { error: string };
+		const bodyAdminKeyUser = (await resAdminKeyUser.json()) as {
+			error: string;
+		};
 		expect(bodyAdminKeyUser.error).toBe("access_denied");
 
 		// admin_key mode with admin: succeeds

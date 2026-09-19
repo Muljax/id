@@ -36,7 +36,11 @@ describe("RBAC Permissions & Ceiling Hardening", () => {
 		// Wildcard permissions satisfy specific grants
 		const userAdmin = new Set(["users:*"]);
 		expect(
-			canUserGrantPermissions(userAdmin, ["users:read", "users:write", "users:delete"]),
+			canUserGrantPermissions(userAdmin, [
+				"users:read",
+				"users:write",
+				"users:delete",
+			]),
 		).toBe(true);
 		expect(canUserGrantPermissions(userAdmin, ["ssh:keys:manage"])).toBe(false);
 

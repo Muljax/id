@@ -250,7 +250,11 @@ export async function handleAuthorizationRequest(
 		let requiresLogin =
 			!sessionRecord || isUserDisabled(sessionRecord.user) || maxAgeExpired;
 
-		if (!requiresLogin && sessionRecord && settings.signinMode === "admin_key") {
+		if (
+			!requiresLogin &&
+			sessionRecord &&
+			settings.signinMode === "admin_key"
+		) {
 			const isAdmin = await isUserAdmin(db, sessionRecord.user.id);
 			if (!isAdmin) {
 				requiresLogin = true;

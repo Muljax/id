@@ -37,10 +37,7 @@ route.post(
 
 		const keyName = body.name.trim();
 		if (keyName.length > 100) {
-			return c.json(
-				{ error: "Key name must not exceed 100 characters." },
-				400,
-			);
+			return c.json({ error: "Key name must not exceed 100 characters." }, 400);
 		}
 
 		let parsed: ReturnType<typeof parseOpenSshPublicKey>;

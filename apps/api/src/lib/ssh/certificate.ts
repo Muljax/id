@@ -116,8 +116,8 @@ export function buildCertificateToSign(
 
 	const critWriter = new SSHWriter();
 	if (data.criticalOptions) {
-		const sortedOptions = Object.entries(data.criticalOptions).sort(([a], [b]) =>
-			a.localeCompare(b),
+		const sortedOptions = Object.entries(data.criticalOptions).sort(
+			([a], [b]) => a.localeCompare(b),
 		);
 		for (const [name, val] of sortedOptions) {
 			critWriter.writeString(name);
