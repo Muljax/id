@@ -54,7 +54,14 @@ These three immutable system roles and all canonical permissions are seeded into
 
 ## Permissions Catalog
 
-Permissions follow the standard `resource:action` convention. Wildcards (`*`) expand to match all actions under a given resource.
+Permissions follow the standard `resource:action` or `resource:subresource:action` convention.
+
+### Hierarchical Wildcards
+Muljax ID supports multi-level wildcard resolution:
+- `*`: Superadministrator privilege granting access across all resources.
+- `ssh:*`: Grants all actions across all SSH resources (`ssh:ca:read`, `ssh:keys:manage`, `ssh:cert:issue`, `ssh:cert:revoke`, etc.).
+- `ssh:cert:*`: Grants all certificate-specific actions (`ssh:cert:issue`, `ssh:cert:revoke`, `ssh:cert:list`).
+- `users:*`: Grants all user management actions (`users:read`, `users:write`, `users:delete`, `users:lifecycle`, etc.).
 
 ### System & Users
 - `*`: Superadministrator access across the entire platform.
@@ -94,6 +101,16 @@ Permissions follow the standard `resource:action` convention. Wildcards (`*`) ex
 
 ---
 
+## Permission Ceiling Enforcement (Anti-Privilege Escalation)
+
+To prevent privilege escalation attacks across administrators and delegated operators, Muljax ID strictly enforces a **caller permission ceiling**:
+
+1. **Role Creation & Editing**: An operator cannot assign any permission to a new or existing role that the operator does not currently possess. For instance, an admin holding only `users:*` cannot create a role granting `settings:write` or `ssh:*`.
+2. **Role Assignment**: An operator cannot assign a role to any user if that role contains permissions exceeding the caller's own permissions.
+3. **Invite Token Generation**: When creating single-use invitation tokens with pre-assigned roles, the inviter cannot assign roles containing permissions outside their own permission ceiling.
+
+---
+
 ## Administrator Resolution & Break-Glass Logic
 
 Certain high-privilege emergency pathways (such as bypassing the sign-in access key requirement when `signin_mode` is set to `admin_key`) determine administrator status using the `isUserAdmin` helper:
@@ -126,4 +143,5 @@ Under **Admin** -> **Roles** (`/admin/roles`):
 - **Create Custom Role**: Specify a unique slug, name, and description, and toggle individual permissions from the catalog.
 - **Assign to Users**: Assign one or more roles per user under **Admin** -> **Users** -> **Roles**. User permissions are the union of all permissions granted across assigned roles.
 - **Read-Only Constraints**: The `everyone` role is restricted; only permissions ending with `:read` can be assigned to it.
+
 

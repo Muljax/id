@@ -87,11 +87,17 @@ Returns the RFC 8414 / OpenID Connect Discovery document.
     "revocation_endpoint": "https://id-api.example.com/oauth/revoke",
     "introspection_endpoint": "https://id-api.example.com/oauth/introspect",
     "response_types_supported": ["code"],
+    "grant_types_supported": ["authorization_code", "refresh_token", "client_credentials"],
     "subject_types_supported": ["public"],
     "id_token_signing_alg_values_supported": ["ES256"],
-    "scopes_supported": ["openid", "profile", "email", "offline_access"],
-    "token_endpoint_auth_methods_supported": ["client_secret_post", "client_secret_basic", "none"],
-    "code_challenge_methods_supported": ["S256"]
+    "scopes_supported": ["openid", "profile", "email"],
+    "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post", "none"],
+    "revocation_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post", "none"],
+    "introspection_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post", "none"],
+    "code_challenge_methods_supported": ["S256"],
+    "request_parameter_supported": true,
+    "claims_parameter_supported": true,
+    "request_object_signing_alg_values_supported": ["none"]
   }
   ```
 
@@ -145,7 +151,7 @@ Exchanges an authorization code, refresh token, or client credentials for tokens
     "expires_in": 3600,
     "refresh_token": "rt_81f09c88210e4a7b",
     "id_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6Ik11bGpheC1pZC0xIn0...",
-    "scope": "openid profile email offline_access"
+    "scope": "openid profile email"
   }
   ```
 
@@ -154,21 +160,24 @@ Exchanges an authorization code, refresh token, or client credentials for tokens
 ### `GET /oauth/userinfo`
 <Badge text="GET" variant="tip" /> <Badge text="Bearer Token" variant="note" />
 
-Returns OpenID Connect claims for the authenticated subject.
+Returns OpenID Connect claims for the authenticated subject. Requires the access token to include the `openid` scope.
 
 - **Request Headers**: `Authorization: Bearer <access_token>`
-- **Response**: `200 OK` (`application/json`)
-  ```json
-  {
-    "sub": "usr_01HXYZ123456789ABCDEF",
-    "email": "alice@example.com",
-    "email_verified": true,
-    "name": "Alice Smith",
-    "given_name": "Alice",
-    "family_name": "Smith",
-    "preferred_username": "alice"
-  }
-  ```
+- **Responses**:
+  - `200 OK` (`application/json`):
+    ```json
+    {
+      "sub": "usr_01HXYZ123456789ABCDEF",
+      "email": "alice@example.com",
+      "email_verified": true,
+      "name": "Alice Smith",
+      "given_name": "Alice",
+      "family_name": "Smith",
+      "preferred_username": "alice"
+    }
+    ```
+  - `403 Forbidden` (`application/json` with `WWW-Authenticate: Bearer error="insufficient_scope"`): Returned when access token is missing the `openid` scope.
+  - `401 Unauthorized` (`application/json` with `WWW-Authenticate: Bearer error="invalid_token"`): Returned when token is missing, expired, or invalid.
 
 ---
 

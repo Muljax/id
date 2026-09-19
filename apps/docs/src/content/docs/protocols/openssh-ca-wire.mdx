@@ -122,6 +122,27 @@ If the certificate authorizes principals `["alice", "admin"]`:
   - Total inner bytes = 18 bytes.
 - The outer certificate writer writes `00 00 00 12` (18 in hex) followed by the 18 bytes.
 
+### Field 10: Critical Options Wire Buffer (`criticalOptions`)
+OpenSSH certificates enforce strict requirements on critical options:
+1. **Lexicographical Ordering**: Options must be sorted strictly by name in ascending ASCII order (e.g. `force-command` before `source-address`).
+2. **Inner String Envelope**: String values (such as allowed CIDR ranges for `source-address` or shell commands for `force-command`) must be wrapped inside an inner string wire format (`new SSHWriter().writeString(val).toUint8Array()`), written to the outer buffer with `writeBytes(innerWire)`.
+
+```ts
+// apps/api/src/lib/ssh/certificate.ts
+const criticalOptionsWriter = new SSHWriter();
+const sortedOptions = Object.entries(data.criticalOptions ?? {}).sort(([a], [b]) =>
+    a.localeCompare(b),
+);
+
+for (const [name, val] of sortedOptions) {
+    criticalOptionsWriter.writeString(name);
+    const innerWriter = new SSHWriter();
+    innerWriter.writeString(val);
+    criticalOptionsWriter.writeBytes(innerWriter.toUint8Array());
+}
+writer.writeBytes(criticalOptionsWriter.toUint8Array());
+```
+
 ### Field 11: Extensions Wire Buffer (`extensions`)
 OpenSSH extensions are structured as name/data pairs:
 - **`name`**: `string` identifying the extension.

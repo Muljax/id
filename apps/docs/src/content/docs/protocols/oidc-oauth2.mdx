@@ -43,7 +43,7 @@ flowchart LR
 | Database Table | Primary Identifier | Security Transform at Rest | Expiration / TTL |
 | :--- | :--- | :--- | :--- |
 | **`oauth_clients`** | Muljax ID (`client_id`) | Client secrets hashed with SHA-256 (`client_secret_hash`) | Permanent until deleted |
-| **`oauth_authorization_codes`** | `code_hash` (PK) | Ephemeral codes hashed with SHA-256 | **10 minutes** (single-use enforced) |
+| **`oauth_authorization_codes`** | `code_hash` (PK) | Ephemeral codes hashed with SHA-256 | **1 minute** (60 seconds, single-use enforced) |
 | **`oauth_access_tokens`** | `token_hash` (PK) | Access tokens hashed with SHA-256 | **1 hour** (3600 seconds) |
 | **`oauth_refresh_tokens`** | `token_hash` (PK) | Refresh tokens hashed with SHA-256 | **30 days** (revocable) |
 | **`oauth_grants`** | `(user_id, client_id)` | JSON-encoded approved scopes | Persisted until revoked by user |
@@ -236,11 +236,17 @@ Provides standard RFC 8414 server metadata:
   "revocation_endpoint": "https://id-api.example.com/oauth/revoke",
   "introspection_endpoint": "https://id-api.example.com/oauth/introspect",
   "response_types_supported": ["code"],
+  "grant_types_supported": ["authorization_code", "refresh_token", "client_credentials"],
   "subject_types_supported": ["public"],
   "id_token_signing_alg_values_supported": ["ES256"],
-  "scopes_supported": ["openid", "profile", "email", "offline_access"],
-  "token_endpoint_auth_methods_supported": ["client_secret_post", "client_secret_basic", "none"],
-  "code_challenge_methods_supported": ["S256"]
+  "scopes_supported": ["openid", "profile", "email"],
+  "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post", "none"],
+  "revocation_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post", "none"],
+  "introspection_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post", "none"],
+  "code_challenge_methods_supported": ["S256"],
+  "request_parameter_supported": true,
+  "claims_parameter_supported": true,
+  "request_object_signing_alg_values_supported": ["none"]
 }
 ```
 
@@ -265,15 +271,38 @@ Exposes the public key used to verify `id_token` signatures:
 
 ---
 
-## 7. Error Handling & RFC Status Codes
+## 7. Error Handling, Redirection & Security Mitigations
 
-When an OAuth 2.0 validation error occurs, the server returns structured JSON responses per RFC 6749 § 5.2:
+### 1. Authorization Endpoint Redirection vs. HTTP 400 (RFC 6749 §4.1.2.1 / OIDC Core §3.1.2.6)
+- **Non-Redirectable Errors**: If the authorization request fails due to a missing or invalid `client_id` or an unregistered `redirect_uri`, the server **MUST NOT** redirect the user-agent. It responds directly with HTTP `400 Bad Request` JSON to prevent open redirect vulnerabilities.
+- **Redirectable Errors**: Once `client_id` and `redirect_uri` are verified against the client registration, subsequent errors (e.g. `unsupported_response_type`, PKCE validation failures, `invalid_scope`, `temporarily_unavailable`) are returned via a `302 Found` redirect to the validated `redirect_uri` with `error`, `error_description`, and `state` parameters in the query component.
 
-| Error Code | HTTP Status | Trigger Condition |
+### 2. OIDC `prompt=none` Silent Authentication (OIDC Core §3.1.2.1)
+When `prompt=none` is requested:
+- If the user is unauthenticated or their session has expired, the server redirects to `redirect_uri` with `error=login_required`.
+- If the user is authenticated but has not pre-granted consent for the requested scopes, the server redirects with `error=consent_required` and description `"Consent is required for prompt=none."`, ensuring no interactive consent UI is rendered.
+
+### 3. Userinfo Endpoint Scope Gating (OIDC Core §5.3.1 / RFC 6750 §3.1)
+- The `/oauth/userinfo` endpoint requires an access token containing the `openid` scope.
+- Requests without a valid `openid` scope return `403 Forbidden` with `{ "error": "insufficient_scope" }` and the `WWW-Authenticate: Bearer error="insufficient_scope"` challenge header.
+- Malformed or invalid tokens return `401 Unauthorized` with `WWW-Authenticate: Bearer error="invalid_token"`.
+
+### 4. Code Reuse & Refresh Token Revocation
+- In accordance with RFC 6749 §4.1.2 and OAuth 2.1 recommendations, authorization codes are strictly single-use.
+- If an authorization code is presented more than once, the server immediately revokes all access and refresh tokens previously issued by that authorization code.
+
+### Summary of OAuth Error Codes
+
+| Error Code | HTTP Status / Transport | Trigger Condition |
 | :--- | :--- | :--- |
-| `invalid_request` | `400 Bad Request` | Missing required parameters (`client_id`, `redirect_uri`, or `code_verifier`). |
+| `invalid_request` | `400 Bad Request` or `302 Redirect` | Missing required parameters (`client_id`, `redirect_uri`, or `code_verifier`). |
 | `invalid_client` | `401 Unauthorized` | Client authentication failed (invalid `client_secret` or unrecognized `client_id`). |
 | `invalid_grant` | `400 Bad Request` | Authorization code expired, already used, or PKCE verifier mismatch. |
-| `unauthorized_client` | `400 Bad Request` | Client not authorized to use the requested grant type. |
+| `unauthorized_client` | `400 Bad Request` or `302 Redirect` | Client not authorized to use the requested grant type. |
+| `unsupported_response_type` | `302 Redirect` | Requested `response_type` other than `code`. |
 | `unsupported_grant_type` | `400 Bad Request` | Grant type other than `authorization_code`, `refresh_token`, or `client_credentials`. |
-| `invalid_scope` | `400 Bad Request` | Requested scopes exceed client configuration or user approval. |
+| `invalid_scope` | `400 Bad Request` or `302 Redirect` | Requested scopes exceed client configuration or user approval. |
+| `login_required` | `302 Redirect` | `prompt=none` requested without an active user session. |
+| `consent_required` | `302 Redirect` | `prompt=none` requested without prior granted consent. |
+| `insufficient_scope` | `403 Forbidden` | Access token missing the required `openid` scope on `/oauth/userinfo`. |
+
