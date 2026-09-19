@@ -211,3 +211,133 @@ describe("OpenID Discovery Metadata (RFC 8414, RFC 7009, RFC 7662)", () => {
 		]);
 	});
 });
+
+describe("Userinfo Endpoint Scope Enforcement (OIDC Core §5.3.1 / RFC 6750)", () => {
+	test("returns 401 with WWW-Authenticate header when token is missing or malformed", async () => {
+		const userinfoRoute = (await import("../src/routes/oauth/userinfo/get"))
+			.default;
+		const { Hono } = await import("hono");
+
+		const app = new Hono<{ Bindings: Env }>();
+		app.route("/oauth/userinfo", userinfoRoute);
+
+		// Missing Authorization header
+		const res1 = await app.request("/oauth/userinfo", {}, {} as Env);
+		expect(res1.status).toBe(401);
+		expect(res1.headers.get("WWW-Authenticate")).toBe("Bearer");
+
+		// Malformed Authorization header
+		const res2 = await app.request(
+			"/oauth/userinfo",
+			{
+				headers: {
+					Authorization: "Basic abc123xyz",
+				},
+			},
+			{} as Env,
+		);
+		expect(res2.status).toBe(401);
+		expect(res2.headers.get("WWW-Authenticate")).toBe(
+			'Bearer error="invalid_token"',
+		);
+	});
+
+	test("returns 403 with insufficient_scope when token does not contain openid scope", async () => {
+		const userinfoRoute = (await import("../src/routes/oauth/userinfo/get"))
+			.default;
+		const { Hono } = await import("hono");
+
+		const mockTokenRow = {
+			id: "token-1",
+			client_id: "client-1",
+			user_id: "user-1",
+			token_hash: "hashed",
+			scope: "profile email",
+			expires_at: Date.now() + 3600000,
+			created_at: Date.now(),
+			revoked_at: null,
+			authorization_code_id: null,
+		};
+
+		const mockUserRow = {
+			id: "user-1",
+			email: "user@example.com",
+			display_name: "Test User",
+			given_name: null,
+			family_name: null,
+			middle_name: null,
+			nickname: null,
+			preferred_username: null,
+			profile_url: null,
+			profile_image_key: null,
+			website: null,
+			gender: null,
+			birthdate: null,
+			zoneinfo: null,
+			locale: null,
+			email_verified_at: null,
+			disabled_at: null,
+			updated_at: Date.now(),
+		};
+
+		const mockD1 = {
+			prepare: (query: string) => {
+				const stmt = {
+					bind: () => stmt,
+					all: async () => {
+						if (query.includes("oauth_access_tokens")) {
+							return { results: [mockTokenRow], success: true };
+						}
+						if (query.includes("users")) {
+							return { results: [mockUserRow], success: true };
+						}
+						return { results: [], success: true };
+					},
+					first: async () => {
+						if (query.includes("oauth_access_tokens")) {
+							return mockTokenRow;
+						}
+						if (query.includes("users")) {
+							return mockUserRow;
+						}
+						return null;
+					},
+					raw: async () => {
+						if (query.includes("oauth_access_tokens")) {
+							return [Object.values(mockTokenRow)];
+						}
+						if (query.includes("users")) {
+							return [Object.values(mockUserRow)];
+						}
+						return [];
+					},
+					run: async () => ({ success: true, meta: {} }),
+				};
+				return stmt;
+			},
+			batch: async () => [],
+			exec: async () => ({ count: 0, duration: 0 }),
+			dump: async () => new ArrayBuffer(0),
+		} as unknown as D1Database;
+
+		const app = new Hono<{ Bindings: Env }>();
+		app.route("/oauth/userinfo", userinfoRoute);
+
+		const res = await app.request(
+			"/oauth/userinfo",
+			{
+				headers: {
+					Authorization: "Bearer test-access-token",
+				},
+			},
+			{
+				DB: mockD1,
+			} as Env,
+		);
+
+		expect(res.status).toBe(403);
+		expect(res.headers.get("WWW-Authenticate")).toContain("insufficient_scope");
+		const json = (await res.json()) as Record<string, unknown>;
+		expect(json.error).toBe("insufficient_scope");
+	});
+});

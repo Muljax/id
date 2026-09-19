@@ -118,6 +118,7 @@ export async function userinfo(c: Context<{ Bindings: Env }>) {
 		const match = authorization.match(/^Bearer\s+(.+)$/i);
 
 		if (!match) {
+			c.header("WWW-Authenticate", 'Bearer error="invalid_token"');
 			return c.json(
 				{
 					error: "invalid_token",
@@ -142,6 +143,7 @@ export async function userinfo(c: Context<{ Bindings: Env }>) {
 	}
 
 	if (!token) {
+		c.header("WWW-Authenticate", "Bearer");
 		return c.json(
 			{
 				error: "invalid_token",
@@ -154,6 +156,7 @@ export async function userinfo(c: Context<{ Bindings: Env }>) {
 	const accessToken = await getAccessToken(db, token);
 
 	if (!accessToken) {
+		c.header("WWW-Authenticate", 'Bearer error="invalid_token"');
 		return c.json(
 			{
 				error: "invalid_token",
@@ -163,6 +166,7 @@ export async function userinfo(c: Context<{ Bindings: Env }>) {
 	}
 
 	if (!accessToken.userId) {
+		c.header("WWW-Authenticate", 'Bearer error="invalid_token"');
 		return c.json(
 			{
 				error: "invalid_token",
@@ -199,6 +203,7 @@ export async function userinfo(c: Context<{ Bindings: Env }>) {
 	const user = result[0];
 
 	if (!user || isUserDisabled(user)) {
+		c.header("WWW-Authenticate", 'Bearer error="invalid_token"');
 		return c.json(
 			{
 				error: "invalid_token",
@@ -208,6 +213,21 @@ export async function userinfo(c: Context<{ Bindings: Env }>) {
 	}
 
 	const scopes = new Set(accessToken.scope.split(" ").filter(Boolean));
+
+	if (!scopes.has("openid")) {
+		c.header(
+			"WWW-Authenticate",
+			'Bearer error="insufficient_scope", error_description="The access token must contain the \'openid\' scope to access userinfo."',
+		);
+		return c.json(
+			{
+				error: "insufficient_scope",
+				error_description:
+					"The access token must contain the 'openid' scope to access userinfo.",
+			},
+			403,
+		);
+	}
 
 	const requestedUserInfoClaims = new Set<string>();
 
