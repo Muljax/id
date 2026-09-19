@@ -19,12 +19,33 @@ export function invalidClient(c: Context) {
 	);
 }
 
-export function invalidGrant(c: Context) {
+export function invalidGrant(c: Context, description?: string) {
 	return c.json(
 		{
 			error: "invalid_grant",
+			...(description ? { error_description: description } : {}),
 		},
 		400,
+	);
+}
+
+export function accessDenied(c: Context, description?: string) {
+	return c.json(
+		{
+			error: "access_denied",
+			...(description ? { error_description: description } : {}),
+		},
+		403,
+	);
+}
+
+export function temporarilyUnavailable(c: Context, description?: string) {
+	return c.json(
+		{
+			error: "temporarily_unavailable",
+			...(description ? { error_description: description } : {}),
+		},
+		503,
 	);
 }
 

@@ -78,6 +78,22 @@ When `signinMode === "admin_key"`, the system applies a **lockout-prevention byp
 Use `admin_key` mode when conducting scheduled maintenance, performing tenant migrations, or staging private deployments. Administrators maintain administrative access while non-operators are locked out unless granted a temporary key.
 :::
 
+### OAuth 2.0 & OIDC Hard Lockdown Behavior
+
+The tenant sign-in policy strictly enforces security policies across OAuth 2.0 / OpenID Connect authorization flows:
+
+- **When Sign-in Mode is `disabled`**:
+  - `GET /oauth/authorize`: Immediately redirects the relying party with RFC 6749 error `error=temporarily_unavailable` (`"Authentication and OAuth authorizations are currently disabled on this instance."`).
+  - `POST /oauth/approve`: Rejects consent grant attempts with `503 Service Unavailable`.
+  - `POST /oauth/token (grant_type=refresh_token)`: Rejects refresh token exchanges for non-administrators with `invalid_grant`.
+  - `POST /oauth/token (grant_type=authorization_code)`: Rejects token issuance for non-administrators with `invalid_grant`.
+- **When Sign-in Mode is `admin_key`**:
+  - `GET /oauth/authorize`: Users with active sessions who are not administrators are forced to re-authenticate with an Admin Sign-in Key. If `prompt=none`, returns `error=login_required`.
+  - `POST /oauth/approve`: Blocked for non-admins with `403 Forbidden` (`error=access_denied`).
+  - `POST /oauth/token (grant_type=refresh_token)`: Non-admins cannot refresh OAuth tokens during restricted maintenance mode.
+- **Machine-to-Machine Clients (`grant_type=client_credentials`)**:
+  - Machine-to-machine integrations without user context remain active to prevent backend service disruptions.
+
 ---
 
 ## 3. Admin Sign-in Access Keys

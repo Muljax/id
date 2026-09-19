@@ -9,6 +9,8 @@ import {
 	createRefreshToken,
 } from "../../lib/oauth/tokens";
 import { hashToken } from "../../lib/token";
+import { isUserAdmin } from "../rbac/permissions";
+import { getOrCreateInstanceSettings } from "../settings";
 import { isUserDisabled } from "../user";
 import { authenticateClient } from "./client-auth";
 import { invalidGrant, invalidRequest } from "./responses";
@@ -100,6 +102,19 @@ export async function exchangeRefreshToken(
 
 	if (!user || isUserDisabled(user)) {
 		return invalidGrant(c);
+	}
+
+	const settings = await getOrCreateInstanceSettings(db);
+	if (settings.signinMode !== "enabled") {
+		const isAdmin = await isUserAdmin(db, user.id);
+		if (!isAdmin) {
+			return invalidGrant(
+				c,
+				settings.signinMode === "disabled"
+					? "Authentication and token refreshes are disabled on this instance."
+					: "OAuth token refresh requires administrator authorization during maintenance mode.",
+			);
+		}
 	}
 
 	const newRefreshToken = await createRefreshToken(

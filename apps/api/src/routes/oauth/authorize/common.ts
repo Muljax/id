@@ -8,7 +8,9 @@ import {
 } from "@/lib/oauth/authorization";
 import { base64UrlDecode } from "@/lib/base64";
 import { getDashboardOrigin } from "@/lib/env";
+import { isUserAdmin } from "@/lib/rbac/permissions";
 import { getSessionUserWithSession } from "@/lib/session";
+import { getOrCreateInstanceSettings } from "@/lib/settings";
 import { isUserDisabled } from "@/lib/user";
 
 interface RequestObjectClaims {
@@ -207,6 +209,16 @@ export async function handleAuthorizationRequest(
 		}
 
 		const db = createDb(c.env.DB);
+		const settings = await getOrCreateInstanceSettings(db);
+
+		if (settings.signinMode === "disabled") {
+			return redirectWithError(
+				request.redirect_uri,
+				"temporarily_unavailable",
+				request.state,
+				"Authentication and OAuth authorizations are currently disabled on this instance.",
+			);
+		}
 
 		const validation = await validateAuthorizationRequest(db, request);
 
@@ -235,8 +247,15 @@ export async function handleAuthorizationRequest(
 			maxAge !== undefined &&
 			(authenticationAge === null || authenticationAge >= Number(maxAge));
 
-		const requiresLogin =
+		let requiresLogin =
 			!sessionRecord || isUserDisabled(sessionRecord.user) || maxAgeExpired;
+
+		if (!requiresLogin && sessionRecord && settings.signinMode === "admin_key") {
+			const isAdmin = await isUserAdmin(db, sessionRecord.user.id);
+			if (!isAdmin) {
+				requiresLogin = true;
+			}
+		}
 
 		if (requiresLogin && prompt === "none") {
 			return redirectWithError(

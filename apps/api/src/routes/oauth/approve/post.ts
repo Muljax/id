@@ -6,7 +6,9 @@ import {
 	createAuthorizationCode,
 	validateAuthorizationRequest,
 } from "@/lib/oauth/authorization";
+import { isUserAdmin } from "@/lib/rbac/permissions";
 import { getSessionUserWithSession } from "@/lib/session";
+import { getOrCreateInstanceSettings } from "@/lib/settings";
 import { isUserDisabled } from "@/lib/user";
 
 const route = new Hono<{ Bindings: Env }>();
@@ -26,6 +28,18 @@ route.post("/", async (c) => {
 	}>();
 
 	const db = createDb(c.env.DB);
+	const settings = await getOrCreateInstanceSettings(db);
+
+	if (settings.signinMode === "disabled") {
+		return c.json(
+			{
+				error: "temporarily_unavailable",
+				error_description:
+					"Authentication and OAuth authorizations are currently disabled on this instance.",
+			},
+			503,
+		);
+	}
 
 	const validation = await validateAuthorizationRequest(db, body);
 
@@ -58,6 +72,20 @@ route.post("/", async (c) => {
 	}
 
 	const { user, session } = sessionRecord;
+
+	if (settings.signinMode === "admin_key") {
+		const isAdmin = await isUserAdmin(db, user.id);
+		if (!isAdmin) {
+			return c.json(
+				{
+					error: "access_denied",
+					error_description:
+						"Maintenance mode active: Approving OAuth authorizations requires administrator privileges.",
+				},
+				403,
+			);
+		}
+	}
 
 	const code = await createAuthorizationCode(
 		db,

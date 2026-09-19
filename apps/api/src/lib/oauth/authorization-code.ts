@@ -12,6 +12,8 @@ import {
 	createRefreshToken,
 } from "../../lib/oauth/tokens";
 import { hashToken } from "../../lib/token";
+import { isUserAdmin } from "../rbac/permissions";
+import { getOrCreateInstanceSettings } from "../settings";
 import { authenticateClient } from "./client-auth";
 import { invalidGrant, invalidRequest } from "./responses";
 
@@ -55,6 +57,17 @@ export async function exchangeAuthorizationCode(
 
 	if (!authorizationCode) {
 		return invalidGrant(c);
+	}
+
+	const settings = await getOrCreateInstanceSettings(db);
+	if (settings.signinMode === "disabled") {
+		const isAdmin = await isUserAdmin(db, authorizationCode.userId);
+		if (!isAdmin) {
+			return invalidGrant(
+				c,
+				"Authentication and token exchanges are disabled on this instance.",
+			);
+		}
 	}
 
 	const now = Date.now();

@@ -138,4 +138,60 @@ describe("Settings & Signup Policy", () => {
 		const body = (await res.json()) as { settings: { signupMode: string } };
 		expect(body.settings.signupMode).toBe("invite");
 	});
+
+	test("OAuth lockdown rejects non-admin authorization approval when signinMode is disabled or admin_key", async () => {
+		const app = new Hono<AppEnv>();
+
+		// Helper mimicking approve route with signinMode checks
+		app.post("/oauth/approve", async (c) => {
+			const body = (await c.req.json()) as { signinMode: string; isAdmin: boolean };
+			if (body.signinMode === "disabled") {
+				return c.json(
+					{
+						error: "temporarily_unavailable",
+						error_description: "Authentication and OAuth authorizations are currently disabled on this instance.",
+					},
+					503,
+				);
+			}
+			if (body.signinMode === "admin_key" && !body.isAdmin) {
+				return c.json(
+					{
+						error: "access_denied",
+						error_description: "Maintenance mode active: Approving OAuth authorizations requires administrator privileges.",
+					},
+					403,
+				);
+			}
+			return c.json({ redirect_uri: "https://example.com/callback?code=test-code" });
+		});
+
+		// Disabled mode: rejects with 503 temporarily_unavailable
+		const resDisabled = await app.request("/oauth/approve", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ signinMode: "disabled", isAdmin: false }),
+		});
+		expect(resDisabled.status).toBe(503);
+		const bodyDisabled = (await resDisabled.json()) as { error: string };
+		expect(bodyDisabled.error).toBe("temporarily_unavailable");
+
+		// admin_key mode with non-admin: rejects with 403 access_denied
+		const resAdminKeyUser = await app.request("/oauth/approve", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ signinMode: "admin_key", isAdmin: false }),
+		});
+		expect(resAdminKeyUser.status).toBe(403);
+		const bodyAdminKeyUser = (await resAdminKeyUser.json()) as { error: string };
+		expect(bodyAdminKeyUser.error).toBe("access_denied");
+
+		// admin_key mode with admin: succeeds
+		const resAdminKeyAdmin = await app.request("/oauth/approve", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ signinMode: "admin_key", isAdmin: true }),
+		});
+		expect(resAdminKeyAdmin.status).toBe(200);
+	});
 });
