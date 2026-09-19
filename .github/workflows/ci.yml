@@ -8,65 +8,15 @@ on:
 
 jobs:
   format:
-    name: Format
+    name: Format & Lint
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
         with:
+          submodules: recursive
           fetch-depth: 0
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Format
-        run: bunx biome format . --write
-
-      - name: Commit formatting changes
-        if: >
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
-        run: |
-          if git diff --quiet; then
-            echo "No formatting changes."
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add .
-          git commit --no-verify -m "style: format code"
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
-
-      - name: Check formatting
-        if: >
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name != github.repository
-        run: |
-          if ! git diff --quiet; then
-            echo "::error::Formatting changes are required."
-            echo "Run 'bun run format' locally and push the changes."
-            git diff --check
-            exit 1
-          fi
-
-  typecheck:
-    name: Typecheck
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -76,11 +26,33 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Typecheck API
-        run: bun run typecheck:api
+      - name: Check formatting and lint
+        run: bun run check
 
-      - name: Build Dashboard to generate routeTree.gen.ts
-        run: bun run build:dashboard
+  validate:
+    name: Build & Test
+    runs-on: ubuntu-latest
 
-      - name: Typecheck Dashboard
-        run: bun run typecheck:dashboard
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck all apps
+        run: bun run typecheck
+
+      - name: Test API
+        run: bun run test
+
+      - name: Build all apps
+        run: bun run build && bun run build:docs
+

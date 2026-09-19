@@ -1,1 +1,0 @@
-ALTER TABLE `oauth_access_tokens` ADD `authorization_code_id` text REFERENCES oauth_authorization_codes(id) ON DELETE CASCADE;

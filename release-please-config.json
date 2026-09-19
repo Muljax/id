@@ -1,34 +1,4 @@
 {
  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
- "packages": {
-  "apps/api": {
-   "release-type": "node",
-   "package-name": "api",
-   "component": "api",
-   "changelog-path": "CHANGELOG.md"
-  },
-  "apps/dashboard": {
-   "release-type": "node",
-   "package-name": "@id/dashboard",
-   "component": "dashboard",
-   "changelog-path": "CHANGELOG.md"
-  },
-  "apps/docs": {
-   "release-type": "node",
-   "package-name": "apps-docs",
-   "component": "docs",
-   "changelog-path": "CHANGELOG.md"
-  },
-  ".": {
-   "release-type": "node",
-   "package-name": "muljax-id",
-   "component": "root",
-   "changelog-path": "CHANGELOG.md"
-  }
- },
- "plugins": [
-  {
-   "type": "node-workspace"
-  }
- ]
+ "release-type": "node"
 }

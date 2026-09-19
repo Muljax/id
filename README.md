@@ -32,12 +32,12 @@ Full documentation, protocol specifications, administration manuals, and archite
 
 ## Overview
 
-The project is a monorepo consisting of three primary applications:
-- **[API](./apps/api)**: High-performance Hono API Worker with D1 SQLite storage, WebAuthn/Passkeys, OIDC/OAuth 2.0 provider, and OpenSSH CA engine.
-- **[Dashboard](./apps/dashboard)**: Modern Single-Page Application (SPA) built with React, Vite, and TanStack Router/Query/Form for identity and instance management.
-- **[Docs](./apps/docs)**: Comprehensive documentation portal powered by Astro and Starlight.
+The Muljax ID platform is structured as an orchestrator repository (`muljax/id`) managing centralized Terraform infrastructure and deployment orchestration, composed of three autonomous component repositories linked via Git submodules:
+- **[API (muljax/api)](https://github.com/Muljax/api)**: High-performance Hono API Worker with D1 SQLite storage, WebAuthn/Passkeys, OIDC/OAuth 2.0 provider, and OpenSSH CA engine (mounted at `apps/api`).
+- **[Dashboard (muljax/dashboard)](https://github.com/Muljax/dashboard)**: Modern Single-Page Application (SPA) built with React, Vite, and TanStack Router/Query/Form for identity and instance management (mounted at `apps/dashboard`).
+- **[Docs (muljax/docs)](https://github.com/Muljax/docs)**: Comprehensive documentation portal powered by Astro and Starlight (mounted at `apps/docs`).
 
-Infrastructure is fully automated with [Terraform](https://developer.hashicorp.com/terraform), while development and compilation are powered by [Bun](https://bun.sh/).
+Infrastructure is fully automated with [Terraform](https://developer.hashicorp.com/terraform), while development, compilation, and orchestration are powered by [Bun](https://bun.sh/).
 
 ## API
 
@@ -106,9 +106,22 @@ apps/dashboard/
 - [Cloudflare](https://www.cloudflare.com/)
 - [Terraform](https://developer.hashicorp.com/terraform)
 
-### Install
+### Clone & Install
+ 
+Clone the orchestrator repository with all submodules:
 
-Install the project dependencies with:
+```sh
+git clone --recursive git@github.com:Muljax/id.git
+cd id
+```
+
+If already cloned, initialize and pull the submodules:
+
+```sh
+git submodule update --init --recursive
+```
+
+Install the root orchestrator dependencies:
 
 ```sh
 bun install

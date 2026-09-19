@@ -1,5 +1,6 @@
 {
- "$schema": "https://biomejs.dev/schemas/2.5.13/schema.json",
+ "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
+ "root": true,
  "vcs": {
   "enabled": false,
   "clientKind": "git",
@@ -9,17 +10,10 @@
   "ignoreUnknown": false,
   "includes": [
    "**",
+   "!apps",
    "!**/worker-configuration.d.ts",
    "!./bun.lock",
-   "!./biome.json",
-   "!apps/api/dist",
-   "!apps/api/drizzle",
-   "!apps/dashboard/dist",
-   "!apps/dashboard/src/routeTree.gen.ts",
-   "!apps/docs/dist",
-   "!apps/docs/.astro",
-   "!**/.wrangler",
-   "!**/.alchemy"
+   "!./biome.json"
   ]
  },
  "formatter": {

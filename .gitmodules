@@ -1,0 +1,9 @@
+[submodule "apps/api"]
+	path = apps/api
+	url = git@github.com:Muljax/api.git
+[submodule "apps/dashboard"]
+	path = apps/dashboard
+	url = git@github.com:Muljax/dashboard.git
+[submodule "apps/docs"]
+	path = apps/docs
+	url = git@github.com:Muljax/docs.git

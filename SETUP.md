@@ -96,10 +96,23 @@ The platform supports both bundled static assets and external logo URLs:
 * **Fallback Glyph:**
   If no custom logo is specified or an image fails to load, a modern accessible identity badge is rendered as a fallback.
 
-## Install dependencies
-
+## Clone and install dependencies
+ 
+Clone the repository recursively to fetch all component submodules:
+ 
+```sh
+git clone --recursive git@github.com:Muljax/id.git
+cd id
+```
+ 
+If the repository is already cloned, initialize all submodules:
+ 
+```sh
+git submodule update --init --recursive
+```
+ 
 Install the project dependencies using Bun:
-
+ 
 ```sh
 bun install
 ```
