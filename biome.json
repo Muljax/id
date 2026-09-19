@@ -39,6 +39,12 @@
    "formatter": {
     "trailingCommas": "none"
    }
+  },
+  {
+   "includes": ["**/package.json", "package.json"],
+   "formatter": {
+    "enabled": false
+   }
   }
  ],
  "linter": {
