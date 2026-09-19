@@ -126,17 +126,22 @@ export async function consumeInviteToken(
 	const tokenHash = await hashToken(token.trim());
 	const now = Date.now();
 
-	await db
+	const updated = await db
 		.update(inviteTokens)
 		.set({
 			usedAt: now,
 			usedByUserId: userId,
 		})
 		.where(
-			and(eq(inviteTokens.tokenHash, tokenHash), isNull(inviteTokens.usedAt)),
-		);
+			and(
+				eq(inviteTokens.tokenHash, tokenHash),
+				isNull(inviteTokens.usedAt),
+				gt(inviteTokens.expiresAt, now),
+			),
+		)
+		.returning({ id: inviteTokens.id });
 
-	return true;
+	return updated.length > 0;
 }
 
 export interface AdminInviteItem extends InviteToken {

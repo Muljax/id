@@ -144,7 +144,16 @@ route.post("/", async (c) => {
 		.onConflictDoNothing();
 
 	if (validInvite && inviteToken) {
-		await consumeInviteToken(db, inviteToken, userId);
+		const consumed = await consumeInviteToken(db, inviteToken, userId);
+		if (!consumed) {
+			await db.delete(users).where(eq(users.id, userId));
+			return c.json(
+				{
+					error: "Invitation token has already been used or has expired.",
+				},
+				400,
+			);
+		}
 	}
 
 	await emitNotification(db, {
