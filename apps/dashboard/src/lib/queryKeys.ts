@@ -15,6 +15,9 @@ export const queryKeys = {
 			["admin", "users", userId, "roles"] as const,
 		userPermissions: (userId?: string) =>
 			["admin", "users", userId, "permissions"] as const,
+		settings: ["admin", "settings"] as const,
+		invites: ["admin", "invites"] as const,
+		signinKeys: ["admin", "signinKeys"] as const,
 	},
 	account: {
 		passkeys: ["account", "passkeys"] as const,

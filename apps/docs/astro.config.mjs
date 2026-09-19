@@ -76,6 +76,10 @@ export default defineConfig({
 					label: "Administrator Guides",
 					items: [
 						{
+							label: "Instance Settings & Policies",
+							link: "/admin-guides/instance-settings/",
+						},
+						{
 							label: "SSH Certificate Authority",
 							link: "/admin-guides/ssh-ca/",
 						},

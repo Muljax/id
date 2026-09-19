@@ -198,8 +198,9 @@ Protected by `dashboardCors()`. Uses HttpOnly session cookies.
 
 | Endpoint | Method | Description | Request Body | Response |
 | :--- | :--- | :--- | :--- | :--- |
-| `/api/auth/register` | `POST` | Create a new user account | `{ email, password, displayName? }` | `201 Created` + Session Cookie |
-| `/api/auth/login` | `POST` | Authenticate with password | `{ email, password, rememberMe? }` | `200 OK` + Session Cookie |
+| `/api/auth/settings` | `GET` | Get public instance access policies | None (Public) | `200 OK` `{ signupMode, signinMode }` |
+| `/api/auth/register` | `POST` | Create a new user account | `{ email, password, inviteToken? }` | `201 Created` + Session Cookie |
+| `/api/auth/login` | `POST` | Authenticate with password | `{ email, password, adminKey?, rememberMe? }` | `200 OK` + Session Cookie |
 | `/api/auth/logout` | `POST` | Invalidate current session | None | `200 OK` + Clears Cookie |
 | `/api/auth/me` | `GET` | Resolve active session user | None | `{ user, session, roles, permissions }` |
 | `/api/auth/sessions` | `GET` | List active sessions | None | `{ sessions: Session[] }` |
@@ -216,7 +217,7 @@ Protected by `dashboardCors()`. Uses HttpOnly session cookies.
 | `/api/passkeys/register/options` | `POST` | Session | Generate WebAuthn creation options | Returns `PublicKeyCredentialCreationOptionsJSON` |
 | `/api/passkeys/register/verify` | `POST` | Session | Verify attestation & save passkey | Body: `{ response, name? }` |
 | `/api/passkeys/login/options` | `POST` | Public | Generate userless assertion challenge | Returns `{ challengeId, ...options }` |
-| `/api/passkeys/login/verify` | `POST` | Public | Verify assertion & issue session cookie | Body: `{ response, challengeId }` |
+| `/api/passkeys/login/verify` | `POST` | Public | Verify assertion & issue session cookie | Body: `{ response, challengeId, adminKey? }` |
 | `/api/passkeys` | `GET` | Session | List registered authenticators | Returns `{ passkeys: Passkey[] }` |
 | `/api/passkeys/:id` | `PATCH` | Session | Rename authenticator | Body: `{ name: string }` |
 | `/api/passkeys/:id` | `DELETE` | Session | Delete authenticator credential | Returns `{ success: true }` |
@@ -258,12 +259,37 @@ Requires `admin` role or specific permission flags.
 
 ### User Management
 - `GET /api/admin/users`: List users (`users:read`).
-- `POST /api/admin/users`: Create user account (`users:write`).
+- `POST /api/admin/users`: Create user account directly (`users:write`).
+  - Request Body: `{ email: string, password?: string, roleId?: string }`.
+  - Response: `201 Created` `{ user, temporaryPassword? }`.
 - `GET /api/admin/users/:userId`: Get user account details (`users:read`).
 - `PATCH /api/admin/users/:userId`: Update user account attributes (`users:write`).
 - `DELETE /api/admin/users/:userId`: Delete user account (`users:delete`).
 - `POST /api/admin/users/:userId/lifecycle`: Enable, disable, or schedule action (`users:lifecycle`).
-  - Request: `{ action: "enable" | "disable", executeAt?: number }`.
+  - Request Body: `{ action: "enable" | "disable", executeAt?: number }`.
+
+### Invites & Onboarding
+- `GET /api/admin/invites`: List all generated invite tokens (`users:read`).
+  - Response: `200 OK` `{ invites: InviteToken[] }`.
+- `POST /api/admin/invites`: Generate a single-use onboarding invite link (`users:write`).
+  - Request Body: `{ email?: string, roleId?: string, ttlHours?: number }`.
+  - Response: `201 Created` `{ invite: { id, token, expiresAt, roleId, ... } }`.
+- `DELETE /api/admin/invites/:id`: Revoke an unused invitation (`users:write`).
+  - Response: `200 OK` `{ success: true }`.
+
+### Instance Settings & Sign-in Access Keys
+- `GET /api/admin/settings`: Retrieve instance access configuration policies (`settings:read`).
+  - Response: `200 OK` `{ settings: { signupMode, signinMode, updatedAt } }`.
+- `PATCH /api/admin/settings`: Update instance signup/signin modes (`settings:write`).
+  - Request Body: `{ signupMode?: "enabled" | "invite" | "disabled", signinMode?: "enabled" | "admin_key" | "disabled" }`.
+  - Response: `200 OK` `{ settings: InstanceSettings }`.
+- `GET /api/admin/signin-keys`: List active and expired break-glass access keys (`settings:read`).
+  - Response: `200 OK` `{ keys: SigninKey[] }`.
+- `POST /api/admin/signin-keys`: Generate a break-glass sign-in access key (`settings:write`).
+  - Request Body: `{ name: string, ttlHours?: number }`.
+  - Response: `201 Created` `{ key: { id, name, keyPrefix, rawKey, expiresAt, ... } }`.
+- `DELETE /api/admin/signin-keys/:id`: Revoke a sign-in access key (`settings:write`).
+  - Response: `200 OK` `{ success: true }`.
 
 ### Roles & Permissions
 - `GET /api/admin/roles`: List all roles (`roles:read`).
@@ -282,7 +308,7 @@ Requires `admin` role or specific permission flags.
 
 ### Superadmin Bootstrap
 - `POST /api/admin/bootstrap`: One-time administrative elevation with `ADMIN_BOOTSTRAP_SECRET`.
-  - Body: `{ secret: string }`.
+  - Request Body: `{ secret: string }`.
 
 ---
 

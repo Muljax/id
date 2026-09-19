@@ -38,6 +38,7 @@ export function login(
 	password: string,
 	rememberMe: boolean,
 	prompt?: string,
+	adminKey?: string,
 ) {
 	return api<AuthResponse>("/api/auth/login", {
 		method: "POST",
@@ -46,15 +47,27 @@ export function login(
 			password,
 			rememberMe,
 			prompt,
+			adminKey,
 		}),
 	});
 }
 
-export function register(email: string, password: string) {
+export function register(
+	email: string,
+	password: string,
+	inviteToken?: string,
+) {
 	return api<AuthResponse>("/api/auth/register", {
 		method: "POST",
-		body: JSON.stringify({ email, password }),
+		body: JSON.stringify({ email, password, inviteToken }),
 	});
+}
+
+export function getPublicAuthSettings() {
+	return api<{
+		signupMode: "enabled" | "invite" | "disabled";
+		signinMode: "enabled" | "admin_key" | "disabled";
+	}>("/api/auth/settings");
 }
 
 export function logout() {

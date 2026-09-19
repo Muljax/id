@@ -30,6 +30,9 @@ erDiagram
     users ||--o{ lifecycle_actions : "targets"
     users ||--o{ notifications : "receives"
     users ||--o{ password_reset_tokens : "requests"
+    users ||--o{ invite_tokens : "creates / consumes"
+    roles ||--o{ invite_tokens : "assigns on signup"
+    users ||--o{ signin_keys : "provisions"
 ```
 
 ---
@@ -352,3 +355,41 @@ Tenant policy and registration gates.
 | `signin_mode` | `text` | `NOT NULL, DEFAULT 'enabled'` | Authentication policy: `'enabled'`, `'admin_key'`, or `'disabled'`. |
 | `created_at` | `integer` | `NOT NULL` | Initialization timestamp (epoch ms). |
 | `updated_at` | `integer` | `NOT NULL` | Configuration update timestamp (epoch ms). |
+
+### `invite_tokens` (`apps/api/src/db/schema/invites.ts`)
+Single-use onboarding tokens used for account creation when signup mode is `invite` or for targeted role onboarding.
+
+| Column | SQL Type | Modifiers | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | `text` | `PRIMARY KEY` | Invite token record UUID. |
+| `email` | `text` | `NULL` | Optional email restriction. If specified, only this address can consume the token. |
+| `token_hash` | `text` | `NOT NULL, UNIQUE` | SHA-256 digest of the raw invite token. |
+| `role_id` | `text` | `NOT NULL, DEFAULT 'user', FK -> roles(id) ON DELETE CASCADE` | Role automatically granted upon registration. |
+| `created_by_user_id` | `text` | `NULL, FK -> users(id) ON DELETE SET NULL` | Admin who generated the invite. |
+| `used_by_user_id` | `text` | `NULL, FK -> users(id) ON DELETE SET NULL` | User who redeemed the token. |
+| `expires_at` | `integer` | `NOT NULL` | Expiration timestamp (epoch ms). |
+| `used_at` | `integer` | `NULL` | Consumption timestamp (epoch ms). |
+| `created_at` | `integer` | `NOT NULL` | Creation timestamp (epoch ms). |
+
+**Indices**:
+- `invite_tokens_token_hash_idx` on `(token_hash)`
+- `invite_tokens_email_idx` on `(email)`
+
+### `signin_keys` (`apps/api/src/db/schema/signinKeys.ts`)
+Break-glass administrative access keys for instance emergency authentication during `admin_key` signin mode.
+
+| Column | SQL Type | Modifiers | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | `text` | `PRIMARY KEY` | Access key record UUID. |
+| `name` | `text` | `NOT NULL` | Human-readable key label (e.g. `"Emergency Access Key"`). |
+| `key_hash` | `text` | `NOT NULL, UNIQUE` | SHA-256 digest of the raw key string. |
+| `key_prefix` | `text` | `NOT NULL` | Identification prefix shown in UI (e.g. `id_key_ab12`). |
+| `created_by_user_id` | `text` | `NULL, FK -> users(id) ON DELETE SET NULL` | Admin who provisioned the key. |
+| `expires_at` | `integer` | `NULL` | Expiration timestamp (epoch ms), or `NULL` if no expiration. |
+| `last_used_at` | `integer` | `NULL` | Timestamp of most recent authentication assertion (epoch ms). |
+| `created_at` | `integer` | `NOT NULL` | Creation timestamp (epoch ms). |
+
+**Indices**:
+- `signin_keys_key_hash_idx` on `(key_hash)`
+- `signin_keys_key_prefix_idx` on `(key_prefix)`
+

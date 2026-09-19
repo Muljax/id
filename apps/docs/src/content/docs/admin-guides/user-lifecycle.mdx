@@ -20,6 +20,36 @@ An account exists in one of two core lifecycle states:
 
 ---
 
+## User Onboarding & Provisioning
+
+Muljax ID supports two administrative onboarding flows accessible directly from **Admin** -> **Users** via the **New User / Invite** modal:
+
+```mermaid
+flowchart TD
+    A[Admin Opens New User Modal] --> B{Choose Onboarding Method}
+    B -->|Tab 1: Direct Provisioning| C[Admin supplies Email, Optional Password & Role]
+    C --> D[POST /api/admin/users]
+    D --> E[User Created Immediately in D1 with Selected Role]
+    B -->|Tab 2: Invite Link| F{Instance Signup Policy?}
+    F -->|Disabled / Closed| G[Tab is Inactive & Disabled with Explanatory Tooltip]
+    F -->|Enabled or Invite Only| H[Admin generates single-use token with Role & TTL]
+    H --> I[POST /api/admin/invites]
+    I --> J[Recipient completes self-registration via /register?token=...]
+```
+
+### 1. Direct User Provisioning
+- **Endpoint**: `POST /api/admin/users` (Guarded by `users:write`).
+- **Behavior**: An administrator directly creates a user record, specifying an email, assigned role, and an optional initial password (auto-generated if omitted).
+- **Policy Independence**: Works regardless of the instance signup mode (`enabled`, `invite`, or `disabled`).
+
+### 2. Single-Use Invite Links
+- **Endpoint**: `POST /api/admin/invites` (Guarded by `users:write`).
+- **Behavior**: Generates a cryptographically random token (`id_inv_...`) with configurable TTL and assigned role.
+- **Signup Policy Interplay**:
+  - When the instance signup mode is **Closed (`disabled`)**, self-registration is entirely prohibited. The **Invite Link** tab in the admin dashboard modal is automatically disabled/greyed out with an explanatory message instructing the admin to either switch to Direct Provisioning or adjust the instance policy under [Instance Settings & Policies](/admin-guides/instance-settings/).
+
+---
+
 ## Managing Lifecycle in the Dashboard
 
 Administrators manage user lifecycles under **Admin** -> **Users** (`/admin/users`):
@@ -34,6 +64,7 @@ Administrators manage user lifecycles under **Admin** -> **Users** (`/admin/user
 :::caution
 Administrators cannot suspend their own account. The system rejects self-deactivation to prevent accidental admin lockouts.
 :::
+
 
 ---
 

@@ -46,3 +46,5 @@ export const instanceSettings = sqliteTable("instance_settings", {
 		.notNull()
 		.$defaultFn(() => Date.now()),
 });
+
+export type InstanceSettings = typeof instanceSettings.$inferSelect;

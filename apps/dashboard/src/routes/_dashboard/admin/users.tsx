@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { RefreshCw, Users } from "lucide-react";
+import { RefreshCw, UserPlus, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import Badge from "@/components/ui/Badge";
@@ -9,6 +9,7 @@ import Card, { CardHeader, CardTitle } from "@/components/ui/Card";
 import EmptyState from "@/components/ui/EmptyState";
 import PageHeader from "@/components/ui/PageHeader";
 import Spinner from "@/components/ui/Spinner";
+import CreateUserModal from "@/components/users/CreateUserModal";
 import ResetPasswordModal from "@/components/users/ResetPasswordModal";
 import UserLifecycleModal from "@/components/users/UserLifecycleModal";
 import UserRolesModal from "@/components/users/UserRolesModal";
@@ -46,9 +47,11 @@ function UsersPageWrapper() {
 
 function UsersPage() {
 	const { userId } = Route.useSearch();
-	const { user: currentUser } = useAuth();
+	const { user: currentUser, hasPermission } = useAuth();
+	const canWriteUsers = hasPermission("users:write");
 	const queryClient = useQueryClient();
 
+	const [createModalOpen, setCreateModalOpen] = useState(false);
 	const [expandedUserId, setExpandedUserId] = useState<string | null>(
 		userId ?? null,
 	);
@@ -109,18 +112,32 @@ function UsersPage() {
 					</>
 				}
 				actions={
-					<Button
-						type="button"
-						variant="secondary"
-						size="sm"
-						loading={isFetching && !isLoading}
-						onClick={() => {
-							void refetch();
-						}}
-						icon={<RefreshCw size={14} />}
-					>
-						Refresh
-					</Button>
+					<div className="flex items-center gap-2.5">
+						<Button
+							type="button"
+							variant="secondary"
+							size="sm"
+							loading={isFetching && !isLoading}
+							onClick={() => {
+								void refetch();
+							}}
+							icon={<RefreshCw size={14} />}
+						>
+							Refresh
+						</Button>
+
+						{canWriteUsers && (
+							<Button
+								type="button"
+								variant="primary"
+								size="sm"
+								icon={<UserPlus size={14} />}
+								onClick={() => setCreateModalOpen(true)}
+							>
+								Add user
+							</Button>
+						)}
+					</div>
 				}
 			/>
 
@@ -184,6 +201,18 @@ function UsersPage() {
 					onClose={() => setLifecycleTargetUser(null)}
 					onSuccess={() => {
 						setLifecycleTargetUser(null);
+						void queryClient.invalidateQueries({
+							queryKey: queryKeys.admin.users,
+						});
+					}}
+				/>
+			)}
+
+			{createModalOpen && (
+				<CreateUserModal
+					open={createModalOpen}
+					onClose={() => setCreateModalOpen(false)}
+					onSuccess={() => {
 						void queryClient.invalidateQueries({
 							queryKey: queryKeys.admin.users,
 						});

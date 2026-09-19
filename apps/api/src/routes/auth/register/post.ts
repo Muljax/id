@@ -2,12 +2,15 @@ import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 
 import { createDb } from "@/db";
-import { userRoles, users } from "@/db/schema";
+import { type InviteToken, userRoles, users } from "@/db/schema";
 import { setSessionCookie } from "@/lib/cookie";
+import { consumeInviteToken, verifyInviteToken } from "@/lib/invites";
 import { emitNotification } from "@/lib/notifications/emitter";
 import { hashPassword } from "@/lib/password";
 import { SYSTEM_ROLE_IDS } from "@/lib/rbac/constants";
+import { getUserPermissions } from "@/lib/rbac/permissions";
 import { createSession } from "@/lib/session";
+import { getOrCreateInstanceSettings } from "@/lib/settings";
 
 interface CloudflareRequestProperties {
 	country?: string;
@@ -21,10 +24,12 @@ route.post("/", async (c) => {
 	const body = await c.req.json<{
 		email?: string;
 		password?: string;
+		inviteToken?: string;
 	}>();
 
 	const email = body.email?.trim().toLowerCase();
 	const password = body.password;
+	const inviteToken = body.inviteToken?.trim();
 
 	if (!email || !password) {
 		return c.json(
@@ -54,6 +59,52 @@ route.post("/", async (c) => {
 	}
 
 	const db = createDb(c.env.DB);
+	const settings = await getOrCreateInstanceSettings(db);
+
+	if (settings.signupMode === "disabled") {
+		return c.json(
+			{
+				error: "Registration is currently disabled on this instance.",
+			},
+			403,
+		);
+	}
+
+	let validInvite: InviteToken | undefined;
+
+	if (settings.signupMode === "invite") {
+		if (!inviteToken) {
+			return c.json(
+				{
+					error: "An invitation token is required to register.",
+				},
+				400,
+			);
+		}
+
+		const verifyResult = await verifyInviteToken(db, inviteToken, email);
+		if (!verifyResult.valid || !verifyResult.invite) {
+			return c.json(
+				{
+					error: verifyResult.error || "Invalid or expired invitation token.",
+				},
+				400,
+			);
+		}
+		validInvite = verifyResult.invite;
+	} else if (inviteToken) {
+		// If mode is enabled but user provided an invite token, validate it
+		const verifyResult = await verifyInviteToken(db, inviteToken, email);
+		if (!verifyResult.valid || !verifyResult.invite) {
+			return c.json(
+				{
+					error: verifyResult.error || "Invalid or expired invitation token.",
+				},
+				400,
+			);
+		}
+		validInvite = verifyResult.invite;
+	}
 
 	const existing = await db
 		.select({ id: users.id })
@@ -73,6 +124,7 @@ route.post("/", async (c) => {
 	const now = Date.now();
 	const userId = crypto.randomUUID();
 	const passwordHash = await hashPassword(password);
+	const targetRoleId = validInvite?.roleId || SYSTEM_ROLE_IDS.USER;
 
 	await db.insert(users).values({
 		id: userId,
@@ -86,10 +138,14 @@ route.post("/", async (c) => {
 		.insert(userRoles)
 		.values({
 			userId,
-			roleId: SYSTEM_ROLE_IDS.USER,
+			roleId: targetRoleId,
 			assignedAt: now,
 		})
 		.onConflictDoNothing();
+
+	if (validInvite && inviteToken) {
+		await consumeInviteToken(db, inviteToken, userId);
+	}
 
 	await emitNotification(db, {
 		userId,
@@ -106,7 +162,9 @@ route.post("/", async (c) => {
 		category: "admin",
 		severity: "info",
 		title: "New User Registered",
-		message: `${email} has registered an account.`,
+		message: `${email} has registered an account${
+			validInvite ? " using an invitation" : ""
+		}.`,
 		actionUrl: "/admin/users",
 	});
 
@@ -126,6 +184,8 @@ route.post("/", async (c) => {
 	);
 
 	setSessionCookie(c, session.token);
+
+	const userPerms = await getUserPermissions(db, userId);
 
 	return c.json(
 		{
@@ -147,8 +207,8 @@ route.post("/", async (c) => {
 				locale: null,
 				emailVerifiedAt: null,
 				createdAt: now,
-				roles: [SYSTEM_ROLE_IDS.USER],
-				permissions: [],
+				roles: [targetRoleId],
+				permissions: Array.from(userPerms),
 			},
 		},
 		201,

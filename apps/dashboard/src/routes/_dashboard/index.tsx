@@ -115,7 +115,7 @@ function DashboardPage() {
 				<Card variant="interactive" className="flex flex-col justify-between">
 					<div>
 						<CardHeader className="flex items-center justify-between border-b-0 pb-0">
-							<div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-emerald-400">
+							<div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-violet-400">
 								<KeyRound size={20} />
 							</div>
 							<Badge variant="success">Passwordless</Badge>
@@ -146,7 +146,7 @@ function DashboardPage() {
 				<Card variant="interactive" className="flex flex-col justify-between">
 					<div>
 						<CardHeader className="flex items-center justify-between border-b-0 pb-0">
-							<div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-amber-400">
+							<div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-violet-400">
 								<Lock size={20} />
 							</div>
 							<Badge variant="default">Security</Badge>

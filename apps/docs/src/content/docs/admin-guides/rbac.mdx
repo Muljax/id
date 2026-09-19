@@ -89,8 +89,34 @@ Permissions follow the standard `resource:action` convention. Wildcards (`*`) ex
 ### Notifications & Settings
 - `notifications:read`: View notifications and system alerts.
 - `notifications:write`: Dismiss, mark read, or emit notifications.
-- `settings:read`: View tenant and instance configuration.
-- `settings:write`: Modify tenant and instance configuration.
+- `settings:read`: View tenant and instance configuration policies, invite tokens, and sign-in access keys.
+- `settings:write`: Modify tenant and instance configuration policies, manage sign-in access keys, and toggle signup/signin restrictions.
+
+---
+
+## Administrator Resolution & Break-Glass Logic
+
+Certain high-privilege emergency pathways (such as bypassing the sign-in access key requirement when `signin_mode` is set to `admin_key`) determine administrator status using the `isUserAdmin` helper:
+
+```typescript
+export async function isUserAdmin(db: DrizzleD1Database, userId: string): Promise<boolean> {
+  const userRoleRecords = await db.query.userRoles.findMany({
+    where: eq(userRoles.userId, userId),
+    with: { role: { with: { rolePermissions: true } } },
+  });
+
+  const hasAdminRole = userRoleRecords.some((ur) => ur.roleId === "admin");
+  const hasWildcard = userRoleRecords.some((ur) =>
+    ur.role.rolePermissions.some((rp) => rp.permissionId === "*")
+  );
+
+  return hasAdminRole || hasWildcard;
+}
+```
+
+### Key Differences: Direct Role vs. Granular Permission
+1. **Standard API Authorizations**: Guarded by `requirePermission(perm)`. Any custom role containing `settings:write` or `users:write` can perform respective management tasks.
+2. **Break-Glass Sign-In Lockout Bypass**: Only users with the explicit `admin` role or wildcard `*` permission qualify for `isUserAdmin`. This guarantees that standard users or restricted roles cannot log in without a valid Admin Access Key when sign-in restrictions are enforced.
 
 ---
 
@@ -100,3 +126,4 @@ Under **Admin** -> **Roles** (`/admin/roles`):
 - **Create Custom Role**: Specify a unique slug, name, and description, and toggle individual permissions from the catalog.
 - **Assign to Users**: Assign one or more roles per user under **Admin** -> **Users** -> **Roles**. User permissions are the union of all permissions granted across assigned roles.
 - **Read-Only Constraints**: The `everyone` role is restricted; only permissions ending with `:read` can be assigned to it.
+

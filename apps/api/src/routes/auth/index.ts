@@ -5,6 +5,7 @@ import me from "./me";
 import passwordReset from "./password-reset";
 import register from "./register";
 import sessions from "./sessions";
+import settings from "./settings";
 import { rateLimit } from "../../middleware/rateLimiter";
 
 const auth = new Hono<{ Bindings: Env }>();
@@ -22,5 +23,6 @@ auth.route("/logout", logout);
 auth.route("/me", me);
 auth.route("/sessions", sessions);
 auth.route("/password-reset", passwordReset);
+auth.route("/settings", settings);
 
 export default auth;

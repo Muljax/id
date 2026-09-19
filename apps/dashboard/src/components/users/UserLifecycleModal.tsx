@@ -208,7 +208,7 @@ export default function UserLifecycleModal({
 									}`}
 								>
 									<div className="flex items-center gap-1.5 text-xs font-semibold text-white">
-										<Calendar size={14} className="text-amber-400" />
+										<Calendar size={14} className="text-violet-400" />
 										<span>Scheduled</span>
 									</div>
 									<span className="text-[11px] text-zinc-400 mt-1">

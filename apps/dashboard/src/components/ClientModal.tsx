@@ -256,7 +256,7 @@ export default function ClientModal({
 									}`}
 								>
 									<div className="flex items-center gap-1.5 text-xs font-semibold text-white">
-										<Shield size={13} className="text-emerald-400" />
+										<Shield size={13} className="text-violet-400" />
 										<span>Web App</span>
 									</div>
 									<span className="text-[11px] text-zinc-400 mt-1">
@@ -275,7 +275,7 @@ export default function ClientModal({
 									}`}
 								>
 									<div className="flex items-center gap-1.5 text-xs font-semibold text-white">
-										<Globe size={13} className="text-amber-400" />
+										<Globe size={13} className="text-violet-400" />
 										<span>SPA / Native</span>
 									</div>
 									<span className="text-[11px] text-zinc-400 mt-1">

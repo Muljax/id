@@ -10,7 +10,10 @@ import { passkeys, users } from "@/db/schema";
 import { setSessionCookie } from "@/lib/cookie";
 import { getDashboardOrigin } from "@/lib/env";
 import { base64ToUint8Array, consumeChallengeById } from "@/lib/passkey";
+import { isUserAdmin } from "@/lib/rbac/permissions";
 import { createSession } from "@/lib/session";
+import { getOrCreateInstanceSettings } from "@/lib/settings";
+import { verifySigninKey } from "@/lib/signinKeys";
 import { isUserDisabled, toAuthUser } from "@/lib/user";
 
 interface CloudflareRequestProperties {
@@ -24,6 +27,7 @@ const route = new Hono<{ Bindings: Env }>();
 route.post("/", async (c) => {
 	const body = await c.req.json<{
 		challengeId?: string;
+		adminKey?: string;
 		response: AuthenticationResponseJSON;
 	}>();
 
@@ -37,6 +41,16 @@ route.post("/", async (c) => {
 	}
 
 	const db = createDb(c.env.DB);
+	const settings = await getOrCreateInstanceSettings(db);
+
+	if (settings.signinMode === "disabled") {
+		return c.json(
+			{
+				error: "Authentication is currently disabled on this instance.",
+			},
+			403,
+		);
+	}
 
 	const challenge = await consumeChallengeById(db, body.challengeId);
 
@@ -81,6 +95,42 @@ route.post("/", async (c) => {
 			},
 			401,
 		);
+	}
+
+	if (isUserDisabled(user)) {
+		return c.json(
+			{
+				error: "Your account has been disabled.",
+			},
+			403,
+		);
+	}
+
+	if (settings.signinMode === "admin_key") {
+		const isAdmin = await isUserAdmin(db, user.id);
+		if (!isAdmin) {
+			if (!body.adminKey) {
+				return c.json(
+					{
+						error: "An administrator access key is required to sign in.",
+					},
+					403,
+				);
+			}
+
+			const keyResult = await verifySigninKey(db, body.adminKey);
+			if (!keyResult.valid) {
+				return c.json(
+					{
+						error:
+							keyResult.error || "Invalid or expired administrator access key.",
+					},
+					401,
+				);
+			}
+		} else if (body.adminKey) {
+			await verifySigninKey(db, body.adminKey);
+		}
 	}
 
 	try {

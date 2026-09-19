@@ -78,7 +78,7 @@ function BootstrapPage() {
 				>
 					<CardHeader>
 						<div className="flex items-center gap-3">
-							<div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-amber-400">
+							<div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-violet-400">
 								<KeyRound size={18} />
 							</div>
 							<div>
