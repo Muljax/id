@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.33.0](https://github.com/Muljax/id/compare/v0.32.1...v0.33.0) (2026-09-19)
+
+
+### Features
+
+* **auth,admin:** add instance access policies, invite tokens, and break-glass sign-in keys ([e4efc87](https://github.com/Muljax/id/commit/e4efc87373c7af3331fc91b83dcd3d1349dc25cb))
+
 ## [0.32.1](https://github.com/Muljax/id/compare/v0.32.0...v0.32.1) (2026-09-18)
 
 
