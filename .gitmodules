@@ -7,3 +7,6 @@
 [submodule "apps/docs"]
 	path = apps/docs
 	url = git@github.com:Muljax/docs.git
+[submodule "apps/cli"]
+	path = apps/cli
+	url = git@github.com:Muljax/cli.git
