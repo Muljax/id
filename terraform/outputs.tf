@@ -8,6 +8,11 @@ output "dashboard_worker_name" {
   value       = cloudflare_workers_script.dashboard.script_name
 }
 
+output "docs_worker_name" {
+  description = "Docs Worker name."
+  value       = cloudflare_workers_script.docs.script_name
+}
+
 output "database_name" {
   description = "D1 database name."
   value       = cloudflare_d1_database.api.name
@@ -33,6 +38,11 @@ output "dashboard_hostname" {
   value       = local.dashboard_hostname
 }
 
+output "docs_hostname" {
+  description = "Docs hostname."
+  value       = local.docs_hostname
+}
+
 output "api_url" {
   description = "Public API URL."
   value       = local.api_url
@@ -41,6 +51,11 @@ output "api_url" {
 output "dashboard_url" {
   description = "Public dashboard URL."
   value       = local.dashboard_url
+}
+
+output "docs_url" {
+  description = "Public docs URL."
+  value       = local.docs_url
 }
 
 output "oidc_issuer" {

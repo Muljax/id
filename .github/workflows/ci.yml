@@ -48,7 +48,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build all apps
-        run: bun run build && bun run build:docs
+        run: bun run build
 
       - name: Typecheck all apps
         run: bun run typecheck

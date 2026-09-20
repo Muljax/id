@@ -158,3 +158,29 @@ resource "cloudflare_workers_script" "dashboard" {
     },
   ]
 }
+
+resource "cloudflare_workers_script" "docs" {
+  account_id = var.cloudflare_account_id
+
+  script_name = local.docs_worker_name
+
+  content_file   = var.docs_worker_file
+  content_sha256 = filesha256(var.docs_worker_file)
+
+  main_module = basename(var.docs_worker_file)
+
+  assets = {
+    directory = var.docs_assets_directory
+
+    config = {
+      not_found_handling = "single-page-application"
+    }
+  }
+
+  bindings = [
+    {
+      name = "ASSETS"
+      type = "assets"
+    },
+  ]
+}

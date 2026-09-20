@@ -24,6 +24,12 @@ variable "dashboard_domain" {
   type        = string
 }
 
+variable "docs_domain" {
+  description = "Public hostname of the documentation portal."
+  type        = string
+  default     = ""
+}
+
 variable "localhost" {
   description = "Use HTTP instead of HTTPS for local development."
   type        = bool
@@ -65,6 +71,18 @@ variable "dashboard_assets_directory" {
   description = "Built dashboard static assets."
   type        = string
   default     = "../apps/dashboard/dist"
+}
+
+variable "docs_worker_file" {
+  description = "Built docs Worker JavaScript module."
+  type        = string
+  default     = "../apps/docs/dist/worker.js"
+}
+
+variable "docs_assets_directory" {
+  description = "Built docs static assets."
+  type        = string
+  default     = "../apps/docs/dist"
 }
 
 variable "d1_migrations_directory" {

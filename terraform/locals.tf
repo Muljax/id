@@ -3,9 +3,11 @@ locals {
 
   api_hostname       = var.api_domain
   dashboard_hostname = var.dashboard_domain
+  docs_hostname      = var.docs_domain
 
   api_url       = "${local.protocol}://${local.api_hostname}"
   dashboard_url = "${local.protocol}://${local.dashboard_hostname}"
+  docs_url      = local.docs_hostname != "" ? "${local.protocol}://${local.docs_hostname}" : ""
   oidc_issuer   = local.api_url
 
   _clean_instance_name     = trim(replace(replace(lower(var.instance_name), "/[^a-z0-9-]+/", "-"), "/-+/", "-"), "-")
@@ -13,6 +15,7 @@ locals {
 
   api_worker_name       = "${local.normalized_instance_name}-api"
   dashboard_worker_name = "${local.normalized_instance_name}-dashboard"
+  docs_worker_name      = "${local.normalized_instance_name}-docs"
 
   profile_bucket_name = "${local.normalized_instance_name}-profiles"
   database_name       = "${local.normalized_instance_name}-api"

@@ -19,3 +19,16 @@ resource "cloudflare_workers_custom_domain" "dashboard" {
     cloudflare_workers_script.dashboard,
   ]
 }
+
+resource "cloudflare_workers_custom_domain" "docs" {
+  count = local.docs_hostname != "" ? 1 : 0
+
+  account_id = var.cloudflare_account_id
+  zone_id    = var.cloudflare_zone_id
+  hostname   = local.docs_hostname
+  service    = local.docs_worker_name
+
+  depends_on = [
+    cloudflare_workers_script.docs,
+  ]
+}
