@@ -39,7 +39,7 @@
     },
     "apps/dashboard": {
       "name": "@muljax/id-dashboard",
-      "version": "1.5.0",
+      "version": "1.6.0",
       "dependencies": {
         "@muljax/id-api": "workspace:*",
         "@simplewebauthn/browser": "14.0.0",
