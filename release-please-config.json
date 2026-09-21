@@ -1,20 +1,4 @@
 {
  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
- "packages": {
-  ".": {
-   "release-type": "node"
-  },
-  "apps/api": {
-   "release-type": "node"
-  },
-  "apps/dashboard": {
-   "release-type": "node"
-  },
-  "apps/docs": {
-   "release-type": "node"
-  },
-  "apps/cli": {
-   "release-type": "go"
-  }
- }
+ "release-type": "node"
 }

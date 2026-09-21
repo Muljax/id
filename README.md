@@ -36,7 +36,6 @@ The Muljax ID platform is structured as a unified monorepo (`muljax/id`) managin
 - **API (`apps/api`)**: High-performance Hono API Worker with D1 SQLite storage, WebAuthn/Passkeys, OIDC/OAuth 2.0 provider, and OpenSSH CA engine.
 - **Dashboard (`apps/dashboard`)**: Modern Single-Page Application (SPA) built with React, Vite, and TanStack Router/Query/Form for identity and instance management.
 - **Docs (`apps/docs`)**: Comprehensive documentation portal powered by Astro and Starlight.
-- **CLI (`apps/cli`)**: Developer CLI tool for terminal authentication, SSH certificate generation, and token inspection.
 
 Infrastructure is fully automated with [Terraform](https://developer.hashicorp.com/terraform), while development, compilation, and workspace orchestration are powered by [Bun](https://bun.sh/).
 
@@ -85,7 +84,6 @@ apps/dashboard/
 .
 ├── apps/
 │   ├── api/          # Hono API Worker
-│   ├── cli/          # Developer CLI tool
 │   ├── dashboard/    # React + Vite dashboard
 │   └── docs/         # Astro + Starlight documentation site
 ├── packages/         # Shared monorepo packages

@@ -13,40 +13,11 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
-    outputs:
-      cli_released: ${{ steps.release.outputs['apps/cli--release_created'] }}
-      cli_tag: ${{ steps.release.outputs['apps/cli--tag_name'] }}
+
     steps:
       - name: Release Please
-        id: release
         uses: googleapis/release-please-action@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-
-  build-and-upload-cli-binaries:
-    needs: release-please
-    if: ${{ needs.release-please.outputs.cli_released == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: 'apps/cli/go.mod'
-          cache-dependency-path: 'apps/cli/go.sum'
-
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser
-          version: '~> 2'
-          workdir: apps/cli
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
