@@ -70,6 +70,14 @@ The user and administrative console is a client-side single-page application bui
 - **TanStack Query**: Request caching, background refetching, and optimistic mutations.
 - **Tailwind CSS**: Modern accessible dark theme.
 
+### Core Cryptography & SSH Engine (`packages/crypto`)
+
+The zero-dependency cryptographic and protocol kernel is packaged as `@id/crypto`:
+- **Bytes**: Constant-time Base64 and Base64URL codecs.
+- **Hashing**: Argon2id password hashing via WASM, cryptographic token generation, and constant-time comparison (`timingSafeEqual`).
+- **JWT & OIDC**: ES256 / ECDSA P-256 key management, PKCE S256 challenge generation, and RFC 9068 `at+jwt` token minting.
+- **SSH Engine**: RFC 4251 binary wire serialization (`SSHWriter`, `SSHReader`), OpenSSH user certificate issuance, POSIX principal derivation, and binary Key Revocation List (`PROTOCOL.krl`) generation.
+
 ### Database Layer (`Cloudflare D1`)
 
 Data persistence is handled by Cloudflare D1, an edge-distributed SQLite database managed through [Drizzle ORM](https://orm.drizzle.team):
@@ -82,25 +90,21 @@ Data persistence is handled by Cloudflare D1, an edge-distributed SQLite databas
 ## Storage & Module Layout
 
 <FileTree>
-- apps/api/src/
-  - db/
-    - index.ts D1 client instantiation with Drizzle
-    - schema/ 11 schema modules defining SQLite tables
-  - lib/
-    - auth/ Password hashing, WebAuthn verification, session tokens
-    - lifecycle/ Lifecycle execution engine and workflow hooks
-    - oauth/ JWT signer, JWKS, token hashes, PKCE validation
-    - rbac/ Permission definitions and role evaluation
-    - ssh/ RFC 4251 wire format, OpenSSH certificate serialization
-  - middleware/ CORS, authentication, and RBAC guards
-  - routes/
-    - account/ User self-service profile and credential endpoints
-    - admin/ Operator administrative endpoints
-    - auth/ Login, logout, session verification
-    - oauth/ Standard RFC 6749 OAuth2 & OIDC endpoints
-    - passkeys/ WebAuthn registration and authentication ceremonies
-    - ssh/ CA key distribution, cert issue, KRL sync
-    - well-known/ OpenID Discovery and JWKS endpoints
-  - workflows/
-    - lifecycle.ts Cloudflare Workflow durable entrypoint
+- apps/
+  - api/ Cloudflare Worker API (Hono, D1 SQLite, Drizzle ORM)
+    - src/
+      - db/ D1 schema modules and migrations
+      - lib/ Lifecycle, notifications, RBAC, and crypto re-exports
+      - middleware/ CORS, authentication, and RBAC guards
+      - routes/ REST API, OAuth2/OIDC, passkeys, SSH CA routes
+  - dashboard/ SPA console (React 19, TanStack Router, Vite)
+  - docs/ Documentation site (Vite, React, MDX)
+- packages/
+  - crypto/ Standalone cryptographic kernel (@id/crypto)
+    - src/
+      - bytes/ Base64 / Base64URL codecs
+      - hashing/ Argon2id, token hashing, timing-safe compare
+      - jwt/ ES256 key signing, OIDC ID tokens, PKCE
+      - ssh/ RFC 4251 wire format, certificate minting, KRL
+      - webauthn/ WebAuthn binary serialization helpers
 </FileTree>

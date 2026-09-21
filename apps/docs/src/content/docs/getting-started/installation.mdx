@@ -3,7 +3,7 @@ title: Installation & Prerequisites
 description: Local setup, toolchain requirements, and repository installation.
 ---
 
-import { Steps, FileTree, Card, CardGrid } from '@/components/mdx';
+import { Steps, FileTree, Card, CardGrid, Tabs, TabItem } from '@/components/mdx';
 
 This guide covers cloning, installing, and preparing the Muljax ID repository on your local workstation.
 
@@ -45,7 +45,7 @@ Before getting started, verify that your local environment has the required tool
    ```
 
 2. **Install monorepo dependencies**:
-   Install all dependencies across `apps/api`, `apps/dashboard`, and `apps/docs`:
+   Install all dependencies across `apps/*` and `packages/*`:
    ```sh
    bun install
    ```
@@ -54,6 +54,7 @@ Before getting started, verify that your local environment has the required tool
    ```sh
    bun run check
    bun run typecheck
+   bun run test
    ```
 
 </Steps>
@@ -66,7 +67,9 @@ Before getting started, verify that your local environment has the required tool
 - apps/
   - api/ Cloudflare Worker API (Hono, D1 SQLite, Drizzle ORM)
   - dashboard/ SPA console (React 19, TanStack Router, Vite)
-  - docs/ Documentation site (Astro Starlight)
+  - docs/ Documentation site (React, MDX, Vite)
+- packages/
+  - crypto/ Standalone cryptographic kernel (@id/crypto)
 - scripts/
   - generate-tfvars.ts Generates terraform.tfvars from .env
   - oidc-key.ts Generates or rotates OIDC ES256 signing key
@@ -76,3 +79,26 @@ Before getting started, verify that your local environment has the required tool
 - biome.json Monorepo linter and formatter configuration
 - package.json Workspace definitions and unified scripts
 </FileTree>
+
+---
+
+## Standalone CLI Installation
+
+For terminal authentication and SSH certificate workflows, the standalone Muljax CLI is maintained at [`github.com/Muljax/cli`](https://github.com/Muljax/cli):
+
+<Tabs>
+<TabItem label="Homebrew">
+```sh
+brew tap muljax/tap
+brew install muljax
+```
+</TabItem>
+<TabItem label="Go Install">
+```sh
+go install github.com/Muljax/cli/cmd/muljax@latest
+```
+</TabItem>
+<TabItem label="GitHub Releases">
+Download pre-compiled binaries for Linux, macOS, and Windows from the [GitHub Releases](https://github.com/Muljax/cli/releases) page.
+</TabItem>
+</Tabs>

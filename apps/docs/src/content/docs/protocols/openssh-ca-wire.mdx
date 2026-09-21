@@ -5,7 +5,7 @@ description: RFC 4251 and OpenSSH CERT01 binary wire format implementation detai
 
 import { DatabaseTable, Callout, Badge } from '@/components/mdx';
 
-Muljax ID implements a native, zero-dependency OpenSSH certificate binary serialization and deserialization engine in `apps/api/src/lib/ssh/`. This document is an exhaustive engineering deep dive into the exact binary wire layout, endianness, cryptographic signing boundaries, and host verification pipelines conforming strictly to OpenSSH's certificate specification ([IETF draft-miller-ssh-cert](https://datatracker.ietf.org/doc/draft-miller-ssh-cert/)) and RFC 4251.
+Muljax ID implements a native, zero-dependency OpenSSH certificate binary serialization and deserialization engine in `@id/crypto/ssh` (`packages/crypto/src/ssh/`). This document is an exhaustive engineering deep dive into the exact binary wire layout, endianness, cryptographic signing boundaries, and host verification pipelines conforming strictly to OpenSSH's certificate specification ([IETF draft-miller-ssh-cert](https://datatracker.ietf.org/doc/draft-miller-ssh-cert/)) and RFC 4251.
 
 ---
 
@@ -26,7 +26,7 @@ The OpenSSH certificate implementation adheres strictly to four foundational sta
 
 ## 2. Binary Wire Types & Endianness (RFC 4251 § 5)
 
-All primitive data types are serialized in **network byte order (big-endian)**. The implementation in `apps/api/src/lib/ssh/wire.ts` uses contiguous `Uint8Array` allocations and `DataView` operations without any intermediate string conversions:
+All primitive data types are serialized in **network byte order (big-endian)**. The implementation in `@id/crypto/ssh` (`packages/crypto/src/ssh/wire.ts`) uses contiguous `Uint8Array` allocations and `DataView` operations without any intermediate string conversions:
 
 | Wire Type | Wire Size | Memory Representation | Implementation Detail (`SSHWriter`) |
 | :--- | :--- | :--- | :--- |
@@ -37,7 +37,7 @@ All primitive data types are serialized in **network byte order (big-endian)**. 
 | **`raw`** | `n` bytes | Raw unadorned octets | Direct slice copy without length prefix (used to embed pre-built buffers) |
 
 ```ts
-// apps/api/src/lib/ssh/wire.ts
+// @id/crypto/ssh (packages/crypto/src/ssh/wire.ts)
 writeUint32(value: number): this {
     this.ensureCapacity(4);
     this.view.setUint32(this.offset, value, false); // false = big-endian
@@ -279,7 +279,7 @@ sequenceDiagram
 
 ## 8. Key Revocation List (KRL) Wire Specification (PROTOCOL.krl)
 
-OpenSSH's native binary KRL format provides maximum space efficiency when revoking certificates by serial number across host fleets. Muljax ID builds binary KRL payloads conforming directly to OpenSSH `PROTOCOL.krl` via `apps/api/src/lib/ssh/krl.ts`.
+OpenSSH's native binary KRL format provides maximum space efficiency when revoking certificates by serial number across host fleets. Muljax ID builds binary KRL payloads conforming directly to OpenSSH `PROTOCOL.krl` via `@id/crypto/ssh` (`packages/crypto/src/ssh/krl.ts`).
 
 ### KRL File Header Layout
 
