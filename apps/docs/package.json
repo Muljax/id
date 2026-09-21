@@ -16,7 +16,7 @@
 	"dependencies": {
 		"@mdx-js/react": "^3.1.1",
 		"@mdx-js/rollup": "^3.1.0",
-		"@shikijs/rehype": "^3.7.0",
+		"@shikijs/rehype": "^4.0.0",
 		"drizzle-orm": "^0.45.2",
 		"gray-matter": "^4.0.3",
 		"lucide-react": "^1.47.0",
