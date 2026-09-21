@@ -1,6 +1,6 @@
 {
 	"name": "@muljax/id-api",
-	"version": "1.7.0",
+	"version": "1.3.0",
 	"main": "dist/src/types.d.ts",
 	"module": "dist/src/types.d.ts",
 	"types": "dist/src/types.d.ts",
