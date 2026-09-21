@@ -1,3005 +1,2823 @@
 {
-  "version": "7",
-  "dialect": "sqlite",
-  "id": "a1226d58-aea1-4c8c-87a9-01a474099225",
-  "prevIds": [
-    "18713228-7dfa-4ee4-9b90-fd03431d4b8c"
-  ],
-  "ddl": [
-    {
-      "name": "instance_settings",
-      "entityType": "tables"
-    },
-    {
-      "name": "invite_tokens",
-      "entityType": "tables"
-    },
-    {
-      "name": "lifecycle_actions",
-      "entityType": "tables"
-    },
-    {
-      "name": "notifications",
-      "entityType": "tables"
-    },
-    {
-      "name": "oauth_access_tokens",
-      "entityType": "tables"
-    },
-    {
-      "name": "oauth_authorization_codes",
-      "entityType": "tables"
-    },
-    {
-      "name": "oauth_clients",
-      "entityType": "tables"
-    },
-    {
-      "name": "oauth_device_codes",
-      "entityType": "tables"
-    },
-    {
-      "name": "oauth_grants",
-      "entityType": "tables"
-    },
-    {
-      "name": "oauth_refresh_tokens",
-      "entityType": "tables"
-    },
-    {
-      "name": "passkeys",
-      "entityType": "tables"
-    },
-    {
-      "name": "password_reset_tokens",
-      "entityType": "tables"
-    },
-    {
-      "name": "sessions",
-      "entityType": "tables"
-    },
-    {
-      "name": "users",
-      "entityType": "tables"
-    },
-    {
-      "name": "passkey_challenges",
-      "entityType": "tables"
-    },
-    {
-      "name": "permissions",
-      "entityType": "tables"
-    },
-    {
-      "name": "role_permissions",
-      "entityType": "tables"
-    },
-    {
-      "name": "roles",
-      "entityType": "tables"
-    },
-    {
-      "name": "user_roles",
-      "entityType": "tables"
-    },
-    {
-      "name": "signin_keys",
-      "entityType": "tables"
-    },
-    {
-      "name": "ssh_certificates",
-      "entityType": "tables"
-    },
-    {
-      "name": "user_ssh_keys",
-      "entityType": "tables"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "instance_settings"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "'enabled'",
-      "generated": null,
-      "name": "signup_mode",
-      "entityType": "columns",
-      "table": "instance_settings"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "'enabled'",
-      "generated": null,
-      "name": "signin_mode",
-      "entityType": "columns",
-      "table": "instance_settings"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "instance_settings"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "table": "instance_settings"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "invite_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "email",
-      "entityType": "columns",
-      "table": "invite_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "token_hash",
-      "entityType": "columns",
-      "table": "invite_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "'user'",
-      "generated": null,
-      "name": "role_id",
-      "entityType": "columns",
-      "table": "invite_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_by_user_id",
-      "entityType": "columns",
-      "table": "invite_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "used_by_user_id",
-      "entityType": "columns",
-      "table": "invite_tokens"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "expires_at",
-      "entityType": "columns",
-      "table": "invite_tokens"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "used_at",
-      "entityType": "columns",
-      "table": "invite_tokens"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "invite_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "lifecycle_actions"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "table": "lifecycle_actions"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "action",
-      "entityType": "columns",
-      "table": "lifecycle_actions"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "execute_at",
-      "entityType": "columns",
-      "table": "lifecycle_actions"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "'pending'",
-      "generated": null,
-      "name": "status",
-      "entityType": "columns",
-      "table": "lifecycle_actions"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "lifecycle_actions"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "table": "lifecycle_actions"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "executed_at",
-      "entityType": "columns",
-      "table": "lifecycle_actions"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "cancelled_at",
-      "entityType": "columns",
-      "table": "lifecycle_actions"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "error",
-      "entityType": "columns",
-      "table": "lifecycle_actions"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "notifications"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "'user'",
-      "generated": null,
-      "name": "target",
-      "entityType": "columns",
-      "table": "notifications"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "table": "notifications"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "type",
-      "entityType": "columns",
-      "table": "notifications"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "'general'",
-      "generated": null,
-      "name": "category",
-      "entityType": "columns",
-      "table": "notifications"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "'info'",
-      "generated": null,
-      "name": "severity",
-      "entityType": "columns",
-      "table": "notifications"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "title",
-      "entityType": "columns",
-      "table": "notifications"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "message",
-      "entityType": "columns",
-      "table": "notifications"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "action_url",
-      "entityType": "columns",
-      "table": "notifications"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "data",
-      "entityType": "columns",
-      "table": "notifications"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "read_at",
-      "entityType": "columns",
-      "table": "notifications"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "notifications"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "oauth_access_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "client_id",
-      "entityType": "columns",
-      "table": "oauth_access_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "table": "oauth_access_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "token_hash",
-      "entityType": "columns",
-      "table": "oauth_access_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "scope",
-      "entityType": "columns",
-      "table": "oauth_access_tokens"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "expires_at",
-      "entityType": "columns",
-      "table": "oauth_access_tokens"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "oauth_access_tokens"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "revoked_at",
-      "entityType": "columns",
-      "table": "oauth_access_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "authorization_code_id",
-      "entityType": "columns",
-      "table": "oauth_access_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "client_id",
-      "entityType": "columns",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "code_hash",
-      "entityType": "columns",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "redirect_uri",
-      "entityType": "columns",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "scope",
-      "entityType": "columns",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "nonce",
-      "entityType": "columns",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "code_challenge",
-      "entityType": "columns",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "code_challenge_method",
-      "entityType": "columns",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "acr",
-      "entityType": "columns",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "auth_time",
-      "entityType": "columns",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "expires_at",
-      "entityType": "columns",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "used_at",
-      "entityType": "columns",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "claims",
-      "entityType": "columns",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "oauth_clients"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "name",
-      "entityType": "columns",
-      "table": "oauth_clients"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "client_type",
-      "entityType": "columns",
-      "table": "oauth_clients"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "client_secret_hash",
-      "entityType": "columns",
-      "table": "oauth_clients"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "redirect_uris",
-      "entityType": "columns",
-      "table": "oauth_clients"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "scopes",
-      "entityType": "columns",
-      "table": "oauth_clients"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "oauth_clients"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "table": "oauth_clients"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "oauth_device_codes"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "client_id",
-      "entityType": "columns",
-      "table": "oauth_device_codes"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "device_code_hash",
-      "entityType": "columns",
-      "table": "oauth_device_codes"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "user_code",
-      "entityType": "columns",
-      "table": "oauth_device_codes"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "scope",
-      "entityType": "columns",
-      "table": "oauth_device_codes"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "table": "oauth_device_codes"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "'pending'",
-      "generated": null,
-      "name": "status",
-      "entityType": "columns",
-      "table": "oauth_device_codes"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "5",
-      "generated": null,
-      "name": "polling_interval",
-      "entityType": "columns",
-      "table": "oauth_device_codes"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "last_polled_at",
-      "entityType": "columns",
-      "table": "oauth_device_codes"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "expires_at",
-      "entityType": "columns",
-      "table": "oauth_device_codes"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "oauth_device_codes"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "oauth_grants"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "table": "oauth_grants"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "client_id",
-      "entityType": "columns",
-      "table": "oauth_grants"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "scopes",
-      "entityType": "columns",
-      "table": "oauth_grants"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "granted_at",
-      "entityType": "columns",
-      "table": "oauth_grants"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "revoked_at",
-      "entityType": "columns",
-      "table": "oauth_grants"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "oauth_refresh_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "client_id",
-      "entityType": "columns",
-      "table": "oauth_refresh_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "table": "oauth_refresh_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "token_hash",
-      "entityType": "columns",
-      "table": "oauth_refresh_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "scope",
-      "entityType": "columns",
-      "table": "oauth_refresh_tokens"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "expires_at",
-      "entityType": "columns",
-      "table": "oauth_refresh_tokens"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "oauth_refresh_tokens"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "revoked_at",
-      "entityType": "columns",
-      "table": "oauth_refresh_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "replaced_by",
-      "entityType": "columns",
-      "table": "oauth_refresh_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "passkeys"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "table": "passkeys"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "credential_id",
-      "entityType": "columns",
-      "table": "passkeys"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "public_key",
-      "entityType": "columns",
-      "table": "passkeys"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "0",
-      "generated": null,
-      "name": "counter",
-      "entityType": "columns",
-      "table": "passkeys"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "transports",
-      "entityType": "columns",
-      "table": "passkeys"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "name",
-      "entityType": "columns",
-      "table": "passkeys"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "passkeys"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "last_used_at",
-      "entityType": "columns",
-      "table": "passkeys"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "password_reset_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "table": "password_reset_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "token_hash",
-      "entityType": "columns",
-      "table": "password_reset_tokens"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "expires_at",
-      "entityType": "columns",
-      "table": "password_reset_tokens"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "password_reset_tokens"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "sessions"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "table": "sessions"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "token_hash",
-      "entityType": "columns",
-      "table": "sessions"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "ip_address",
-      "entityType": "columns",
-      "table": "sessions"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "country",
-      "entityType": "columns",
-      "table": "sessions"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "city",
-      "entityType": "columns",
-      "table": "sessions"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "region",
-      "entityType": "columns",
-      "table": "sessions"
-    },
-    {
-      "type": "real",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "latitude",
-      "entityType": "columns",
-      "table": "sessions"
-    },
-    {
-      "type": "real",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "longitude",
-      "entityType": "columns",
-      "table": "sessions"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "user_agent",
-      "entityType": "columns",
-      "table": "sessions"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "browser",
-      "entityType": "columns",
-      "table": "sessions"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "os",
-      "entityType": "columns",
-      "table": "sessions"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "expires_at",
-      "entityType": "columns",
-      "table": "sessions"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "sessions"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "last_used_at",
-      "entityType": "columns",
-      "table": "sessions"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "email",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "password_hash",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "display_name",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "given_name",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "family_name",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "middle_name",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "nickname",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "preferred_username",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "profile_url",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "profile_image_key",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "website",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "gender",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "birthdate",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "zoneinfo",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "locale",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "email_verified_at",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "disabled_at",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "table": "users"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "passkey_challenges"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "table": "passkey_challenges"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "challenge",
-      "entityType": "columns",
-      "table": "passkey_challenges"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "expires_at",
-      "entityType": "columns",
-      "table": "passkey_challenges"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "passkey_challenges"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "permissions"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "name",
-      "entityType": "columns",
-      "table": "permissions"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "description",
-      "entityType": "columns",
-      "table": "permissions"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "resource",
-      "entityType": "columns",
-      "table": "permissions"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "true",
-      "generated": null,
-      "name": "is_system",
-      "entityType": "columns",
-      "table": "permissions"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "permissions"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "table": "permissions"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "role_id",
-      "entityType": "columns",
-      "table": "role_permissions"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "permission_id",
-      "entityType": "columns",
-      "table": "role_permissions"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "role_permissions"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "roles"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "name",
-      "entityType": "columns",
-      "table": "roles"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "description",
-      "entityType": "columns",
-      "table": "roles"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "false",
-      "generated": null,
-      "name": "is_system",
-      "entityType": "columns",
-      "table": "roles"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "roles"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "table": "roles"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "table": "user_roles"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "role_id",
-      "entityType": "columns",
-      "table": "user_roles"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "assigned_at",
-      "entityType": "columns",
-      "table": "user_roles"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "assigned_by",
-      "entityType": "columns",
-      "table": "user_roles"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "signin_keys"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "name",
-      "entityType": "columns",
-      "table": "signin_keys"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "key_hash",
-      "entityType": "columns",
-      "table": "signin_keys"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "key_prefix",
-      "entityType": "columns",
-      "table": "signin_keys"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_by_user_id",
-      "entityType": "columns",
-      "table": "signin_keys"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "expires_at",
-      "entityType": "columns",
-      "table": "signin_keys"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "last_used_at",
-      "entityType": "columns",
-      "table": "signin_keys"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "signin_keys"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "ssh_certificates"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "table": "ssh_certificates"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "serial",
-      "entityType": "columns",
-      "table": "ssh_certificates"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "key_id",
-      "entityType": "columns",
-      "table": "ssh_certificates"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "principals",
-      "entityType": "columns",
-      "table": "ssh_certificates"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "valid_after",
-      "entityType": "columns",
-      "table": "ssh_certificates"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "valid_before",
-      "entityType": "columns",
-      "table": "ssh_certificates"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "fingerprint",
-      "entityType": "columns",
-      "table": "ssh_certificates"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "ca_fingerprint",
-      "entityType": "columns",
-      "table": "ssh_certificates"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "client_ip",
-      "entityType": "columns",
-      "table": "ssh_certificates"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "user_agent",
-      "entityType": "columns",
-      "table": "ssh_certificates"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "revoked_at",
-      "entityType": "columns",
-      "table": "ssh_certificates"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "revoked_by",
-      "entityType": "columns",
-      "table": "ssh_certificates"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "revoked_reason",
-      "entityType": "columns",
-      "table": "ssh_certificates"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "ssh_certificates"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "id",
-      "entityType": "columns",
-      "table": "user_ssh_keys"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "table": "user_ssh_keys"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "name",
-      "entityType": "columns",
-      "table": "user_ssh_keys"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "public_key",
-      "entityType": "columns",
-      "table": "user_ssh_keys"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "fingerprint",
-      "entityType": "columns",
-      "table": "user_ssh_keys"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "table": "user_ssh_keys"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "last_used_at",
-      "entityType": "columns",
-      "table": "user_ssh_keys"
-    },
-    {
-      "columns": [
-        "role_id"
-      ],
-      "tableTo": "roles",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "fk_invite_tokens_role_id_roles_id_fk",
-      "entityType": "fks",
-      "table": "invite_tokens"
-    },
-    {
-      "columns": [
-        "created_by_user_id"
-      ],
-      "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "SET NULL",
-      "nameExplicit": false,
-      "name": "fk_invite_tokens_created_by_user_id_users_id_fk",
-      "entityType": "fks",
-      "table": "invite_tokens"
-    },
-    {
-      "columns": [
-        "used_by_user_id"
-      ],
-      "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "SET NULL",
-      "nameExplicit": false,
-      "name": "fk_invite_tokens_used_by_user_id_users_id_fk",
-      "entityType": "fks",
-      "table": "invite_tokens"
-    },
-    {
-      "columns": [
-        "user_id"
-      ],
-      "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "lifecycle_actions_user_id_users_id_fk",
-      "entityType": "fks",
-      "table": "lifecycle_actions"
-    },
-    {
-      "columns": [
-        "user_id"
-      ],
-      "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "fk_notifications_user_id_users_id_fk",
-      "entityType": "fks",
-      "table": "notifications"
-    },
-    {
-      "columns": [
-        "client_id"
-      ],
-      "tableTo": "oauth_clients",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "oauth_access_tokens_client_id_oauth_clients_id_fk",
-      "entityType": "fks",
-      "table": "oauth_access_tokens"
-    },
-    {
-      "columns": [
-        "user_id"
-      ],
-      "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "oauth_access_tokens_user_id_users_id_fk",
-      "entityType": "fks",
-      "table": "oauth_access_tokens"
-    },
-    {
-      "columns": [
-        "authorization_code_id"
-      ],
-      "tableTo": "oauth_authorization_codes",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "fk_oauth_access_tokens_authorization_code_id_oauth_authorization_codes_id_fk",
-      "entityType": "fks",
-      "table": "oauth_access_tokens"
-    },
-    {
-      "columns": [
-        "client_id"
-      ],
-      "tableTo": "oauth_clients",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "oauth_authorization_codes_client_id_oauth_clients_id_fk",
-      "entityType": "fks",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "columns": [
-        "user_id"
-      ],
-      "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "oauth_authorization_codes_user_id_users_id_fk",
-      "entityType": "fks",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "columns": [
-        "client_id"
-      ],
-      "tableTo": "oauth_clients",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "fk_oauth_device_codes_client_id_oauth_clients_id_fk",
-      "entityType": "fks",
-      "table": "oauth_device_codes"
-    },
-    {
-      "columns": [
-        "user_id"
-      ],
-      "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "fk_oauth_device_codes_user_id_users_id_fk",
-      "entityType": "fks",
-      "table": "oauth_device_codes"
-    },
-    {
-      "columns": [
-        "user_id"
-      ],
-      "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "oauth_grants_user_id_users_id_fk",
-      "entityType": "fks",
-      "table": "oauth_grants"
-    },
-    {
-      "columns": [
-        "client_id"
-      ],
-      "tableTo": "oauth_clients",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "oauth_grants_client_id_oauth_clients_id_fk",
-      "entityType": "fks",
-      "table": "oauth_grants"
-    },
-    {
-      "columns": [
-        "client_id"
-      ],
-      "tableTo": "oauth_clients",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "oauth_refresh_tokens_client_id_oauth_clients_id_fk",
-      "entityType": "fks",
-      "table": "oauth_refresh_tokens"
-    },
-    {
-      "columns": [
-        "user_id"
-      ],
-      "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "oauth_refresh_tokens_user_id_users_id_fk",
-      "entityType": "fks",
-      "table": "oauth_refresh_tokens"
-    },
-    {
-      "columns": [
-        "user_id"
-      ],
-      "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "passkeys_user_id_users_id_fk",
-      "entityType": "fks",
-      "table": "passkeys"
-    },
-    {
-      "columns": [
-        "user_id"
-      ],
-      "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "password_reset_tokens_user_id_users_id_fk",
-      "entityType": "fks",
-      "table": "password_reset_tokens"
-    },
-    {
-      "columns": [
-        "user_id"
-      ],
-      "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "sessions_user_id_users_id_fk",
-      "entityType": "fks",
-      "table": "sessions"
-    },
-    {
-      "columns": [
-        "role_id"
-      ],
-      "tableTo": "roles",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "fk_role_permissions_role_id_roles_id_fk",
-      "entityType": "fks",
-      "table": "role_permissions"
-    },
-    {
-      "columns": [
-        "permission_id"
-      ],
-      "tableTo": "permissions",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "fk_role_permissions_permission_id_permissions_id_fk",
-      "entityType": "fks",
-      "table": "role_permissions"
-    },
-    {
-      "columns": [
-        "user_id"
-      ],
-      "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "fk_user_roles_user_id_users_id_fk",
-      "entityType": "fks",
-      "table": "user_roles"
-    },
-    {
-      "columns": [
-        "role_id"
-      ],
-      "tableTo": "roles",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "fk_user_roles_role_id_roles_id_fk",
-      "entityType": "fks",
-      "table": "user_roles"
-    },
-    {
-      "columns": [
-        "assigned_by"
-      ],
-      "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "SET NULL",
-      "nameExplicit": false,
-      "name": "fk_user_roles_assigned_by_users_id_fk",
-      "entityType": "fks",
-      "table": "user_roles"
-    },
-    {
-      "columns": [
-        "created_by_user_id"
-      ],
-      "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "SET NULL",
-      "nameExplicit": false,
-      "name": "fk_signin_keys_created_by_user_id_users_id_fk",
-      "entityType": "fks",
-      "table": "signin_keys"
-    },
-    {
-      "columns": [
-        "user_id"
-      ],
-      "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "fk_ssh_certificates_user_id_users_id_fk",
-      "entityType": "fks",
-      "table": "ssh_certificates"
-    },
-    {
-      "columns": [
-        "user_id"
-      ],
-      "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "nameExplicit": false,
-      "name": "fk_user_ssh_keys_user_id_users_id_fk",
-      "entityType": "fks",
-      "table": "user_ssh_keys"
-    },
-    {
-      "columns": [
-        "role_id",
-        "permission_id"
-      ],
-      "nameExplicit": false,
-      "name": "role_permissions_pk",
-      "entityType": "pks",
-      "table": "role_permissions"
-    },
-    {
-      "columns": [
-        "user_id",
-        "role_id"
-      ],
-      "nameExplicit": false,
-      "name": "user_roles_pk",
-      "entityType": "pks",
-      "table": "user_roles"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "instance_settings_pk",
-      "table": "instance_settings",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "invite_tokens_pk",
-      "table": "invite_tokens",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "lifecycle_actions_pk",
-      "table": "lifecycle_actions",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "notifications_pk",
-      "table": "notifications",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "oauth_access_tokens_pk",
-      "table": "oauth_access_tokens",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "oauth_authorization_codes_pk",
-      "table": "oauth_authorization_codes",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "oauth_clients_pk",
-      "table": "oauth_clients",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "oauth_device_codes_pk",
-      "table": "oauth_device_codes",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "oauth_grants_pk",
-      "table": "oauth_grants",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "oauth_refresh_tokens_pk",
-      "table": "oauth_refresh_tokens",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "passkeys_pk",
-      "table": "passkeys",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "password_reset_tokens_pk",
-      "table": "password_reset_tokens",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "sessions_pk",
-      "table": "sessions",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "users_pk",
-      "table": "users",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "passkey_challenges_pk",
-      "table": "passkey_challenges",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "permissions_pk",
-      "table": "permissions",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "roles_pk",
-      "table": "roles",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "signin_keys_pk",
-      "table": "signin_keys",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "ssh_certificates_pk",
-      "table": "ssh_certificates",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "user_ssh_keys_pk",
-      "table": "user_ssh_keys",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        {
-          "value": "token_hash",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "invite_tokens_token_hash_idx",
-      "entityType": "indexes",
-      "table": "invite_tokens"
-    },
-    {
-      "columns": [
-        {
-          "value": "email",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "invite_tokens_email_idx",
-      "entityType": "indexes",
-      "table": "invite_tokens"
-    },
-    {
-      "columns": [
-        {
-          "value": "status",
-          "isExpression": false
-        },
-        {
-          "value": "execute_at",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "lifecycle_actions_pending_idx",
-      "entityType": "indexes",
-      "table": "lifecycle_actions"
-    },
-    {
-      "columns": [
-        {
-          "value": "user_id",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "lifecycle_actions_user_idx",
-      "entityType": "indexes",
-      "table": "lifecycle_actions"
-    },
-    {
-      "columns": [
-        {
-          "value": "user_id",
-          "isExpression": false
-        },
-        {
-          "value": "client_id",
-          "isExpression": false
-        }
-      ],
-      "isUnique": true,
-      "where": null,
-      "origin": "manual",
-      "name": "oauth_grants_user_client_idx",
-      "entityType": "indexes",
-      "table": "oauth_grants"
-    },
-    {
-      "columns": [
-        {
-          "value": "permission_id",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "role_permissions_permission_idx",
-      "entityType": "indexes",
-      "table": "role_permissions"
-    },
-    {
-      "columns": [
-        {
-          "value": "role_id",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "user_roles_role_idx",
-      "entityType": "indexes",
-      "table": "user_roles"
-    },
-    {
-      "columns": [
-        {
-          "value": "key_hash",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "signin_keys_key_hash_idx",
-      "entityType": "indexes",
-      "table": "signin_keys"
-    },
-    {
-      "columns": [
-        {
-          "value": "key_prefix",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "signin_keys_key_prefix_idx",
-      "entityType": "indexes",
-      "table": "signin_keys"
-    },
-    {
-      "columns": [
-        {
-          "value": "user_id",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "ssh_certificates_user_idx",
-      "entityType": "indexes",
-      "table": "ssh_certificates"
-    },
-    {
-      "columns": [
-        {
-          "value": "serial",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "ssh_certificates_serial_idx",
-      "entityType": "indexes",
-      "table": "ssh_certificates"
-    },
-    {
-      "columns": [
-        {
-          "value": "fingerprint",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "ssh_certificates_fingerprint_idx",
-      "entityType": "indexes",
-      "table": "ssh_certificates"
-    },
-    {
-      "columns": [
-        {
-          "value": "user_id",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "user_ssh_keys_user_idx",
-      "entityType": "indexes",
-      "table": "user_ssh_keys"
-    },
-    {
-      "columns": [
-        {
-          "value": "fingerprint",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "user_ssh_keys_fingerprint_idx",
-      "entityType": "indexes",
-      "table": "user_ssh_keys"
-    },
-    {
-      "columns": [
-        "token_hash"
-      ],
-      "nameExplicit": false,
-      "name": "invite_tokens_token_hash_unique",
-      "entityType": "uniques",
-      "table": "invite_tokens"
-    },
-    {
-      "columns": [
-        "token_hash"
-      ],
-      "nameExplicit": false,
-      "name": "oauth_access_tokens_token_hash_unique",
-      "entityType": "uniques",
-      "table": "oauth_access_tokens"
-    },
-    {
-      "columns": [
-        "code_hash"
-      ],
-      "nameExplicit": false,
-      "name": "oauth_authorization_codes_code_hash_unique",
-      "entityType": "uniques",
-      "table": "oauth_authorization_codes"
-    },
-    {
-      "columns": [
-        "device_code_hash"
-      ],
-      "nameExplicit": false,
-      "name": "oauth_device_codes_device_code_hash_unique",
-      "entityType": "uniques",
-      "table": "oauth_device_codes"
-    },
-    {
-      "columns": [
-        "user_code"
-      ],
-      "nameExplicit": false,
-      "name": "oauth_device_codes_user_code_unique",
-      "entityType": "uniques",
-      "table": "oauth_device_codes"
-    },
-    {
-      "columns": [
-        "token_hash"
-      ],
-      "nameExplicit": false,
-      "name": "oauth_refresh_tokens_token_hash_unique",
-      "entityType": "uniques",
-      "table": "oauth_refresh_tokens"
-    },
-    {
-      "columns": [
-        "credential_id"
-      ],
-      "nameExplicit": false,
-      "name": "passkeys_credential_id_unique",
-      "entityType": "uniques",
-      "table": "passkeys"
-    },
-    {
-      "columns": [
-        "token_hash"
-      ],
-      "nameExplicit": false,
-      "name": "password_reset_tokens_token_hash_unique",
-      "entityType": "uniques",
-      "table": "password_reset_tokens"
-    },
-    {
-      "columns": [
-        "token_hash"
-      ],
-      "nameExplicit": false,
-      "name": "sessions_token_hash_unique",
-      "entityType": "uniques",
-      "table": "sessions"
-    },
-    {
-      "columns": [
-        "email"
-      ],
-      "nameExplicit": false,
-      "name": "users_email_unique",
-      "entityType": "uniques",
-      "table": "users"
-    },
-    {
-      "columns": [
-        "preferred_username"
-      ],
-      "nameExplicit": false,
-      "name": "users_preferred_username_unique",
-      "entityType": "uniques",
-      "table": "users"
-    },
-    {
-      "columns": [
-        "name"
-      ],
-      "nameExplicit": false,
-      "name": "roles_name_unique",
-      "entityType": "uniques",
-      "table": "roles"
-    },
-    {
-      "columns": [
-        "key_hash"
-      ],
-      "nameExplicit": false,
-      "name": "signin_keys_key_hash_unique",
-      "entityType": "uniques",
-      "table": "signin_keys"
+ "version": "7",
+ "dialect": "sqlite",
+ "id": "a1226d58-aea1-4c8c-87a9-01a474099225",
+ "prevIds": ["18713228-7dfa-4ee4-9b90-fd03431d4b8c"],
+ "ddl": [
+  {
+   "name": "instance_settings",
+   "entityType": "tables"
+  },
+  {
+   "name": "invite_tokens",
+   "entityType": "tables"
+  },
+  {
+   "name": "lifecycle_actions",
+   "entityType": "tables"
+  },
+  {
+   "name": "notifications",
+   "entityType": "tables"
+  },
+  {
+   "name": "oauth_access_tokens",
+   "entityType": "tables"
+  },
+  {
+   "name": "oauth_authorization_codes",
+   "entityType": "tables"
+  },
+  {
+   "name": "oauth_clients",
+   "entityType": "tables"
+  },
+  {
+   "name": "oauth_device_codes",
+   "entityType": "tables"
+  },
+  {
+   "name": "oauth_grants",
+   "entityType": "tables"
+  },
+  {
+   "name": "oauth_refresh_tokens",
+   "entityType": "tables"
+  },
+  {
+   "name": "passkeys",
+   "entityType": "tables"
+  },
+  {
+   "name": "password_reset_tokens",
+   "entityType": "tables"
+  },
+  {
+   "name": "sessions",
+   "entityType": "tables"
+  },
+  {
+   "name": "users",
+   "entityType": "tables"
+  },
+  {
+   "name": "passkey_challenges",
+   "entityType": "tables"
+  },
+  {
+   "name": "permissions",
+   "entityType": "tables"
+  },
+  {
+   "name": "role_permissions",
+   "entityType": "tables"
+  },
+  {
+   "name": "roles",
+   "entityType": "tables"
+  },
+  {
+   "name": "user_roles",
+   "entityType": "tables"
+  },
+  {
+   "name": "signin_keys",
+   "entityType": "tables"
+  },
+  {
+   "name": "ssh_certificates",
+   "entityType": "tables"
+  },
+  {
+   "name": "user_ssh_keys",
+   "entityType": "tables"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "instance_settings"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": "'enabled'",
+   "generated": null,
+   "name": "signup_mode",
+   "entityType": "columns",
+   "table": "instance_settings"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": "'enabled'",
+   "generated": null,
+   "name": "signin_mode",
+   "entityType": "columns",
+   "table": "instance_settings"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "instance_settings"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "updated_at",
+   "entityType": "columns",
+   "table": "instance_settings"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "invite_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "email",
+   "entityType": "columns",
+   "table": "invite_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "token_hash",
+   "entityType": "columns",
+   "table": "invite_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": "'user'",
+   "generated": null,
+   "name": "role_id",
+   "entityType": "columns",
+   "table": "invite_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_by_user_id",
+   "entityType": "columns",
+   "table": "invite_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "used_by_user_id",
+   "entityType": "columns",
+   "table": "invite_tokens"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "expires_at",
+   "entityType": "columns",
+   "table": "invite_tokens"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "used_at",
+   "entityType": "columns",
+   "table": "invite_tokens"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "invite_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "lifecycle_actions"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "user_id",
+   "entityType": "columns",
+   "table": "lifecycle_actions"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "action",
+   "entityType": "columns",
+   "table": "lifecycle_actions"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "execute_at",
+   "entityType": "columns",
+   "table": "lifecycle_actions"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": "'pending'",
+   "generated": null,
+   "name": "status",
+   "entityType": "columns",
+   "table": "lifecycle_actions"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "lifecycle_actions"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "updated_at",
+   "entityType": "columns",
+   "table": "lifecycle_actions"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "executed_at",
+   "entityType": "columns",
+   "table": "lifecycle_actions"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "cancelled_at",
+   "entityType": "columns",
+   "table": "lifecycle_actions"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "error",
+   "entityType": "columns",
+   "table": "lifecycle_actions"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "notifications"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": "'user'",
+   "generated": null,
+   "name": "target",
+   "entityType": "columns",
+   "table": "notifications"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "user_id",
+   "entityType": "columns",
+   "table": "notifications"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "type",
+   "entityType": "columns",
+   "table": "notifications"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": "'general'",
+   "generated": null,
+   "name": "category",
+   "entityType": "columns",
+   "table": "notifications"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": "'info'",
+   "generated": null,
+   "name": "severity",
+   "entityType": "columns",
+   "table": "notifications"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "title",
+   "entityType": "columns",
+   "table": "notifications"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "message",
+   "entityType": "columns",
+   "table": "notifications"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "action_url",
+   "entityType": "columns",
+   "table": "notifications"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "data",
+   "entityType": "columns",
+   "table": "notifications"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "read_at",
+   "entityType": "columns",
+   "table": "notifications"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "notifications"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "oauth_access_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "client_id",
+   "entityType": "columns",
+   "table": "oauth_access_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "user_id",
+   "entityType": "columns",
+   "table": "oauth_access_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "token_hash",
+   "entityType": "columns",
+   "table": "oauth_access_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "scope",
+   "entityType": "columns",
+   "table": "oauth_access_tokens"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "expires_at",
+   "entityType": "columns",
+   "table": "oauth_access_tokens"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "oauth_access_tokens"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "revoked_at",
+   "entityType": "columns",
+   "table": "oauth_access_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "authorization_code_id",
+   "entityType": "columns",
+   "table": "oauth_access_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "client_id",
+   "entityType": "columns",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "user_id",
+   "entityType": "columns",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "code_hash",
+   "entityType": "columns",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "redirect_uri",
+   "entityType": "columns",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "scope",
+   "entityType": "columns",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "nonce",
+   "entityType": "columns",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "code_challenge",
+   "entityType": "columns",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "code_challenge_method",
+   "entityType": "columns",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "acr",
+   "entityType": "columns",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "auth_time",
+   "entityType": "columns",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "expires_at",
+   "entityType": "columns",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "used_at",
+   "entityType": "columns",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "claims",
+   "entityType": "columns",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "oauth_clients"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "name",
+   "entityType": "columns",
+   "table": "oauth_clients"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "client_type",
+   "entityType": "columns",
+   "table": "oauth_clients"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "client_secret_hash",
+   "entityType": "columns",
+   "table": "oauth_clients"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "redirect_uris",
+   "entityType": "columns",
+   "table": "oauth_clients"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "scopes",
+   "entityType": "columns",
+   "table": "oauth_clients"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "oauth_clients"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "updated_at",
+   "entityType": "columns",
+   "table": "oauth_clients"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "oauth_device_codes"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "client_id",
+   "entityType": "columns",
+   "table": "oauth_device_codes"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "device_code_hash",
+   "entityType": "columns",
+   "table": "oauth_device_codes"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "user_code",
+   "entityType": "columns",
+   "table": "oauth_device_codes"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "scope",
+   "entityType": "columns",
+   "table": "oauth_device_codes"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "user_id",
+   "entityType": "columns",
+   "table": "oauth_device_codes"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": "'pending'",
+   "generated": null,
+   "name": "status",
+   "entityType": "columns",
+   "table": "oauth_device_codes"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": "5",
+   "generated": null,
+   "name": "polling_interval",
+   "entityType": "columns",
+   "table": "oauth_device_codes"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "last_polled_at",
+   "entityType": "columns",
+   "table": "oauth_device_codes"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "expires_at",
+   "entityType": "columns",
+   "table": "oauth_device_codes"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "oauth_device_codes"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "oauth_grants"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "user_id",
+   "entityType": "columns",
+   "table": "oauth_grants"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "client_id",
+   "entityType": "columns",
+   "table": "oauth_grants"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "scopes",
+   "entityType": "columns",
+   "table": "oauth_grants"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "granted_at",
+   "entityType": "columns",
+   "table": "oauth_grants"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "revoked_at",
+   "entityType": "columns",
+   "table": "oauth_grants"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "oauth_refresh_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "client_id",
+   "entityType": "columns",
+   "table": "oauth_refresh_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "user_id",
+   "entityType": "columns",
+   "table": "oauth_refresh_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "token_hash",
+   "entityType": "columns",
+   "table": "oauth_refresh_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "scope",
+   "entityType": "columns",
+   "table": "oauth_refresh_tokens"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "expires_at",
+   "entityType": "columns",
+   "table": "oauth_refresh_tokens"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "oauth_refresh_tokens"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "revoked_at",
+   "entityType": "columns",
+   "table": "oauth_refresh_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "replaced_by",
+   "entityType": "columns",
+   "table": "oauth_refresh_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "passkeys"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "user_id",
+   "entityType": "columns",
+   "table": "passkeys"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "credential_id",
+   "entityType": "columns",
+   "table": "passkeys"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "public_key",
+   "entityType": "columns",
+   "table": "passkeys"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": "0",
+   "generated": null,
+   "name": "counter",
+   "entityType": "columns",
+   "table": "passkeys"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "transports",
+   "entityType": "columns",
+   "table": "passkeys"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "name",
+   "entityType": "columns",
+   "table": "passkeys"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "passkeys"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "last_used_at",
+   "entityType": "columns",
+   "table": "passkeys"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "password_reset_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "user_id",
+   "entityType": "columns",
+   "table": "password_reset_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "token_hash",
+   "entityType": "columns",
+   "table": "password_reset_tokens"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "expires_at",
+   "entityType": "columns",
+   "table": "password_reset_tokens"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "password_reset_tokens"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "sessions"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "user_id",
+   "entityType": "columns",
+   "table": "sessions"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "token_hash",
+   "entityType": "columns",
+   "table": "sessions"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "ip_address",
+   "entityType": "columns",
+   "table": "sessions"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "country",
+   "entityType": "columns",
+   "table": "sessions"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "city",
+   "entityType": "columns",
+   "table": "sessions"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "region",
+   "entityType": "columns",
+   "table": "sessions"
+  },
+  {
+   "type": "real",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "latitude",
+   "entityType": "columns",
+   "table": "sessions"
+  },
+  {
+   "type": "real",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "longitude",
+   "entityType": "columns",
+   "table": "sessions"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "user_agent",
+   "entityType": "columns",
+   "table": "sessions"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "browser",
+   "entityType": "columns",
+   "table": "sessions"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "os",
+   "entityType": "columns",
+   "table": "sessions"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "expires_at",
+   "entityType": "columns",
+   "table": "sessions"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "sessions"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "last_used_at",
+   "entityType": "columns",
+   "table": "sessions"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "email",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "password_hash",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "display_name",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "given_name",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "family_name",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "middle_name",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "nickname",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "preferred_username",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "profile_url",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "profile_image_key",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "website",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "gender",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "birthdate",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "zoneinfo",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "locale",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "email_verified_at",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "disabled_at",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "updated_at",
+   "entityType": "columns",
+   "table": "users"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "passkey_challenges"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "user_id",
+   "entityType": "columns",
+   "table": "passkey_challenges"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "challenge",
+   "entityType": "columns",
+   "table": "passkey_challenges"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "expires_at",
+   "entityType": "columns",
+   "table": "passkey_challenges"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "passkey_challenges"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "permissions"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "name",
+   "entityType": "columns",
+   "table": "permissions"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "description",
+   "entityType": "columns",
+   "table": "permissions"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "resource",
+   "entityType": "columns",
+   "table": "permissions"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": "true",
+   "generated": null,
+   "name": "is_system",
+   "entityType": "columns",
+   "table": "permissions"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "permissions"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "updated_at",
+   "entityType": "columns",
+   "table": "permissions"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "role_id",
+   "entityType": "columns",
+   "table": "role_permissions"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "permission_id",
+   "entityType": "columns",
+   "table": "role_permissions"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "role_permissions"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "roles"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "name",
+   "entityType": "columns",
+   "table": "roles"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "description",
+   "entityType": "columns",
+   "table": "roles"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": "false",
+   "generated": null,
+   "name": "is_system",
+   "entityType": "columns",
+   "table": "roles"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "roles"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "updated_at",
+   "entityType": "columns",
+   "table": "roles"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "user_id",
+   "entityType": "columns",
+   "table": "user_roles"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "role_id",
+   "entityType": "columns",
+   "table": "user_roles"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "assigned_at",
+   "entityType": "columns",
+   "table": "user_roles"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "assigned_by",
+   "entityType": "columns",
+   "table": "user_roles"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "signin_keys"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "name",
+   "entityType": "columns",
+   "table": "signin_keys"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "key_hash",
+   "entityType": "columns",
+   "table": "signin_keys"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "key_prefix",
+   "entityType": "columns",
+   "table": "signin_keys"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_by_user_id",
+   "entityType": "columns",
+   "table": "signin_keys"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "expires_at",
+   "entityType": "columns",
+   "table": "signin_keys"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "last_used_at",
+   "entityType": "columns",
+   "table": "signin_keys"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "signin_keys"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "ssh_certificates"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "user_id",
+   "entityType": "columns",
+   "table": "ssh_certificates"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "serial",
+   "entityType": "columns",
+   "table": "ssh_certificates"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "key_id",
+   "entityType": "columns",
+   "table": "ssh_certificates"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "principals",
+   "entityType": "columns",
+   "table": "ssh_certificates"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "valid_after",
+   "entityType": "columns",
+   "table": "ssh_certificates"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "valid_before",
+   "entityType": "columns",
+   "table": "ssh_certificates"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "fingerprint",
+   "entityType": "columns",
+   "table": "ssh_certificates"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "ca_fingerprint",
+   "entityType": "columns",
+   "table": "ssh_certificates"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "client_ip",
+   "entityType": "columns",
+   "table": "ssh_certificates"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "user_agent",
+   "entityType": "columns",
+   "table": "ssh_certificates"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "revoked_at",
+   "entityType": "columns",
+   "table": "ssh_certificates"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "revoked_by",
+   "entityType": "columns",
+   "table": "ssh_certificates"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "revoked_reason",
+   "entityType": "columns",
+   "table": "ssh_certificates"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "ssh_certificates"
+  },
+  {
+   "type": "text",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "id",
+   "entityType": "columns",
+   "table": "user_ssh_keys"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "user_id",
+   "entityType": "columns",
+   "table": "user_ssh_keys"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "name",
+   "entityType": "columns",
+   "table": "user_ssh_keys"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "public_key",
+   "entityType": "columns",
+   "table": "user_ssh_keys"
+  },
+  {
+   "type": "text",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "fingerprint",
+   "entityType": "columns",
+   "table": "user_ssh_keys"
+  },
+  {
+   "type": "integer",
+   "notNull": true,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "created_at",
+   "entityType": "columns",
+   "table": "user_ssh_keys"
+  },
+  {
+   "type": "integer",
+   "notNull": false,
+   "autoincrement": false,
+   "default": null,
+   "generated": null,
+   "name": "last_used_at",
+   "entityType": "columns",
+   "table": "user_ssh_keys"
+  },
+  {
+   "columns": ["role_id"],
+   "tableTo": "roles",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "fk_invite_tokens_role_id_roles_id_fk",
+   "entityType": "fks",
+   "table": "invite_tokens"
+  },
+  {
+   "columns": ["created_by_user_id"],
+   "tableTo": "users",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "SET NULL",
+   "nameExplicit": false,
+   "name": "fk_invite_tokens_created_by_user_id_users_id_fk",
+   "entityType": "fks",
+   "table": "invite_tokens"
+  },
+  {
+   "columns": ["used_by_user_id"],
+   "tableTo": "users",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "SET NULL",
+   "nameExplicit": false,
+   "name": "fk_invite_tokens_used_by_user_id_users_id_fk",
+   "entityType": "fks",
+   "table": "invite_tokens"
+  },
+  {
+   "columns": ["user_id"],
+   "tableTo": "users",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "lifecycle_actions_user_id_users_id_fk",
+   "entityType": "fks",
+   "table": "lifecycle_actions"
+  },
+  {
+   "columns": ["user_id"],
+   "tableTo": "users",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "fk_notifications_user_id_users_id_fk",
+   "entityType": "fks",
+   "table": "notifications"
+  },
+  {
+   "columns": ["client_id"],
+   "tableTo": "oauth_clients",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "oauth_access_tokens_client_id_oauth_clients_id_fk",
+   "entityType": "fks",
+   "table": "oauth_access_tokens"
+  },
+  {
+   "columns": ["user_id"],
+   "tableTo": "users",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "oauth_access_tokens_user_id_users_id_fk",
+   "entityType": "fks",
+   "table": "oauth_access_tokens"
+  },
+  {
+   "columns": ["authorization_code_id"],
+   "tableTo": "oauth_authorization_codes",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "fk_oauth_access_tokens_authorization_code_id_oauth_authorization_codes_id_fk",
+   "entityType": "fks",
+   "table": "oauth_access_tokens"
+  },
+  {
+   "columns": ["client_id"],
+   "tableTo": "oauth_clients",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "oauth_authorization_codes_client_id_oauth_clients_id_fk",
+   "entityType": "fks",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "columns": ["user_id"],
+   "tableTo": "users",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "oauth_authorization_codes_user_id_users_id_fk",
+   "entityType": "fks",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "columns": ["client_id"],
+   "tableTo": "oauth_clients",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "fk_oauth_device_codes_client_id_oauth_clients_id_fk",
+   "entityType": "fks",
+   "table": "oauth_device_codes"
+  },
+  {
+   "columns": ["user_id"],
+   "tableTo": "users",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "fk_oauth_device_codes_user_id_users_id_fk",
+   "entityType": "fks",
+   "table": "oauth_device_codes"
+  },
+  {
+   "columns": ["user_id"],
+   "tableTo": "users",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "oauth_grants_user_id_users_id_fk",
+   "entityType": "fks",
+   "table": "oauth_grants"
+  },
+  {
+   "columns": ["client_id"],
+   "tableTo": "oauth_clients",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "oauth_grants_client_id_oauth_clients_id_fk",
+   "entityType": "fks",
+   "table": "oauth_grants"
+  },
+  {
+   "columns": ["client_id"],
+   "tableTo": "oauth_clients",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "oauth_refresh_tokens_client_id_oauth_clients_id_fk",
+   "entityType": "fks",
+   "table": "oauth_refresh_tokens"
+  },
+  {
+   "columns": ["user_id"],
+   "tableTo": "users",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "oauth_refresh_tokens_user_id_users_id_fk",
+   "entityType": "fks",
+   "table": "oauth_refresh_tokens"
+  },
+  {
+   "columns": ["user_id"],
+   "tableTo": "users",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "passkeys_user_id_users_id_fk",
+   "entityType": "fks",
+   "table": "passkeys"
+  },
+  {
+   "columns": ["user_id"],
+   "tableTo": "users",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "password_reset_tokens_user_id_users_id_fk",
+   "entityType": "fks",
+   "table": "password_reset_tokens"
+  },
+  {
+   "columns": ["user_id"],
+   "tableTo": "users",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "sessions_user_id_users_id_fk",
+   "entityType": "fks",
+   "table": "sessions"
+  },
+  {
+   "columns": ["role_id"],
+   "tableTo": "roles",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "fk_role_permissions_role_id_roles_id_fk",
+   "entityType": "fks",
+   "table": "role_permissions"
+  },
+  {
+   "columns": ["permission_id"],
+   "tableTo": "permissions",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "fk_role_permissions_permission_id_permissions_id_fk",
+   "entityType": "fks",
+   "table": "role_permissions"
+  },
+  {
+   "columns": ["user_id"],
+   "tableTo": "users",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "fk_user_roles_user_id_users_id_fk",
+   "entityType": "fks",
+   "table": "user_roles"
+  },
+  {
+   "columns": ["role_id"],
+   "tableTo": "roles",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "fk_user_roles_role_id_roles_id_fk",
+   "entityType": "fks",
+   "table": "user_roles"
+  },
+  {
+   "columns": ["assigned_by"],
+   "tableTo": "users",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "SET NULL",
+   "nameExplicit": false,
+   "name": "fk_user_roles_assigned_by_users_id_fk",
+   "entityType": "fks",
+   "table": "user_roles"
+  },
+  {
+   "columns": ["created_by_user_id"],
+   "tableTo": "users",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "SET NULL",
+   "nameExplicit": false,
+   "name": "fk_signin_keys_created_by_user_id_users_id_fk",
+   "entityType": "fks",
+   "table": "signin_keys"
+  },
+  {
+   "columns": ["user_id"],
+   "tableTo": "users",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "fk_ssh_certificates_user_id_users_id_fk",
+   "entityType": "fks",
+   "table": "ssh_certificates"
+  },
+  {
+   "columns": ["user_id"],
+   "tableTo": "users",
+   "columnsTo": ["id"],
+   "onUpdate": "NO ACTION",
+   "onDelete": "CASCADE",
+   "nameExplicit": false,
+   "name": "fk_user_ssh_keys_user_id_users_id_fk",
+   "entityType": "fks",
+   "table": "user_ssh_keys"
+  },
+  {
+   "columns": ["role_id", "permission_id"],
+   "nameExplicit": false,
+   "name": "role_permissions_pk",
+   "entityType": "pks",
+   "table": "role_permissions"
+  },
+  {
+   "columns": ["user_id", "role_id"],
+   "nameExplicit": false,
+   "name": "user_roles_pk",
+   "entityType": "pks",
+   "table": "user_roles"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "instance_settings_pk",
+   "table": "instance_settings",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "invite_tokens_pk",
+   "table": "invite_tokens",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "lifecycle_actions_pk",
+   "table": "lifecycle_actions",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "notifications_pk",
+   "table": "notifications",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "oauth_access_tokens_pk",
+   "table": "oauth_access_tokens",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "oauth_authorization_codes_pk",
+   "table": "oauth_authorization_codes",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "oauth_clients_pk",
+   "table": "oauth_clients",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "oauth_device_codes_pk",
+   "table": "oauth_device_codes",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "oauth_grants_pk",
+   "table": "oauth_grants",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "oauth_refresh_tokens_pk",
+   "table": "oauth_refresh_tokens",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "passkeys_pk",
+   "table": "passkeys",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "password_reset_tokens_pk",
+   "table": "password_reset_tokens",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "sessions_pk",
+   "table": "sessions",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "users_pk",
+   "table": "users",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "passkey_challenges_pk",
+   "table": "passkey_challenges",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "permissions_pk",
+   "table": "permissions",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "roles_pk",
+   "table": "roles",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "signin_keys_pk",
+   "table": "signin_keys",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "ssh_certificates_pk",
+   "table": "ssh_certificates",
+   "entityType": "pks"
+  },
+  {
+   "columns": ["id"],
+   "nameExplicit": false,
+   "name": "user_ssh_keys_pk",
+   "table": "user_ssh_keys",
+   "entityType": "pks"
+  },
+  {
+   "columns": [
+    {
+     "value": "token_hash",
+     "isExpression": false
     }
-  ],
-  "renames": []
+   ],
+   "isUnique": false,
+   "where": null,
+   "origin": "manual",
+   "name": "invite_tokens_token_hash_idx",
+   "entityType": "indexes",
+   "table": "invite_tokens"
+  },
+  {
+   "columns": [
+    {
+     "value": "email",
+     "isExpression": false
+    }
+   ],
+   "isUnique": false,
+   "where": null,
+   "origin": "manual",
+   "name": "invite_tokens_email_idx",
+   "entityType": "indexes",
+   "table": "invite_tokens"
+  },
+  {
+   "columns": [
+    {
+     "value": "status",
+     "isExpression": false
+    },
+    {
+     "value": "execute_at",
+     "isExpression": false
+    }
+   ],
+   "isUnique": false,
+   "where": null,
+   "origin": "manual",
+   "name": "lifecycle_actions_pending_idx",
+   "entityType": "indexes",
+   "table": "lifecycle_actions"
+  },
+  {
+   "columns": [
+    {
+     "value": "user_id",
+     "isExpression": false
+    }
+   ],
+   "isUnique": false,
+   "where": null,
+   "origin": "manual",
+   "name": "lifecycle_actions_user_idx",
+   "entityType": "indexes",
+   "table": "lifecycle_actions"
+  },
+  {
+   "columns": [
+    {
+     "value": "user_id",
+     "isExpression": false
+    },
+    {
+     "value": "client_id",
+     "isExpression": false
+    }
+   ],
+   "isUnique": true,
+   "where": null,
+   "origin": "manual",
+   "name": "oauth_grants_user_client_idx",
+   "entityType": "indexes",
+   "table": "oauth_grants"
+  },
+  {
+   "columns": [
+    {
+     "value": "permission_id",
+     "isExpression": false
+    }
+   ],
+   "isUnique": false,
+   "where": null,
+   "origin": "manual",
+   "name": "role_permissions_permission_idx",
+   "entityType": "indexes",
+   "table": "role_permissions"
+  },
+  {
+   "columns": [
+    {
+     "value": "role_id",
+     "isExpression": false
+    }
+   ],
+   "isUnique": false,
+   "where": null,
+   "origin": "manual",
+   "name": "user_roles_role_idx",
+   "entityType": "indexes",
+   "table": "user_roles"
+  },
+  {
+   "columns": [
+    {
+     "value": "key_hash",
+     "isExpression": false
+    }
+   ],
+   "isUnique": false,
+   "where": null,
+   "origin": "manual",
+   "name": "signin_keys_key_hash_idx",
+   "entityType": "indexes",
+   "table": "signin_keys"
+  },
+  {
+   "columns": [
+    {
+     "value": "key_prefix",
+     "isExpression": false
+    }
+   ],
+   "isUnique": false,
+   "where": null,
+   "origin": "manual",
+   "name": "signin_keys_key_prefix_idx",
+   "entityType": "indexes",
+   "table": "signin_keys"
+  },
+  {
+   "columns": [
+    {
+     "value": "user_id",
+     "isExpression": false
+    }
+   ],
+   "isUnique": false,
+   "where": null,
+   "origin": "manual",
+   "name": "ssh_certificates_user_idx",
+   "entityType": "indexes",
+   "table": "ssh_certificates"
+  },
+  {
+   "columns": [
+    {
+     "value": "serial",
+     "isExpression": false
+    }
+   ],
+   "isUnique": false,
+   "where": null,
+   "origin": "manual",
+   "name": "ssh_certificates_serial_idx",
+   "entityType": "indexes",
+   "table": "ssh_certificates"
+  },
+  {
+   "columns": [
+    {
+     "value": "fingerprint",
+     "isExpression": false
+    }
+   ],
+   "isUnique": false,
+   "where": null,
+   "origin": "manual",
+   "name": "ssh_certificates_fingerprint_idx",
+   "entityType": "indexes",
+   "table": "ssh_certificates"
+  },
+  {
+   "columns": [
+    {
+     "value": "user_id",
+     "isExpression": false
+    }
+   ],
+   "isUnique": false,
+   "where": null,
+   "origin": "manual",
+   "name": "user_ssh_keys_user_idx",
+   "entityType": "indexes",
+   "table": "user_ssh_keys"
+  },
+  {
+   "columns": [
+    {
+     "value": "fingerprint",
+     "isExpression": false
+    }
+   ],
+   "isUnique": false,
+   "where": null,
+   "origin": "manual",
+   "name": "user_ssh_keys_fingerprint_idx",
+   "entityType": "indexes",
+   "table": "user_ssh_keys"
+  },
+  {
+   "columns": ["token_hash"],
+   "nameExplicit": false,
+   "name": "invite_tokens_token_hash_unique",
+   "entityType": "uniques",
+   "table": "invite_tokens"
+  },
+  {
+   "columns": ["token_hash"],
+   "nameExplicit": false,
+   "name": "oauth_access_tokens_token_hash_unique",
+   "entityType": "uniques",
+   "table": "oauth_access_tokens"
+  },
+  {
+   "columns": ["code_hash"],
+   "nameExplicit": false,
+   "name": "oauth_authorization_codes_code_hash_unique",
+   "entityType": "uniques",
+   "table": "oauth_authorization_codes"
+  },
+  {
+   "columns": ["device_code_hash"],
+   "nameExplicit": false,
+   "name": "oauth_device_codes_device_code_hash_unique",
+   "entityType": "uniques",
+   "table": "oauth_device_codes"
+  },
+  {
+   "columns": ["user_code"],
+   "nameExplicit": false,
+   "name": "oauth_device_codes_user_code_unique",
+   "entityType": "uniques",
+   "table": "oauth_device_codes"
+  },
+  {
+   "columns": ["token_hash"],
+   "nameExplicit": false,
+   "name": "oauth_refresh_tokens_token_hash_unique",
+   "entityType": "uniques",
+   "table": "oauth_refresh_tokens"
+  },
+  {
+   "columns": ["credential_id"],
+   "nameExplicit": false,
+   "name": "passkeys_credential_id_unique",
+   "entityType": "uniques",
+   "table": "passkeys"
+  },
+  {
+   "columns": ["token_hash"],
+   "nameExplicit": false,
+   "name": "password_reset_tokens_token_hash_unique",
+   "entityType": "uniques",
+   "table": "password_reset_tokens"
+  },
+  {
+   "columns": ["token_hash"],
+   "nameExplicit": false,
+   "name": "sessions_token_hash_unique",
+   "entityType": "uniques",
+   "table": "sessions"
+  },
+  {
+   "columns": ["email"],
+   "nameExplicit": false,
+   "name": "users_email_unique",
+   "entityType": "uniques",
+   "table": "users"
+  },
+  {
+   "columns": ["preferred_username"],
+   "nameExplicit": false,
+   "name": "users_preferred_username_unique",
+   "entityType": "uniques",
+   "table": "users"
+  },
+  {
+   "columns": ["name"],
+   "nameExplicit": false,
+   "name": "roles_name_unique",
+   "entityType": "uniques",
+   "table": "roles"
+  },
+  {
+   "columns": ["key_hash"],
+   "nameExplicit": false,
+   "name": "signin_keys_key_hash_unique",
+   "entityType": "uniques",
+   "table": "signin_keys"
+  }
+ ],
+ "renames": []
 }

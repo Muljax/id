@@ -1,3 +1,0 @@
-bun run typecheck
-bun run check
-bun test

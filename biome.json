@@ -10,7 +10,8 @@
   "ignoreUnknown": false,
   "includes": [
    "**",
-   "!apps",
+   "!**/dist",
+   "!**/*.gen.ts",
    "!**/worker-configuration.d.ts",
    "!./bun.lock",
    "!./biome.json"
@@ -20,7 +21,53 @@
   "enabled": true,
   "indentStyle": "tab"
  },
+ "css": {
+  "parser": {
+   "tailwindDirectives": true
+  }
+ },
  "overrides": [
+  {
+   "includes": ["**/*.test.ts", "**/test/**"],
+   "linter": {
+    "rules": {
+     "style": {
+      "noNonNullAssertion": "off"
+     },
+     "correctness": {
+      "noUnusedVariables": "off",
+      "noUnusedImports": "off"
+     }
+    }
+   }
+  },
+  {
+   "includes": ["apps/docs/**"],
+   "linter": {
+    "rules": {
+     "suspicious": {
+      "noAssignInExpressions": "off",
+      "noArrayIndexKey": "off"
+     },
+     "a11y": {
+      "noStaticElementInteractions": "off"
+     },
+     "correctness": {
+      "noUnusedVariables": "off"
+     }
+    }
+   }
+  },
+  {
+   "includes": ["apps/dashboard/**"],
+   "linter": {
+    "rules": {
+     "suspicious": {
+      "noExplicitAny": "off"
+     }
+    }
+   }
+  },
   {
    "includes": ["**/*.json", "**/*.jsonc", "**/*.yml", "**/*.yaml"],
    "formatter": {

@@ -255,7 +255,7 @@ describe("OAuth Flows & Authorization Libraries", () => {
 		const secret = "confidential-secret-999";
 		const secretHash = await hashToken(secret);
 
-		const [client] = await db
+		const [_client] = await db
 			.insert(schema.oauthClients)
 			.values({
 				id: "conf-client-m2m",

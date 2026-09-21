@@ -8,7 +8,6 @@ import {
 	revokeRefreshToken,
 } from "../src/lib/oauth/tokens";
 import {
-	getOAuthGrant,
 	grantOAuthAccess,
 	hasOAuthGrant,
 	revokeOAuthAccess,
