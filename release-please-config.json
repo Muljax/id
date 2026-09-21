@@ -14,7 +14,7 @@
    "release-type": "node"
   },
   "apps/cli": {
-   "release-type": "node"
+   "release-type": "go"
   }
  }
 }
