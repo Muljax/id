@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+
+project_name: muljax
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: muljax
+    main: .
+    binary: muljax
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/muljax/cli/cmd.Version={{.Version}}
+      - -X github.com/muljax/cli/cmd.Commit={{.Commit}}
+      - -X github.com/muljax/cli/cmd.BuildDate={{.Date}}
+
+archives:
+  - format: tar.gz
+    name_template: "muljax_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'

@@ -1,0 +1,47 @@
+{
+	"name": "@muljax/id-api",
+	"version": "1.7.0",
+	"main": "dist/src/types.d.ts",
+	"module": "dist/src/types.d.ts",
+	"types": "dist/src/types.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/src/types.d.ts",
+			"import": "./dist/src/types.d.ts"
+		}
+	},
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"dev": "wrangler dev",
+		"build": "bun build.ts",
+		"check": "bunx biome check .",
+		"check:fix": "bunx biome check . --fix",
+		"format": "bunx biome format --write .",
+		"typecheck": "bunx tsc --noEmit",
+		"test": "bun test",
+		"db:generate": "drizzle-kit generate",
+		"prepare": "husky"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.5.14",
+		"@cloudflare/workers-types": "5.20260919.1",
+		"@commitlint/cli": "21.2.2",
+		"@commitlint/config-conventional": "21.2.2",
+		"@types/bun": "1.4.2",
+		"@types/node": "26.6.2",
+		"drizzle-kit": "1.0.0-rc.5-ab785fc",
+		"husky": "9.1.7",
+		"typescript": "7.0.2",
+		"wrangler": "4.135.0"
+	},
+	"dependencies": {
+		"@hono/zod-openapi": "^1.6.3",
+		"@simplewebauthn/server": "14.0.2",
+		"argon2-wasm-edge": "1.0.23",
+		"drizzle-orm": "1.0.0-rc.5-ab785fc",
+		"hono": "4.13.8",
+		"yaml": "^2.7.0",
+		"zod": "^4.6.5"
+	}
+}

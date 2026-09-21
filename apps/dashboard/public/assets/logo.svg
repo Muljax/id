@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <title>Logo</title>
+  <defs>
+    <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="50%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    <linearGradient id="inner-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a78bfa" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+  </defs>
+  <rect width="48" height="48" rx="12" fill="#18181b" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+  <rect x="2" y="2" width="44" height="44" rx="10" fill="url(#brand-grad)" fill-opacity="0.15" />
+  <path d="M24 10C18.477 10 14 14.477 14 20C14 24.125 16.5 27.666 20.086 29.176V34L24 38L27.914 34V29.176C31.5 27.666 34 24.125 34 20C34 14.477 29.523 10 24 10Z" stroke="url(#inner-grad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="24" cy="20" r="3.5" fill="url(#brand-grad)" />
+  <path d="M24 31V34" stroke="url(#inner-grad)" stroke-width="2" stroke-linecap="round" />
+</svg>

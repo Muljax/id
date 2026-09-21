@@ -1,0 +1,81 @@
+---
+title: WebAuthn & Passkeys
+description: End-user guide to registering, managing, and authenticating with passkeys in the dashboard.
+---
+
+import { Steps, Callout, DatabaseTable } from '@/components/mdx';
+
+Muljax ID provides passwordless authentication using the FIDO2 / WebAuthn standard. You can sign in using platform authenticators (such as Touch ID, Apple Face ID, or Windows Hello) or roaming hardware security keys (such as YubiKeys).
+
+## What are Passkeys?
+
+Passkeys replace traditional passwords with cryptographic public/private keypairs:
+- **Private Key**: Generated and securely stored inside your device's Secure Enclave or hardware security key. It never leaves your device.
+- **Public Key**: Sent to and stored by the server in the `passkeys` table.
+- **Phishing Resistance**: Authenticators cryptographically bind signatures to the exact website origin (e.g. `https://id.example.com`).
+
+Because WebAuthn relies on browser APIs (`navigator.credentials.create` and `navigator.credentials.get`), passkey registration and authentication take place entirely within the web browser.
+
+<DatabaseTable name="passkeys" />
+
+---
+
+## Registering a Passkey in the Dashboard
+
+<Steps>
+
+1. Log in to your account on the dashboard.
+
+2. Navigate to **Account** -> **Passkeys** (`/account/passkeys`).
+
+3. Click **Add Passkey**.
+
+4. Enter a descriptive label for your device (e.g., `"MacBook Pro Touch ID"` or `"YubiKey 5C NFC"`).
+
+5. Follow your browser and operating system prompt:
+   - For biometric login, scan your fingerprint or face when prompted.
+   - For a hardware key, insert the key into USB and tap the capacitive contact.
+
+6. The dashboard completes the WebAuthn attestation verification, and your new credential is added.
+
+</Steps>
+
+---
+
+## Authenticating with a Passkey
+
+Muljax ID supports two seamless methods to authenticate with a passkey:
+
+### 1. Browser-Native Autofill (Conditional UI)
+
+When you navigate to the sign-in page (`/login`), modern browsers (Chrome, Safari, Edge, Firefox) automatically detect supported passkeys and present them in the email field's autofill dropdown:
+
+1. Click or tap into the email / username input field.
+2. Select your saved passkey identity from the browser's autofill suggestions.
+3. Complete the biometric scan (Touch ID, Face ID, Windows Hello) or security key tap.
+4. You are instantly signed in without needing to click additional buttons.
+
+### 2. Manual Sign-In Ceremony
+
+If your browser does not support autofill or you are using a roaming security key:
+
+<Steps>
+
+1. On the login screen (`/login`), click **Sign in with a passkey**.
+
+2. When prompted by the browser, verify your biometric or tap your security key.
+
+3. Upon cryptographic challenge verification, an authenticated session cookie is set and you are redirected to the dashboard.
+
+</Steps>
+
+---
+
+## Managing Passkeys
+
+Under **Account** -> **Passkeys** (`/account/passkeys`), you can review and organize all registered authenticators:
+
+- **Passkey Label & Renaming**: Displays the friendly name of your credential. Click the **Edit** icon next to any passkey name to rename it (e.g. rename `"Passkey #1"` to `"Work MacBook Pro Touch ID"`).
+- **Added & Last Used Dates**: Shows registration time and the timestamp of your most recent sign-in with that specific credential.
+- **Revocation**: Click **Remove** to delete a lost device or retired security key. Deleting a passkey immediately removes its credential ID from the database, preventing future logins with that device.
+

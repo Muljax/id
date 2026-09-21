@@ -1,0 +1,31 @@
+{
+ "compilerOptions": {
+  "lib": ["ESNext", "DOM", "DOM.Iterable"],
+  "types": ["bun", "vite/client"],
+  "target": "ESNext",
+  "module": "Preserve",
+  "moduleResolution": "Bundler",
+  "moduleDetection": "force",
+  "jsx": "react-jsx",
+  "strict": true,
+  "noEmit": true,
+  "verbatimModuleSyntax": true,
+  "skipLibCheck": true,
+  "noFallthroughCasesInSwitch": true,
+  "noImplicitOverride": true,
+  "paths": {
+   "@/*": ["./src/*"],
+   "@components/*": ["./src/components/*"],
+   "@lib/*": ["./src/lib/*"],
+   "@hooks/*": ["./src/hooks/*"]
+  }
+ },
+ "include": [
+  "src",
+  "src/lib/navigation/virtual.d.ts",
+  "src/lib/openapi/virtual.d.ts",
+  "src/lib/schema/virtual.d.ts",
+  "src/lib/search/virtual.d.ts",
+  "vite.config.ts"
+ ]
+}

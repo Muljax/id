@@ -1,0 +1,448 @@
+---
+title: REST API Reference
+description: Complete endpoint catalog, request/response schemas, status codes, and authentication requirements for apps/api.
+---
+
+import { Badge, OpenApiEndpoint } from '@/components/mdx';
+
+This document provides an exhaustive, live reference for every HTTP endpoint implemented in `apps/api`. All endpoint specifications, parameter types, request body payloads, and response status schemas are rendered from the OpenAPI specification generated directly from the API codebase.
+
+---
+
+## Access & Security Categories
+
+| Category | Transport / Auth | CORS Policy | Scope / Target |
+| :--- | :--- | :--- | :--- |
+| **Public Protocol** | None or Basic/Bearer | `*` (Wildcard Open) | OIDC discovery, JWKS, token exchanges, and host KRL sync |
+| **Dashboard Session** | HttpOnly `session` cookie | Explicit dashboard origin only | Protected operations driven by the React management console |
+| **Administrative** | Session + RBAC permission | Explicit dashboard origin only | Operator and superadministrator endpoints (`/api/admin/*`) |
+
+---
+
+## 1. System Health
+
+### GET `/api/health`
+
+<OpenApiEndpoint method="get" path="/api/health" />
+
+---
+
+## 2. OpenSSH Certificate Authority & Host Sync
+
+Endpoints used by hosts and clients for CA public key retrieval, CRL/KRL validation, and certificate management.
+
+### GET `/api/ssh/ca/public-key`
+
+<OpenApiEndpoint method="get" path="/api/ssh/ca/public-key" />
+
+### GET `/api/ssh/ca/revoked-keys`
+
+<OpenApiEndpoint method="get" path="/api/ssh/ca/revoked-keys" />
+
+---
+
+## 3. OAuth 2.0 & OpenID Connect Core
+
+RFC 8414 discovery, JWKS public keys, token exchanges, introspection, revocation, and user claims.
+
+### GET `/.well-known/openid-configuration`
+
+<OpenApiEndpoint method="get" path="/.well-known/openid-configuration" />
+
+### GET `/.well-known/jwks.json`
+
+<OpenApiEndpoint method="get" path="/.well-known/jwks.json" />
+
+### POST `/oauth/token`
+
+<OpenApiEndpoint method="post" path="/oauth/token" />
+
+### GET `/oauth/userinfo`
+
+<OpenApiEndpoint method="get" path="/oauth/userinfo" />
+
+### POST `/oauth/userinfo`
+
+<OpenApiEndpoint method="post" path="/oauth/userinfo" />
+
+### POST `/oauth/revoke`
+
+<OpenApiEndpoint method="post" path="/oauth/revoke" />
+
+### POST `/oauth/introspect`
+
+<OpenApiEndpoint method="post" path="/oauth/introspect" />
+
+### GET `/oauth/details`
+
+<OpenApiEndpoint method="get" path="/oauth/details" />
+
+### GET `/oauth/grant`
+
+<OpenApiEndpoint method="get" path="/oauth/grant" />
+
+### POST `/oauth/approve`
+
+<OpenApiEndpoint method="post" path="/oauth/approve" />
+
+### POST `/oauth/device/code`
+
+<OpenApiEndpoint method="post" path="/oauth/device/code" />
+
+### GET `/oauth/device/details`
+
+<OpenApiEndpoint method="get" path="/oauth/device/details" />
+
+### POST `/oauth/device/approve`
+
+<OpenApiEndpoint method="post" path="/oauth/device/approve" />
+
+### POST `/oauth/device/deny`
+
+<OpenApiEndpoint method="post" path="/oauth/device/deny" />
+
+---
+
+## 4. Session & Authentication (`/api/auth`)
+
+Instance signup/signin policies, credential authentication, active session listing, session revocation, and password recovery.
+
+### GET `/api/auth/settings`
+
+<OpenApiEndpoint method="get" path="/api/auth/settings" />
+
+### POST `/api/auth/register`
+
+<OpenApiEndpoint method="post" path="/api/auth/register" />
+
+### POST `/api/auth/login`
+
+<OpenApiEndpoint method="post" path="/api/auth/login" />
+
+### POST `/api/auth/logout`
+
+<OpenApiEndpoint method="post" path="/api/auth/logout" />
+
+### GET `/api/auth/me`
+
+<OpenApiEndpoint method="get" path="/api/auth/me" />
+
+### GET `/api/auth/sessions`
+
+<OpenApiEndpoint method="get" path="/api/auth/sessions" />
+
+### POST `/api/auth/sessions/{id}/revoke`
+
+<OpenApiEndpoint method="post" path="/api/auth/sessions/{id}/revoke" />
+
+### POST `/api/auth/sessions/revoke-all`
+
+<OpenApiEndpoint method="post" path="/api/auth/sessions/revoke-all" />
+
+### POST `/api/auth/password-reset/request`
+
+<OpenApiEndpoint method="post" path="/api/auth/password-reset/request" />
+
+### GET `/api/auth/password-reset/verify`
+
+<OpenApiEndpoint method="get" path="/api/auth/password-reset/verify" />
+
+### POST `/api/auth/password-reset/confirm`
+
+<OpenApiEndpoint method="post" path="/api/auth/password-reset/confirm" />
+
+### POST `/api/auth/elevate/options`
+
+<OpenApiEndpoint method="post" path="/api/auth/elevate/options" />
+
+### POST `/api/auth/elevate/verify`
+
+<OpenApiEndpoint method="post" path="/api/auth/elevate/verify" />
+
+---
+
+## 5. WebAuthn & Passkeys (`/api/passkeys`)
+
+FIDO2 / WebAuthn passkey registration, passkey authentication ceremonies, authenticator management, and credential removal.
+
+### GET `/api/passkeys`
+
+<OpenApiEndpoint method="get" path="/api/passkeys" />
+
+### POST `/api/passkeys/register/options`
+
+<OpenApiEndpoint method="post" path="/api/passkeys/register/options" />
+
+### POST `/api/passkeys/register/verify`
+
+<OpenApiEndpoint method="post" path="/api/passkeys/register/verify" />
+
+### POST `/api/passkeys/login/options`
+
+<OpenApiEndpoint method="post" path="/api/passkeys/login/options" />
+
+### POST `/api/passkeys/login/verify`
+
+<OpenApiEndpoint method="post" path="/api/passkeys/login/verify" />
+
+### PATCH `/api/passkeys/{id}`
+
+<OpenApiEndpoint method="patch" path="/api/passkeys/{id}" />
+
+### DELETE `/api/passkeys/{id}`
+
+<OpenApiEndpoint method="delete" path="/api/passkeys/{id}" />
+
+---
+
+## 6. Account Self-Service (`/api/account`)
+
+User profile customization, avatar uploads, authorized third-party OAuth app management, password updates, and account deletion.
+
+### PATCH `/api/account/profile`
+
+<OpenApiEndpoint method="patch" path="/api/account/profile" />
+
+### GET `/api/account/avatar`
+
+<OpenApiEndpoint method="get" path="/api/account/avatar" />
+
+### PUT `/api/account/avatar`
+
+<OpenApiEndpoint method="put" path="/api/account/avatar" />
+
+### DELETE `/api/account/avatar`
+
+<OpenApiEndpoint method="delete" path="/api/account/avatar" />
+
+### GET `/api/account/oauth/grants`
+
+<OpenApiEndpoint method="get" path="/api/account/oauth/grants" />
+
+### DELETE `/api/account/oauth/grants/{clientId}`
+
+<OpenApiEndpoint method="delete" path="/api/account/oauth/grants/{clientId}" />
+
+### POST `/api/account/password`
+
+<OpenApiEndpoint method="post" path="/api/account/password" />
+
+### DELETE `/api/account`
+
+<OpenApiEndpoint method="delete" path="/api/account" />
+
+---
+
+## 7. SSH Keys & User Certificates (`/api/ssh`)
+
+SSH public key catalog, principal discovery, short-lived certificate minting, and certificate revocation.
+
+### GET `/api/ssh/keys`
+
+<OpenApiEndpoint method="get" path="/api/ssh/keys" />
+
+### POST `/api/ssh/keys`
+
+<OpenApiEndpoint method="post" path="/api/ssh/keys" />
+
+### DELETE `/api/ssh/keys/{id}`
+
+<OpenApiEndpoint method="delete" path="/api/ssh/keys/{id}" />
+
+### GET `/api/ssh/principals`
+
+<OpenApiEndpoint method="get" path="/api/ssh/principals" />
+
+### GET `/api/ssh/certs`
+
+<OpenApiEndpoint method="get" path="/api/ssh/certs" />
+
+### POST `/api/ssh/certs/issue`
+
+<OpenApiEndpoint method="post" path="/api/ssh/certs/issue" />
+
+### POST `/api/ssh/certs/{id}/revoke`
+
+<OpenApiEndpoint method="post" path="/api/ssh/certs/{id}/revoke" />
+
+---
+
+## 8. Administrative Operations (`/api/admin`)
+
+Administrative operations requiring privileged RBAC permissions or bootstrap credentials.
+
+### POST `/api/admin/bootstrap`
+
+<OpenApiEndpoint method="post" path="/api/admin/bootstrap" />
+
+### GET `/api/admin/users`
+
+<OpenApiEndpoint method="get" path="/api/admin/users" />
+
+### POST `/api/admin/users`
+
+<OpenApiEndpoint method="post" path="/api/admin/users" />
+
+### DELETE `/api/admin/users/{userId}`
+
+<OpenApiEndpoint method="delete" path="/api/admin/users/{userId}" />
+
+### POST `/api/admin/users/{userId}/password-reset-link`
+
+<OpenApiEndpoint method="post" path="/api/admin/users/{userId}/password-reset-link" />
+
+### GET `/api/admin/users/{userId}/roles`
+
+<OpenApiEndpoint method="get" path="/api/admin/users/{userId}/roles" />
+
+### PUT `/api/admin/users/{userId}/roles`
+
+<OpenApiEndpoint method="put" path="/api/admin/users/{userId}/roles" />
+
+### POST `/api/admin/users/{userId}/roles`
+
+<OpenApiEndpoint method="post" path="/api/admin/users/{userId}/roles" />
+
+### DELETE `/api/admin/users/{userId}/roles/{roleId}`
+
+<OpenApiEndpoint method="delete" path="/api/admin/users/{userId}/roles/{roleId}" />
+
+### GET `/api/admin/users/{userId}/permissions`
+
+<OpenApiEndpoint method="get" path="/api/admin/users/{userId}/permissions" />
+
+### GET `/api/admin/users/{userId}/sessions`
+
+<OpenApiEndpoint method="get" path="/api/admin/users/{userId}/sessions" />
+
+### POST `/api/admin/users/{userId}/sessions/{sessionId}/revoke`
+
+<OpenApiEndpoint method="post" path="/api/admin/users/{userId}/sessions/{sessionId}/revoke" />
+
+### POST `/api/admin/users/{userId}/sessions/revoke-all`
+
+<OpenApiEndpoint method="post" path="/api/admin/users/{userId}/sessions/revoke-all" />
+
+### POST `/api/admin/users/{userId}/lifecycle`
+
+<OpenApiEndpoint method="post" path="/api/admin/users/{userId}/lifecycle" />
+
+### GET `/api/admin/invites`
+
+<OpenApiEndpoint method="get" path="/api/admin/invites" />
+
+### POST `/api/admin/invites`
+
+<OpenApiEndpoint method="post" path="/api/admin/invites" />
+
+### DELETE `/api/admin/invites/{id}`
+
+<OpenApiEndpoint method="delete" path="/api/admin/invites/{id}" />
+
+### GET `/api/admin/roles`
+
+<OpenApiEndpoint method="get" path="/api/admin/roles" />
+
+### POST `/api/admin/roles`
+
+<OpenApiEndpoint method="post" path="/api/admin/roles" />
+
+### GET `/api/admin/roles/{id}`
+
+<OpenApiEndpoint method="get" path="/api/admin/roles/{id}" />
+
+### PATCH `/api/admin/roles/{id}`
+
+<OpenApiEndpoint method="patch" path="/api/admin/roles/{id}" />
+
+### DELETE `/api/admin/roles/{id}`
+
+<OpenApiEndpoint method="delete" path="/api/admin/roles/{id}" />
+
+### GET `/api/admin/roles/{id}/permissions`
+
+<OpenApiEndpoint method="get" path="/api/admin/roles/{id}/permissions" />
+
+### PUT `/api/admin/roles/{id}/permissions`
+
+<OpenApiEndpoint method="put" path="/api/admin/roles/{id}/permissions" />
+
+### POST `/api/admin/roles/{id}/permissions`
+
+<OpenApiEndpoint method="post" path="/api/admin/roles/{id}/permissions" />
+
+### DELETE `/api/admin/roles/{id}/permissions/{permissionId}`
+
+<OpenApiEndpoint method="delete" path="/api/admin/roles/{id}/permissions/{permissionId}" />
+
+### GET `/api/admin/permissions`
+
+<OpenApiEndpoint method="get" path="/api/admin/permissions" />
+
+### GET `/api/admin/settings`
+
+<OpenApiEndpoint method="get" path="/api/admin/settings" />
+
+### PATCH `/api/admin/settings`
+
+<OpenApiEndpoint method="patch" path="/api/admin/settings" />
+
+### GET `/api/admin/signin-keys`
+
+<OpenApiEndpoint method="get" path="/api/admin/signin-keys" />
+
+### POST `/api/admin/signin-keys`
+
+<OpenApiEndpoint method="post" path="/api/admin/signin-keys" />
+
+### DELETE `/api/admin/signin-keys/{id}`
+
+<OpenApiEndpoint method="delete" path="/api/admin/signin-keys/{id}" />
+
+---
+
+## 9. OAuth Client Management (`/oauth/clients`)
+
+Management of registered third-party OAuth2/OIDC applications.
+
+### GET `/oauth/clients`
+
+<OpenApiEndpoint method="get" path="/oauth/clients" />
+
+### POST `/oauth/clients`
+
+<OpenApiEndpoint method="post" path="/oauth/clients" />
+
+### PATCH `/oauth/clients/{id}`
+
+<OpenApiEndpoint method="patch" path="/oauth/clients/{id}" />
+
+### DELETE `/oauth/clients/{id}`
+
+<OpenApiEndpoint method="delete" path="/oauth/clients/{id}" />
+
+---
+
+## 10. Real-Time Notifications (`/api/notifications`)
+
+In-app notifications and persistent Server-Sent Events (SSE) notification stream.
+
+### GET `/api/notifications`
+
+<OpenApiEndpoint method="get" path="/api/notifications" />
+
+### GET `/api/notifications/stream`
+
+<OpenApiEndpoint method="get" path="/api/notifications/stream" />
+
+### POST `/api/notifications/read-all`
+
+<OpenApiEndpoint method="post" path="/api/notifications/read-all" />
+
+### POST `/api/notifications/{id}/read`
+
+<OpenApiEndpoint method="post" path="/api/notifications/{id}/read" />
+
+### DELETE `/api/notifications/{id}`
+
+<OpenApiEndpoint method="delete" path="/api/notifications/{id}" />

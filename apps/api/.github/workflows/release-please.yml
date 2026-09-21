@@ -1,0 +1,45 @@
+name: release-please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v5
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: node
+
+      - name: Checkout Root Monorepo
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
+        uses: actions/checkout@v4
+        with:
+          repository: Muljax/id
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.PAT || secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          submodules: true
+          fetch-depth: 0
+
+      - name: Bump API Submodule in Root
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          cd apps/api
+          git fetch origin main --tags
+          git checkout ${{ steps.release.outputs.tag_name || steps.release.outputs.sha }}
+          cd ../..
+          git add apps/api
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(api): bump api submodule to ${{ steps.release.outputs.tag_name || steps.release.outputs.version }}"
+            git push origin main
+          fi

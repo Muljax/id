@@ -1,0 +1,1 @@
+ALTER TABLE `passkey_challenges` ADD `user_id` text;

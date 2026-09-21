@@ -1,0 +1,130 @@
+---
+title: SSH Certificate Authority
+description: Managing CA public keys, monitoring issued certificates, and performing revocations.
+---
+
+import { Steps, Badge, Callout, DatabaseTable } from '@/components/mdx';
+
+The **SSH CA** administrative console (`/admin/ssh`) provides real-time visibility into your instance's OpenSSH Certificate Authority, issued client certificates, and the Key Revocation List (KRL).
+
+## Establishing Target Host Trust
+
+To establish host trust across your server fleet, target Linux hosts must be configured to trust the instance CA public key.
+
+### Retrieving the CA Public Key
+
+The CA public key is exposed as a plain OpenSSH public key string at:
+
+```http
+GET /api/ssh/ca/pubkey
+```
+
+Download the key on your target servers:
+
+```sh
+curl -fsSL https://api.example.com/api/ssh/ca/pubkey -o /etc/ssh/trusted_user_ca.pub
+chmod 644 /etc/ssh/trusted_user_ca.pub
+```
+
+Append the trust directive to `/etc/ssh/sshd_config`:
+
+```text
+TrustedUserCAKeys /etc/ssh/trusted_user_ca.pub
+```
+
+Reload `sshd`:
+
+```sh
+sudo systemctl reload sshd
+```
+
+---
+
+## Certificate Inventory & Monitoring
+
+Under **Admin** -> **SSH CA**, the certificate ledger displays all issued certificates across the tenant:
+
+- **Key ID**: The unique identity string embedded in the certificate (typically `username-timestamp`).
+- **Serial Number**: The 64-bit monotonic unsigned integer (e.g. `117284521030851699`), with full support for decimal and hex search (`0x...`).
+- **Principals**: UNIX usernames authorized by the certificate.
+- **Issuing Metadata**: Client IP address (`client_ip`) and timestamp.
+
+<DatabaseTable name="ssh_certificates" />
+
+<DatabaseTable name="user_ssh_keys" />
+
+### Certificate Lifecycle States
+
+<table>
+<thead>
+<tr>
+  <th>Status</th>
+  <th>Condition</th>
+  <th>Host SSH Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><Badge text="Active" variant="success" /></td>
+  <td>Certificate is valid, unexpired, and unrevoked.</td>
+  <td>Accepted by <code>sshd</code> for authorized principals.</td>
+</tr>
+<tr>
+  <td><Badge text="Revoked" variant="danger" /></td>
+  <td>Explicitly revoked by an administrator; recorded in dynamic KRL.</td>
+  <td>Rejected at target hosts upon KRL sync.</td>
+</tr>
+<tr>
+  <td><Badge text="Expired" variant="default" /></td>
+  <td>Validity timestamp (<code>validBefore</code>) has passed.</td>
+  <td>Target host <code>sshd</code> rejects automatically.</td>
+</tr>
+</tbody>
+</table>
+
+---
+
+## Revoking a Certificate
+
+If a user device or private key is compromised:
+
+<Steps>
+
+1. Navigate to **Admin** -> **SSH CA** (`/admin/ssh`).
+
+2. Filter certificates using the search box (supports searching by Key ID, Serial, or Principal).
+
+3. Click the red **Revoke** button on the certificate entry.
+
+4. In the confirmation modal, enter an optional audit reason (e.g., `"Lost laptop"`, `"Contract terminated"`).
+
+5. Click **Revoke certificate**.
+
+</Steps>
+
+<Callout type="note" title="Revocation Propagation">
+Revocation is instantaneous in the database. Within seconds, the serial number is served by `/api/ssh/ca/revoked-keys?format=raw` and synchronized by host systemd timers.
+</Callout>
+
+---
+
+## Principal Policies & Role Delegation
+
+By default, users receive a certificate containing their single derived UNIX username (e.g. `alice`). Administrators have full control over allowed certificate principals:
+
+- **System Administrator Principals**: Users with the `admin` role or `ssh:*` / `*` permissions automatically receive standard administrative principals (`root`, `admin`, `ubuntu`, `debian`, `ec2-user`, `wheel`) alongside their personal username.
+- **Delegated Principals**: Custom roles can grant specific principal claims via `ssh:principal:<name>` (e.g. `ssh:principal:deploy`, `ssh:principal:postgres`) or universal claims via `ssh:principal:*`.
+- **Target Host Configuration**: On target hosts, ensure the `/etc/ssh/authorized_principals` or `/etc/ssh/authorized_principals/%u` file lists the valid principals matching the local user accounts.
+
+---
+
+## Certificate Expiration & Automated Cleanup
+
+OpenSSH servers inherently validate certificate timestamps and reject expired credentials against the host system clock. 
+
+To prevent unbounded database growth and maintain compact KRL payloads, Muljax ID executes an automated scheduled background cleanup job (`cleanupExpiredCertificates` / `cleanupExpiredAuthData`):
+- **Execution Interval**: Runs periodically (hourly) via Cloudflare Workers Cron Triggers.
+- **Scope**: Purges all certificates where `validBefore <= current_timestamp`, regardless of whether the certificate was previously revoked or unrevoked.
+- **KRL Pruning**: Expired revoked serials are omitted from active KRL generation since expired certs are rejected automatically by OpenSSH without needing explicit KRL entries.
+
+

@@ -1,0 +1,77 @@
+---
+title: Notifications & Audit Trail
+description: In-app security alerts, administrative event emission, and session/certificate metadata tracking.
+---
+
+import { Badge, DatabaseTable } from '@/components/mdx';
+
+Muljax ID captures security and administrative activity across sessions, SSH certificate issuance, and user lifecycle events.
+
+## Real-Time Notification System
+
+The platform includes an event emission engine backed by the `notifications` table in Cloudflare D1.
+
+<DatabaseTable name="notifications" />
+
+### Target Audiences
+
+<table>
+<thead>
+<tr>
+  <th>Audience Channel</th>
+  <th>Target Scope</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><Badge text="user" variant="note" /></td>
+  <td>User-Specific</td>
+  <td>Targeted alerts delivered to a specific user account (e.g., password changed, passkey enrolled, certificate issued).</td>
+</tr>
+<tr>
+  <td><Badge text="admins" variant="danger" /></td>
+  <td>Administrators</td>
+  <td>High-priority security alerts broadcast to all administrators (e.g., bootstrap secret claimed, user suspended).</td>
+</tr>
+<tr>
+  <td><Badge text="all" variant="tip" /></td>
+  <td>Tenant-Wide</td>
+  <td>Broadcast announcements delivered to all active tenant accounts.</td>
+</tr>
+</tbody>
+</table>
+
+### Categories & Severities
+
+- **Categories**: `security`, `auth`, `admin`, `general`, `system`.
+- **Severities**: <Badge text="info" variant="note" /> <Badge text="success" variant="success" /> <Badge text="warning" variant="caution" /> <Badge text="danger" variant="danger" />
+
+### Real-Time Streaming (`/api/notifications/stream`)
+
+The dashboard connects to a persistent **Server-Sent Events (SSE)** stream (`GET /api/notifications/stream`) to receive live alerts and toast notifications without requiring WebSocket servers or polling.
+
+---
+
+## Forensic Audit Trails
+
+In addition to notifications, sensitive actions record forensic metadata:
+
+### 1. SSH Certificate Ledger (`ssh_certificates`)
+Every issued certificate records:
+- **Serial Number**: Monotonically generated uint64 identifier string.
+- **Key ID & Principals**: User identity and authorized server usernames.
+- **Client Network Info**: Originating IP address (`client_ip`) and User-Agent (`user_agent`).
+- **Validity Window**: Exact epoch second timestamps (`valid_after`, `valid_before`).
+- **Revocation Ledger**: When revoked, persists `revoked_at`, `revoked_by` (admin user ID), and the explicit `revoked_reason`.
+
+<DatabaseTable name="ssh_certificates" />
+
+### 2. Session Tracking (`sessions`)
+Active sessions capture:
+- **IP & Geolocation**: Client IP, country code, city, and region derived from Cloudflare Edge request headers (`cf-ipcountry`, `cf-region`, `cf-ipcity`).
+- **Client Environment**: Parsed operating system and browser name.
+- **Last Used Timestamp**: Updated on every authenticated request to detect dormant sessions.
+
+<DatabaseTable name="sessions" />
+

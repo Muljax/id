@@ -1,0 +1,5 @@
+{
+ "label": "Protocols & Wire Specs",
+ "order": 50,
+ "pages": ["oidc-oauth2", "webauthn-fido2", "openssh-ca-wire"]
+}

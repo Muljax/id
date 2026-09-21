@@ -1,0 +1,1 @@
+ALTER TABLE `sessions` ADD `elevated_until` integer;

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en" class="dark">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
+		<title>Muljax ID — Documentation</title>
+		<meta name="description" content="Production-ready identity provider, OIDC service, and short-lived OpenSSH Certificate Authority documentation." />
+
+
+
+		<style>
+			.loader {
+				width: 36px;
+				height: 36px;
+				border: 3px solid rgba(139, 92, 246, 0.15);
+				border-top-color: #8b5cf6;
+				border-radius: 50%;
+				animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+			}
+
+			@keyframes spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+		</style>
+	</head>
+
+	<body class="min-h-screen bg-zinc-950 text-zinc-100 font-sans antialiased">
+		<div id="root" class="min-h-screen bg-zinc-950">
+			<div
+				style="
+					min-height: 100vh;
+					display: grid;
+					place-items: center;
+					background: #09090b;
+				"
+			>
+				<div class="loader"></div>
+			</div>
+		</div>
+
+		<script type="module" src="/src/main.tsx"></script>
+	</body>
+</html>

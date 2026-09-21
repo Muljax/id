@@ -1,0 +1,72 @@
+---
+title: Profile, Password & Authorized Apps
+description: Managing profile details, changing passwords, and revoking third-party application access.
+---
+
+import { Steps, Callout, DatabaseTable } from '@/components/mdx';
+
+The **Account** section of the dashboard provides self-service management for personal profile attributes, passwords, and third-party application permissions.
+
+## Profile Information (`/account/profile`)
+
+Your profile information populates your OpenID Connect identity claims returned to authorized applications.
+
+### Editable Fields
+- **Display Name**: Your preferred full name.
+- **Given Name & Family Name**: First and last names.
+- **Preferred Username**: Normalized POSIX identifier used as the default principal in SSH certificates.
+- **Website & Profile URL**: Public links.
+- **Gender, Birthdate, Zoneinfo, Locale**: Standard OIDC identity claims.
+
+### Profile Avatar
+- Upload JPG, PNG, or WebP images up to 5 MB.
+- Built-in interactive cropper allows squaring and centering your avatar.
+- Avatars are stored in Cloudflare R2 and served securely at `/api/account/profile/avatar`.
+
+---
+
+## Password Management (`/account/password`)
+
+To update your account password:
+
+<Steps>
+
+1. Navigate to **Account** -> **Password** (`/account/password`).
+
+2. Enter your current password.
+
+3. Enter your new password (must be at least 8 characters).
+
+4. Click **Update Password**.
+
+</Steps>
+
+<Callout type="tip" title="Passkeys Alternative">
+If you prefer not to use passwords, you can configure one or more biometric or hardware passkeys under **Account** -> **Passkeys** for completely passwordless authentication.
+</Callout>
+
+---
+
+## Authorized Applications (`/account/authorized-apps`)
+
+Whenever you log in to an external service (such as Grafana, Nextcloud, or internal tools) using Muljax ID, an OAuth consent grant is established in the database.
+
+Under **Account** -> **Authorized Apps**:
+- **Application Title**: Name of the authorized third-party client.
+- **Approved Scopes**: Explicit list of data permissions granted to the application (e.g., `openid`, `profile`, `email`).
+- **Granted Date**: Timestamp when consent was authorized.
+- **Revocation**: Click **Revoke Access** to immediately invalidate all active access and refresh tokens held by that third-party client for your user account.
+
+---
+
+## Active Sessions (`/account/sessions`)
+
+The **Active Sessions** page (`/account/sessions`) provides live auditing and revocation tools for all active devices and browser sessions logged into your account:
+
+- **Interactive Geographic Map**: Displays a dark-themed world map with geographic pins marking every active session location. Current device pins feature emerald pulsing indicators, while secondary devices appear in indigo. Hovering over pins reveals device type, browser, IP address, and location details.
+- **Connected Devices List**: Lists each authenticated device with its operating system, browser family, approximate city/country, IP address, and creation/last active timestamps.
+- **Single Session Revocation**: Click **Revoke** on any individual device card to immediately terminate that session and invalidate its session token.
+- **Bulk Revocation**: Click **Revoke other sessions** to immediately sign out all other devices across the world while keeping your current browser session authenticated.
+
+<DatabaseTable name="sessions" />
+

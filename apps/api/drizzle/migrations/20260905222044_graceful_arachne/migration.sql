@@ -1,0 +1,1 @@
+ALTER TABLE `oauth_authorization_codes` ADD `auth_time` integer;

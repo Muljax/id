@@ -1,0 +1,71 @@
+---
+title: Introduction
+description: Overview and capabilities of the ID identity platform and OpenSSH Certificate Authority.
+---
+
+import { Card, CardGrid, Callout, Badge } from '@/components/mdx';
+
+Muljax ID is a lightweight, edge-native identity and access management system built directly on Cloudflare Workers and Cloudflare D1. It serves as both a centralized OpenID Connect (OIDC) / OAuth 2.0 provider and an enterprise-grade OpenSSH Certificate Authority (CA).
+
+## Key Capabilities
+
+<CardGrid>
+  <Card title="FIDO2 / WebAuthn Passkeys" icon="seti:lock">
+    Passwordless authentication supporting biometric authenticators (Touch ID, Windows Hello, Face ID) and hardware security tokens (YubiKeys).
+  </Card>
+  <Card title="OpenSSH Certificate Authority" icon="seti:license">
+    Native binary certificate issuing engine conforming to RFC 4251 and OpenSSH CERT01 specifications for client authentication.
+  </Card>
+  <Card title="Strict Ed25519 Cryptography" icon="padlock">
+    Enforces modern, elliptic-curve public key cryptography (`ssh-ed25519`) for user keys and CA signing operations.
+  </Card>
+  <Card title="Key Revocation List (KRL) Sync" icon="setting">
+    Dynamic revocation endpoint (`/api/ssh/ca/revoked-keys`) compatible with OpenSSH `RevokedKeys` via systemd services and timers.
+  </Card>
+  <Card title="OAuth 2.0 & OpenID Connect" icon="seti:json">
+    Compliant authorization server supporting Authorization Code Flow with PKCE (RFC 7636), JWKS key sets, and OIDC discovery.
+  </Card>
+  <Card title="User Lifecycle Workflows" icon="rocket">
+    User state machine (`active`, `disabled`) integrated with Cloudflare Workflows for delayed, durable background task execution.
+  </Card>
+</CardGrid>
+
+---
+
+## System Topology
+
+```mermaid title="Muljax ID System & Edge Topology"
+flowchart TD
+    Client["Web Browser<br/>(FIDO2 / Passkeys / SPA)"]
+    EdgeHost["Linux SSH Target Host<br/>(/etc/ssh/revoked_keys)"]
+
+    subgraph Cloudflare["Cloudflare Edge Network"]
+        Pages["apps/dashboard<br/>(Cloudflare Pages)"]
+        Worker["apps/api<br/>(Cloudflare Workers / Hono)"]
+        D1[("Cloudflare D1<br/>(Serverless SQLite)")]
+        R2[("Cloudflare R2<br/>(Profile Avatars)")]
+        Workflows["Cloudflare Workflows<br/>(Durable Delays)"]
+    end
+
+    Client -->|HTTPS / WebAuthn| Pages
+    Client -->|REST / OIDC| Worker
+    Worker -->|Drizzle ORM| D1
+    Worker -->|S3 API| R2
+    Worker -->|Durable Events| Workflows
+    EdgeHost -->|Periodic KRL Sync / HTTPS| Worker
+```
+
+<Callout type="tip" title="Edge Native & Zero Cold Starts">
+Every component of Muljax ID runs at the Cloudflare Edge within isolated V8 workers, achieving sub-millisecond p95 latency worldwide with zero dedicated database servers to manage.
+</Callout>
+
+---
+
+## Monorepo Architecture
+
+The system is structured as a Bun monorepo comprising three applications:
+
+- **`apps/api`**: Cloudflare Worker running [Hono](https://hono.dev), interfacing with Cloudflare D1 (SQLite) via [Drizzle ORM](https://orm.drizzle.team).
+- **`apps/dashboard`**: Single-Page Application (SPA) built with React 19, TanStack Router, TanStack Query, and Tailwind CSS, deployed to Cloudflare Pages.
+- **`apps/docs`**: Interactive documentation portal featuring live schema reflection and OpenAPI endpoint explorers.
+

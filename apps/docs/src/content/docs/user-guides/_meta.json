@@ -1,0 +1,11 @@
+{
+ "label": "User Guides",
+ "order": 30,
+ "pages": [
+  "passkeys",
+  "sessions",
+  "ssh-keys",
+  "ssh-certificates",
+  "client-configuration"
+ ]
+}

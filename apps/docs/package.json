@@ -1,0 +1,49 @@
+{
+	"name": "@muljax/id-docs",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "bun build.ts",
+		"preview": "vite preview",
+		"check": "bunx biome check .",
+		"check:fix": "bunx biome check . --fix",
+		"format": "bunx biome format --write .",
+		"typecheck": "bun run build && bunx tsc --noEmit",
+		"prepare": "husky"
+	},
+	"dependencies": {
+		"@mdx-js/react": "^3.1.1",
+		"@mdx-js/rollup": "^3.1.0",
+		"@shikijs/rehype": "^3.7.0",
+		"drizzle-orm": "^0.45.2",
+		"gray-matter": "^4.0.3",
+		"lucide-react": "^1.47.0",
+		"mermaid": "^12.0.0",
+		"react": "19.3.0",
+		"react-dom": "19.3.0",
+		"react-router-dom": "^7.6.0",
+		"rehype-autolink-headings": "^7.1.0",
+		"rehype-slug": "^6.0.0",
+		"remark-frontmatter": "^5.0.0",
+		"remark-gfm": "^4.0.1",
+		"remark-mdx-frontmatter": "^5.0.0",
+		"tailwindcss": "4.3.3"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.5.14",
+		"@commitlint/cli": "21.2.2",
+		"@commitlint/config-conventional": "21.2.2",
+		"@tailwindcss/typography": "^0.5.16",
+		"@tailwindcss/vite": "4.3.3",
+		"@types/bun": "^1.4.2",
+		"@types/node": "26.6.2",
+		"@types/react": "19.3.0",
+		"@types/react-dom": "19.3.0",
+		"@vitejs/plugin-react": "6.1.1",
+		"husky": "9.1.7",
+		"typescript": "7.0.2",
+		"vite": "8.3.0"
+	}
+}

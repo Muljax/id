@@ -1,0 +1,5 @@
+{
+ "label": "Getting Started",
+ "order": 20,
+ "pages": ["installation", "configuration", "initial-setup", "deployment"]
+}

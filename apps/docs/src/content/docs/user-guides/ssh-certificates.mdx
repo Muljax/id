@@ -1,0 +1,109 @@
+---
+title: Requesting Certificates
+description: How to request short-lived OpenSSH client certificates from the CA via the dashboard.
+---
+
+import { Steps, DatabaseTable } from '@/components/mdx';
+
+Traditional SSH keys require manually distributing public keys into every destination host's `~/.ssh/authorized_keys`. With the Muljax ID Certificate Authority, your public key is signed by the CA into a temporary **certificate**, granting instant access to all hosts that trust the CA.
+
+## Certificate Issuance Ceremony
+
+```mermaid title="User SSH Certificate Issuance Ceremony"
+sequenceDiagram
+    autonumber
+    actor User as User (Browser)
+    participant UI as Dashboard (/account/ssh)
+    participant API as API Worker
+    participant DB as Cloudflare D1
+    participant CA as OpenSSH CA Engine
+
+    User->>UI: Click "Get certificate" on saved Ed25519 key
+    User->>UI: Select validity duration (e.g. 8 hours)
+    UI->>API: POST /api/ssh/certs/issue { savedKeyId, ttl }
+    API->>DB: Verify active user & 'ssh:cert:issue' permission
+    API->>DB: Fetch user_ssh_keys record
+    API->>CA: Derive principals (username + admin principals if admin)
+    API->>CA: Mint RFC 4251 CERT01 wire buffer & sign with CA private key
+    API->>DB: INSERT into ssh_certificates (serial, keyId, clientIp, userAgent)
+    API-->>UI: 200 OK { certificate, serial, validBefore }
+    UI-->>User: Present modal with certificate string & copy button
+```
+
+<DatabaseTable name="ssh_certificates" />
+
+
+---
+
+## Requesting via the Dashboard
+
+<Steps>
+
+1. In the dashboard, navigate to **Account** -> **SSH Keys** (`/account/ssh`).
+
+2. Locate your registered public key.
+
+3. Click the **Get certificate** button next to the key.
+
+4. Select the desired certificate duration (defaults to 8 hours).
+
+5. Click **Issue certificate**.
+
+6. A modal opens with your signed certificate string (`ssh-ed25519-cert-v01@openssh.com ...`).
+
+7. Click **Copy certificate**.
+
+</Steps>
+
+---
+
+## Saving the Certificate
+
+Save the copied certificate to your local `~/.ssh/` directory with `-cert.pub` appended to your private key name:
+
+```sh
+cat << 'EOF' > ~/.ssh/id_ed25519-cert.pub
+<paste certificate content here>
+EOF
+chmod 644 ~/.ssh/id_ed25519-cert.pub
+```
+
+---
+
+## Inspecting the Certificate
+
+Use OpenSSH's built-in `ssh-keygen` command to inspect all fields of the generated certificate:
+
+```sh
+ssh-keygen -L -f ~/.ssh/id_ed25519-cert.pub
+```
+
+Example output:
+```text
+~/.ssh/id_ed25519-cert.pub:
+        Type: ssh-ed25519-cert-v01@openssh.com user certificate
+        Public key: ED25519 SHA256:gZ5R...
+        Signing CA: ED25519 SHA256:vT3K... (ca@id.example.com)
+        Key ID: "alice@example.com-1773767800"
+        Serial: 117284521030851699
+        Valid: from 2026-09-17T12:00:00 to 2026-09-17T20:00:00
+        Principals:
+                alice
+                deploy
+        Critical Options: (none)
+        Extensions:
+                permit-X11-forwarding
+                permit-agent-forwarding
+                permit-port-forwarding
+                permit-pty
+                permit-user-rc
+```
+
+---
+
+## Allowed Principals & Custom Claims
+
+- **Standard Accounts**: Certificates automatically include your derived username principal (e.g. `alice`).
+- **Role Delegations**: If your account is assigned roles with custom principal permissions (such as `ssh:principal:deploy` or `ssh:principal:*`), those principals will be included automatically or can be requested selectively via the API/CLI.
+- **Administrators**: System administrators automatically receive standard administration principals (`root`, `admin`, `ubuntu`, `debian`, `ec2-user`, `wheel`).
+

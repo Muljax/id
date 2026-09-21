@@ -1,0 +1,101 @@
+---
+title: Security Model
+description: Cryptographic invariants, token hashing, defense-in-depth, and isolation boundaries.
+---
+
+import { Callout, Badge, Card, CardGrid } from '@/components/mdx';
+
+Muljax ID enforces zero-trust primitives across all authentication, cryptographic signing, and session management boundaries.
+
+## Cryptographic Guarantees
+
+### Strict Ed25519 for SSH
+
+All SSH public keys and Certificate Authority keys are restricted strictly to **Ed25519** (`ssh-ed25519` / RFC 8032):
+
+- **Immunity to Timing Attacks**: Ed25519 operations execute in constant time, eliminating side-channel vulnerabilities inherent in classic RSA and ECDSA implementations.
+- **Compact Key Sizes**: 32-byte public keys and 64-byte signatures keep certificate wire sizes minimal and network transmission fast.
+- **Legacy Rejection**: Legacy RSA (`ssh-rsa`), DSA (`ssh-dss`), and NIST curves (`ecdsa-sha2-nistp256`) are rejected during key validation to prevent algorithmic downgrades.
+
+<Callout type="caution" title="Legacy Key Formats Prohibited">
+RSA and DSA public keys are strictly disallowed. Attempting to upload or sign non-Ed25519 keys returns a <code>400 Bad Request</code> with error code <code>UNSUPPORTED_ALGORITHM</code>.
+</Callout>
+
+### Token Hashing at Rest
+
+Cleartext tokens and credentials are never stored in the database:
+
+- **Session Tokens**: Transmitted via HTTP headers or cookies, but persisted in the `sessions` table exclusively as SHA-256 hashes (`token_hash`). If the database is read, active sessions cannot be spoofed.
+- **OAuth Authorization Codes & Refresh Tokens**: Persisted as SHA-256 hashes (`code_hash`, `token_hash`).
+- **Client Secrets**: Stored as cryptographic hashes (`client_secret_hash`).
+- **Passwords**: Argon2-derived password hashes with unique random salt values.
+
+<Callout type="tip" title="Database Breach Invariant">
+Even if a raw dump of Cloudflare D1 is exfiltrated, no active session, authorization code, refresh token, or client secret can be recovered in plaintext.
+</Callout>
+
+### WebAuthn Cryptographic Binding
+
+WebAuthn registrations and assertions require cryptographic proof:
+
+- **Hardware Signature Verification**: WebAuthn assertions must sign a server-generated random cryptographic challenge.
+- **Origin & RP ID Validation**: The Relying Party identifier (`rpId`) and origin must strictly match the instance domain, preventing phishing attacks.
+- **Signature Counter Monotonicity**: Sign counters returned by authenticators are checked against stored values to detect cloned authenticators.
+
+### Step-Up Authentication & In-Place Session Elevation
+
+High-consequence operations (such as permanently deleting an account or revoking all other active sessions) require real-time step-up re-authentication:
+
+- **Zero Session Bloat**: Re-authentication does not issue new session tokens or churn cookies. Instead, it elevates the active session by updating `elevated_until` in place for a 5-minute window.
+- **Hardware & Password Verification**: Elevation accepts WebAuthn biometric assertion or primary account password verification via `POST /api/auth/elevate/verify`.
+- **Automatic Privilege Decay**: Once the elevation window lapses, the session immediately returns to normal privilege levels without requiring background cleanup tasks.
+
+---
+
+## HTTP Security Headers & Edge Defense
+
+Muljax ID strictly adheres to defense-in-depth security principles across all HTTP entrypoints, including static dashboard assets and dynamic API workers:
+
+### Content Security Policy (CSP)
+The Dashboard Worker enforces a strict Content Security Policy denying unauthorized inline execution, untrusted connections, and frame hijacking:
+- **`default-src 'self'`**: All resource loading defaults to the trusted origin.
+- **`frame-ancestors 'none'`**: Completely blocks framing to eliminate clickjacking and UI redressing attacks.
+- **`object-src 'none'` & `base-uri 'self'`**: Blocks plugin execution and `<base>` injection.
+- **`connect-src 'self' ...`**: Restricts network calls to self and explicitly configured backend API origins.
+
+### Transport & Origin Protection
+- **`Strict-Transport-Security`**: Enforces HTTPS with `max-age=63072000; includeSubDomains; preload` for full browser HSTS pinning.
+- **`X-Frame-Options: DENY`**: Legacy frame-ancestor defense for older user agents.
+- **`X-Content-Type-Options: nosniff`**: Prevents MIME-confusion and drive-by download attacks.
+- **`Cross-Origin-Opener-Policy: same-origin`**: Isolates browsing contexts to protect against Spectre-style side-channel leaks.
+- **`Referrer-Policy: strict-origin-when-cross-origin`**: Restricts referrer leakage when transitioning across domains.
+- **`Permissions-Policy`**: Disables access to sensitive browser features (`camera=()`, `microphone=()`, `geolocation=()`, `payment=()`).
+
+### Sensitive Endpoint Cache Controls
+To prevent credential, token, or challenge leakage via intermediate proxies, CDNs, or browser forward/back caches, the API worker enforces strict cache-busting headers across all authentication endpoints (`/api/auth/*`, `/api/passkeys/*`, `/oauth/*`):
+
+```http
+Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+Pragma: no-cache
+Expires: 0
+```
+
+---
+
+## Isolation Boundaries
+
+<CardGrid>
+  <Card title="Cloudflare V8 Isolates" icon="seti:lock">
+    Workers execute in separate V8 isolates with zero shared memory across tenant boundaries.
+  </Card>
+  <Card title="CORS Protection" icon="seti:json">
+    All `/api/*` endpoints validate request origins against explicitly whitelisted dashboard domains.
+  </Card>
+  <Card title="Short-Lived Certificates" icon="seti:license">
+    User certificates are minted with brief validity windows (typically 8–24 hours), bounding the exposure window.
+  </Card>
+  <Card title="Instant KRL Revocation" icon="setting">
+    When an emergency revocation occurs, the serial number is appended to `/api/ssh/ca/revoked-keys` immediately.
+  </Card>
+</CardGrid>
+

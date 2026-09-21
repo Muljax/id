@@ -3,7 +3,8 @@
 	"version": "1.2.0",
 	"private": true,
 	"workspaces": [
-		"apps/*"
+		"apps/*",
+		"packages/*"
 	],
 	"scripts": {
 		"format": "bunx biome format --write . && bun --cwd=apps/api run format && bun --cwd=apps/dashboard run format && bun --cwd=apps/docs run format",

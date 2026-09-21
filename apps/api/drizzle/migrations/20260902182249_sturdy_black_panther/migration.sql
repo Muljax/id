@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `profile_image_key` text;

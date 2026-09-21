@@ -1,0 +1,178 @@
+---
+title: Role-Based Access Control (RBAC)
+description: Permissions catalog, system roles, custom roles, and authorization policies.
+---
+
+import { Badge, Callout, DatabaseTable } from '@/components/mdx';
+
+Muljax ID implements a granular, resource-based access control engine. Every administrative action and sensitive API operation is guarded by permission checks.
+
+## System Roles
+
+The system initializes three immutable system roles:
+
+<table>
+<thead>
+<tr>
+  <th>Role ID</th>
+  <th>Name</th>
+  <th>Type</th>
+  <th>Description</th>
+  <th>Default Permissions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>admin</code></td>
+  <td><strong>Administrator</strong></td>
+  <td><Badge text="System" variant="danger" /></td>
+  <td>Superadministrator with unrestricted platform access</td>
+  <td><code>["*"]</code></td>
+</tr>
+<tr>
+  <td><code>user</code></td>
+  <td><strong>User</strong></td>
+  <td><Badge text="System" variant="tip" /></td>
+  <td>Standard authenticated user self-service</td>
+  <td><code>["ssh:cert:issue", "ssh:keys:manage", "ssh:ca:read"]</code></td>
+</tr>
+<tr>
+  <td><code>everyone</code></td>
+  <td><strong>Everyone</strong></td>
+  <td><Badge text="System" variant="note" /></td>
+  <td>Universal role applied to all requests (strictly read-only)</td>
+  <td><code>["ssh:ca:read"]</code></td>
+</tr>
+</tbody>
+</table>
+
+<Callout type="tip" title="Automatic D1 Seeding">
+These three immutable system roles and all canonical permissions are seeded into Cloudflare D1 automatically on every deployment via `bun run deploy` (or explicitly with `bun run seed`). Existing roles and custom assignments are preserved safely using idempotent SQLite `INSERT OR IGNORE` clauses.
+</Callout>
+
+<DatabaseTable name="roles" />
+
+<DatabaseTable name="permissions" />
+
+---
+
+## Role & Permission Bindings
+
+<DatabaseTable name="user_roles" />
+
+<DatabaseTable name="role_permissions" />
+
+---
+
+## Permissions Catalog
+
+Permissions follow the standard `resource:action` or `resource:subresource:action` convention.
+
+### Hierarchical Wildcards
+Muljax ID supports multi-level wildcard resolution:
+- `*`: Superadministrator privilege granting access across all resources.
+- `ssh:*`: Grants all actions across all SSH resources (`ssh:ca:read`, `ssh:keys:manage`, `ssh:cert:issue`, `ssh:cert:revoke`, etc.).
+- `ssh:cert:*`: Grants all certificate-specific actions (`ssh:cert:issue`, `ssh:cert:revoke`, `ssh:cert:list`).
+- `users:*`: Grants all user management actions (`users:read`, `users:write`, `users:delete`, `users:lifecycle`, etc.).
+
+### System & Users
+- `*`: Superadministrator access across the entire platform.
+- `users:read`: View user profiles and list registered accounts.
+- `users:write`: Create, edit, and update user profile attributes.
+- `users:delete`: Permanently delete user accounts.
+- `users:lifecycle`: Enable, disable, and schedule delayed account actions.
+- `users:password-reset`: Generate password reset links and tokens.
+- `users:*`: All user management actions.
+
+### Roles & Permissions
+- `roles:read`: View existing roles and their assigned permission sets.
+- `roles:write`: Create, update, or delete custom roles.
+- `roles:assign`: Bind or unbind roles to/from users.
+- `permissions:read`: View the system permissions catalog.
+- `roles:*`: Full control over roles and permissions.
+
+### OAuth Clients
+- `oauth_clients:read`: View registered OAuth 2.0 / OIDC applications.
+- `oauth_clients:write`: Create applications, update redirect URIs, and rotate client secrets.
+- `oauth_clients:*`: Full control over OAuth applications.
+
+### SSH & Certificate Authority
+- `ssh:ca:read`: View CA public keys, fingerprints, and revocation lists.
+- `ssh:keys:manage`: Register, view, and delete personal SSH public keys.
+- `ssh:cert:issue`: Request and receive signed OpenSSH user certificates.
+- `ssh:principal:*`: Claim any UNIX principal username on issued certificates (wildcard principal scope).
+- `ssh:principal:<name>`: Claim a specific UNIX principal username on issued certificates (e.g. `ssh:principal:deploy`, `ssh:principal:postgres`).
+- `ssh:cert:list`: View global history of all issued certificates across all users.
+- `ssh:cert:revoke`: Revoke certificates and update the Key Revocation List.
+- `ssh:keys:admin`: View and delete keys belonging to other users.
+- `ssh:*`: Full control over CA, keys, certificates, and revocations.
+
+### Notifications & Settings
+- `notifications:read`: View notifications and system alerts.
+- `notifications:write`: Dismiss, mark read, or emit notifications.
+- `settings:read`: View tenant and instance configuration policies, invite tokens, and sign-in access keys.
+- `settings:write`: Modify tenant and instance configuration policies, manage sign-in access keys, and toggle signup/signin restrictions.
+
+---
+
+## Permission Ceiling Enforcement (Anti-Privilege Escalation)
+
+To prevent privilege escalation attacks across administrators and delegated operators, Muljax ID strictly enforces a **caller permission ceiling**:
+
+1. **Role Creation & Editing**: An operator cannot assign any permission to a new or existing role that the operator does not currently possess. For instance, an admin holding only `users:*` cannot create a role granting `settings:write` or `ssh:*`.
+2. **Role Assignment**: An operator cannot assign a role to any user if that role contains permissions exceeding the caller's own permissions.
+3. **Invite Token Generation**: When creating single-use invitation tokens with pre-assigned roles, the inviter cannot assign roles containing permissions outside their own permission ceiling.
+
+---
+
+## Administrator Resolution & Break-Glass Logic
+
+Certain high-privilege emergency pathways (such as bypassing the sign-in access key requirement when `signin_mode` is set to `admin_key`) determine administrator status using the `isUserAdmin` helper:
+
+```typescript
+export async function isUserAdmin(db: DrizzleD1Database, userId: string): Promise<boolean> {
+  const userRoleRecords = await db.query.userRoles.findMany({
+    where: eq(userRoles.userId, userId),
+    with: { role: { with: { rolePermissions: true } } },
+  });
+
+  const hasAdminRole = userRoleRecords.some((ur) => ur.roleId === "admin");
+  const hasWildcard = userRoleRecords.some((ur) =>
+    ur.role.rolePermissions.some((rp) => rp.permissionId === "*")
+  );
+
+  return hasAdminRole || hasWildcard;
+}
+```
+
+### Key Differences: Direct Role vs. Granular Permission
+1. **Standard API Authorizations**: Guarded by `requirePermission(perm)`. Any custom role containing `settings:write` or `users:write` can perform respective management tasks.
+2. **Break-Glass Sign-In Lockout Bypass**: Only users with the explicit `admin` role or wildcard `*` permission qualify for `isUserAdmin`. This guarantees that standard users or restricted roles cannot log in without a valid Admin Access Key when sign-in restrictions are enforced.
+
+---
+
+## Managing Roles in the Dashboard
+
+Under **Admin** -> **Roles** (`/admin/roles`):
+- **Create Custom Role**: Specify a unique slug, name, and description, and toggle individual permissions from the catalog.
+- **Assign to Users**: Assign one or more roles per user under **Admin** -> **Users** -> **Roles**. User permissions are the union of all permissions granted across assigned roles.
+- **Read-Only Constraints**: The `everyone` role is restricted; only permissions ending with `:read` can be assigned to it.
+
+---
+
+## SSH Principal Delegation & Scope Isolation
+
+By default, standard users requesting OpenSSH certificates can only claim their own derived UNIX username (e.g. `alice`). Administrators can delegate additional UNIX principals using granular RBAC permissions:
+
+1. **Specific Principals (`ssh:principal:<name>`)**:
+   - Granting `ssh:principal:deploy` allows a user to claim the `deploy` UNIX username on issued OpenSSH certificates.
+   - You can create custom roles (e.g., `Deployer`, `Database Operator`) and attach permissions such as `ssh:principal:deploy` or `ssh:principal:postgres`.
+2. **Wildcard Principals (`ssh:principal:*`)**:
+   - Granting `ssh:principal:*` allows a user to claim any valid POSIX principal (including `root`, `ubuntu`, `deploy`, `ci`, etc.).
+3. **Privilege Escalation Protection**:
+   - `ssh:principal:*` and `ssh:principal:<name>` are strictly isolated to SSH principal authorization.
+   - Holding `ssh:principal:*` **does not** grant any administrative capabilities, user management access (`users:*`), role management access (`roles:*`), CA management, key management (`ssh:keys:admin`), or certificate revocation (`ssh:cert:revoke`).
+   - Conversely, administrators holding `ssh:*` or `*` inherently possess all principal permissions.
+
+
+

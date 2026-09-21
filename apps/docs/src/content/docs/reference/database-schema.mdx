@@ -1,0 +1,152 @@
+---
+title: Database Schema Reference
+description: Comprehensive catalog of Cloudflare D1 SQLite tables, relationships, column types, and indices defined with Drizzle ORM.
+---
+
+import { DatabaseTable, DatabaseDiagram } from '@/components/mdx';
+
+Muljax ID utilizes [Cloudflare D1](https://developers.cloudflare.com/d1/) (distributed edge SQLite) managed via [Drizzle ORM](https://orm.drizzle.team). Foreign key constraints and cascading deletes (`ON DELETE CASCADE`) are strictly enabled across all relational boundaries.
+
+All table schemas, column types, default values, foreign key relations, and indices documented below are extracted directly from the application's live Drizzle ORM source code in `apps/api/src/db/schema`.
+
+---
+
+## Entity Relationship Overview
+
+<DatabaseDiagram title="Entity Relationship Diagram" />
+
+---
+
+## 1. Identity & Sessions
+
+Core subject claims, active sessions with edge geolocation telemetry, and password recovery tokens.
+
+### users
+
+<DatabaseTable name="users" />
+
+### sessions
+
+<DatabaseTable name="sessions" />
+
+### password_reset_tokens
+
+<DatabaseTable name="password_reset_tokens" />
+
+---
+
+## 2. WebAuthn & Passkeys
+
+FIDO2 / WebAuthn credentials for passwordless and multi-factor authentication ceremonies.
+
+### passkeys
+
+<DatabaseTable name="passkeys" />
+
+### passkey_challenges
+
+<DatabaseTable name="passkey_challenges" />
+
+---
+
+## 3. OpenSSH Certificate Authority
+
+OpenSSH public key management and certificate issuance audit ledger with KRL revocation tracking.
+
+### user_ssh_keys
+
+<DatabaseTable name="user_ssh_keys" />
+
+### ssh_certificates
+
+<DatabaseTable name="ssh_certificates" />
+
+---
+
+## 4. Role-Based Access Control (RBAC)
+
+System roles, granular capability flags, and many-to-many junction bindings.
+
+### roles
+
+<DatabaseTable name="roles" />
+
+### permissions
+
+<DatabaseTable name="permissions" />
+
+### user_roles
+
+<DatabaseTable name="user_roles" />
+
+### role_permissions
+
+<DatabaseTable name="role_permissions" />
+
+---
+
+## 5. OAuth 2.0 & OpenID Connect
+
+Registered client applications, user consent grants, authorization codes, and token ledgers.
+
+### oauth_clients
+
+<DatabaseTable name="oauth_clients" />
+
+### oauth_grants
+
+<DatabaseTable name="oauth_grants" />
+
+### oauth_authorization_codes
+
+<DatabaseTable name="oauth_authorization_codes" />
+
+### oauth_device_codes
+
+<DatabaseTable name="oauth_device_codes" />
+
+### oauth_access_tokens
+
+<DatabaseTable name="oauth_access_tokens" />
+
+### oauth_refresh_tokens
+
+<DatabaseTable name="oauth_refresh_tokens" />
+
+---
+
+## 6. Administrative & Onboarding
+
+Single-use invites, break-glass admin access keys, and instance security policies.
+
+### invite_tokens
+
+<DatabaseTable name="invite_tokens" />
+
+### signin_keys
+
+<DatabaseTable name="signin_keys" />
+
+### instance_settings
+
+<DatabaseTable name="instance_settings" />
+
+---
+
+## 7. Operations & Workflows
+
+Durable delayed actions and user account lifecycle workflows executed by Cloudflare Workflows.
+
+### lifecycle_actions
+
+<DatabaseTable name="lifecycle_actions" />
+
+---
+
+## 8. Real-Time Notifications
+
+Persistent notification events and real-time Server-Sent Events (SSE) stream delivery.
+
+### notifications
+
+<DatabaseTable name="notifications" />

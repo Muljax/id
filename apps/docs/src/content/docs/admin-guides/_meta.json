@@ -1,0 +1,13 @@
+{
+ "label": "Admin Guides",
+ "order": 40,
+ "pages": [
+  "rbac",
+  "ssh-ca",
+  "host-krl-sync",
+  "oauth-clients",
+  "instance-settings",
+  "user-lifecycle",
+  "audit-logging"
+ ]
+}

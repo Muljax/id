@@ -1,0 +1,42 @@
+---
+title: Muljax ID Documentation
+description: Edge-native Identity, OIDC Provider, and OpenSSH Certificate Authority
+template: splash
+hero:
+  tagline: Production-ready identity provider and SSH Certificate Authority powered by Cloudflare Workers, D1 SQLite, and React.
+  actions:
+    - text: Getting Started
+      link: /getting-started/installation/
+      icon: right-arrow
+    - text: API Reference
+      link: /reference/api/
+      icon: open-book
+      variant: minimal
+    - text: GitHub Repository
+      link: https://github.com/muljax/id
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@/components/mdx';
+
+<CardGrid stagger>
+	<Card title="Passwordless Authentication" icon="seti:lock">
+		First-class FIDO2 / WebAuthn passkeys with biometric authentication, security keys, and hardware token support.
+	</Card>
+	<Card title="OpenSSH Certificate Authority" icon="seti:license">
+		Issue short-lived, Ed25519-backed OpenSSH user certificates on the wire adhering to RFC 4251 and OpenSSH CERT01 specifications.
+	</Card>
+	<Card title="OIDC & OAuth 2.0 Provider" icon="seti:json">
+		RFC 6749 and OpenID Connect compliant with PKCE (S256), JSON Web Key Sets (JWKS), discovery metadata, and token rotation.
+	</Card>
+	<Card title="Automated KRL Synchronization" icon="setting">
+		Keep server `/etc/ssh/revoked_keys` synchronized in real-time via systemd timers and native OpenSSH revocation endpoints.
+	</Card>
+	<Card title="Cloudflare Edge Native" icon="rocket">
+		Sub-millisecond global execution via Cloudflare Workers and global D1 distributed SQLite storage.
+	</Card>
+	<Card title="Role-Based Access Control" icon="list-format">
+		Granular permissions catalog, dynamic role assignments, and background user lifecycle state machines.
+	</Card>
+</CardGrid>

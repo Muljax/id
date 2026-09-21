@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  goreleaser:
+    name: Release Go Binaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout Root Monorepo
+        uses: actions/checkout@v4
+        with:
+          repository: Muljax/id
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.PAT || secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          submodules: true
+          fetch-depth: 0
+
+      - name: Bump CLI Submodule in Root
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          cd apps/cli
+          git fetch origin main --tags
+          git checkout ${{ github.ref_name }}
+          cd ../..
+          git add apps/cli
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(cli): bump cli submodule to ${{ github.ref_name }}"
+            git push origin main
+          fi

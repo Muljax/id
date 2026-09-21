@@ -32,12 +32,13 @@ Full documentation, protocol specifications, administration manuals, and archite
 
 ## Overview
 
-The Muljax ID platform is structured as an orchestrator repository (`muljax/id`) managing centralized Terraform infrastructure and deployment orchestration, composed of three autonomous component repositories linked via Git submodules:
-- **[API (muljax/api)](https://github.com/Muljax/api)**: High-performance Hono API Worker with D1 SQLite storage, WebAuthn/Passkeys, OIDC/OAuth 2.0 provider, and OpenSSH CA engine (mounted at `apps/api`).
-- **[Dashboard (muljax/dashboard)](https://github.com/Muljax/dashboard)**: Modern Single-Page Application (SPA) built with React, Vite, and TanStack Router/Query/Form for identity and instance management (mounted at `apps/dashboard`).
-- **[Docs (muljax/docs)](https://github.com/Muljax/docs)**: Comprehensive documentation portal powered by Astro and Starlight (mounted at `apps/docs`).
+The Muljax ID platform is structured as a unified monorepo (`muljax/id`) managing centralized Cloudflare infrastructure, applications (`apps/`), and shared packages (`packages/`):
+- **API (`apps/api`)**: High-performance Hono API Worker with D1 SQLite storage, WebAuthn/Passkeys, OIDC/OAuth 2.0 provider, and OpenSSH CA engine.
+- **Dashboard (`apps/dashboard`)**: Modern Single-Page Application (SPA) built with React, Vite, and TanStack Router/Query/Form for identity and instance management.
+- **Docs (`apps/docs`)**: Comprehensive documentation portal powered by Astro and Starlight.
+- **CLI (`apps/cli`)**: Developer CLI tool for terminal authentication, SSH certificate generation, and token inspection.
 
-Infrastructure is fully automated with [Terraform](https://developer.hashicorp.com/terraform), while development, compilation, and orchestration are powered by [Bun](https://bun.sh/).
+Infrastructure is fully automated with [Terraform](https://developer.hashicorp.com/terraform), while development, compilation, and workspace orchestration are powered by [Bun](https://bun.sh/).
 
 ## API
 
@@ -84,8 +85,10 @@ apps/dashboard/
 .
 ├── apps/
 │   ├── api/          # Hono API Worker
+│   ├── cli/          # Developer CLI tool
 │   ├── dashboard/    # React + Vite dashboard
 │   └── docs/         # Astro + Starlight documentation site
+├── packages/         # Shared monorepo packages
 ├── scripts/
 │   ├── generate-tfvars.ts # Terraform variables generator
 │   ├── oidc-key.ts        # OIDC ES256 signing key generator
@@ -108,20 +111,14 @@ apps/dashboard/
 
 ### Clone & Install
  
-Clone the orchestrator repository with all submodules:
+Clone the repository:
 
 ```sh
-git clone --recursive git@github.com:Muljax/id.git
+git clone git@github.com:Muljax/id.git
 cd id
 ```
 
-If already cloned, initialize and pull the submodules:
-
-```sh
-git submodule update --init --recursive
-```
-
-Install the root orchestrator dependencies:
+Install the monorepo workspace dependencies:
 
 ```sh
 bun install

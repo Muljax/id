@@ -1,0 +1,76 @@
+---
+title: Managing SSH Keys
+description: Generating, formatting, and registering Ed25519 SSH public keys in the dashboard.
+---
+
+import { Steps, Callout, DatabaseTable } from '@/components/mdx';
+
+Before requesting an SSH certificate from the Certificate Authority, you must register your public key in your account profile.
+
+## Key Requirements
+
+The platform strictly enforces the following constraints:
+- **Algorithm**: `ssh-ed25519` exclusively. (RSA, DSA, and ECDSA keys are rejected).
+- **Public Key Only**: Never upload private keys. Only paste your `.pub` file content.
+- **Fingerprint Uniqueness**: SHA-256 fingerprints are indexed to prevent duplicate key registrations across accounts.
+
+<Callout type="caution" title="Ed25519 Requirement">
+Legacy RSA, DSA, and ECDSA keys are rejected during upload with <code>400 Bad Request</code>. Generate an Ed25519 keypair using the instructions below.
+</Callout>
+
+<DatabaseTable name="user_ssh_keys" />
+
+---
+
+## Generating an Ed25519 Keypair
+
+If you do not already have an Ed25519 key, generate one with OpenSSH's `ssh-keygen`:
+
+```sh
+ssh-keygen -t ed25519 -C "alice@example.com" -f ~/.ssh/id_ed25519
+```
+
+This command creates two files on your machine:
+- `~/.ssh/id_ed25519` (Private key — keep secret!)
+- `~/.ssh/id_ed25519.pub` (Public key — this is what you register)
+
+Display your public key content:
+
+```sh
+cat ~/.ssh/id_ed25519.pub
+```
+
+Output format:
+```text
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGfX04J5k0FvC78sT5M0tD94YvF5Jg... alice@example.com
+```
+
+---
+
+## Registering via the Dashboard
+
+<Steps>
+
+1. In the dashboard, navigate to **Account** -> **SSH Keys** (`/account/ssh`).
+
+2. Click **Add SSH Key**.
+
+3. Enter a label (e.g., `"Work Laptop M3"`).
+
+4. Paste the single-line string from `~/.ssh/id_ed25519.pub` into the **Public Key** field.
+
+5. Click **Save Key**.
+
+</Steps>
+
+The dashboard validates that the public key is a valid Ed25519 key, computes its SHA-256 fingerprint, and adds it to your registered keys.
+
+---
+
+## Removing an SSH Key
+
+To remove an obsolete or replaced key:
+1. Navigate to **Account** -> **SSH Keys**.
+2. Locate the key in the list.
+3. Click the delete (trash) icon and confirm removal.
+

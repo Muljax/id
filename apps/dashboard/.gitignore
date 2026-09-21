@@ -1,0 +1,6 @@
+dist/
+.wrangler/
+node_modules/
+*.tsbuildinfo*
+routeTree.gen.ts
+.tanstack

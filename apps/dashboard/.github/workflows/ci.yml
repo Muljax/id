@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Monorepo
+        uses: actions/checkout@v4
+        with:
+          repository: Muljax/id
+          submodules: recursive
+
+      - name: Checkout Current Dashboard
+        uses: actions/checkout@v4
+        with:
+          path: apps/dashboard
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build API types
+        run: bun --cwd=apps/api run build
+
+      - name: Check and Validate Dashboard
+        run: |
+          bun --cwd=apps/dashboard run check
+          bun --cwd=apps/dashboard run build
+          bun --cwd=apps/dashboard run typecheck

@@ -1,0 +1,78 @@
+---
+title: Installation & Prerequisites
+description: Local setup, toolchain requirements, and repository installation.
+---
+
+import { Steps, FileTree, Card, CardGrid } from '@/components/mdx';
+
+This guide covers cloning, installing, and preparing the Muljax ID repository on your local workstation.
+
+## Prerequisites
+
+Before getting started, verify that your local environment has the required toolchains:
+
+<CardGrid>
+  <Card title="Bun (>= 1.1.0)" icon="rocket">
+    Primary TypeScript runtime, package manager, and test runner.
+    ```sh
+    curl -fsSL https://bun.sh/install | bash
+    ```
+  </Card>
+  <Card title="Terraform (>= 1.5.0)" icon="setting">
+    Infrastructure-as-code deployment engine for Cloudflare.
+    ```sh
+    brew install terraform # macOS
+    ```
+  </Card>
+  <Card title="Cloudflare Account" icon="cloudflare">
+    Active account with API token permissions for Workers, D1, and Pages.
+  </Card>
+  <Card title="OpenSSH Client" icon="seti:shell">
+    Standard `ssh` and `ssh-keygen` tools for managing Ed25519 keys and certs.
+  </Card>
+</CardGrid>
+
+---
+
+## Installation Steps
+
+<Steps>
+
+1. **Clone the repository**:
+   ```sh
+   git clone https://github.com/muljax/id.git
+   cd id
+   ```
+
+2. **Install monorepo dependencies**:
+   Install all dependencies across `apps/api`, `apps/dashboard`, and `apps/docs`:
+   ```sh
+   bun install
+   ```
+
+3. **Verify type safety and linting**:
+   ```sh
+   bun run check
+   bun run typecheck
+   ```
+
+</Steps>
+
+---
+
+## Monorepo Layout
+
+<FileTree>
+- apps/
+  - api/ Cloudflare Worker API (Hono, D1 SQLite, Drizzle ORM)
+  - dashboard/ SPA console (React 19, TanStack Router, Vite)
+  - docs/ Documentation site (Astro Starlight)
+- scripts/
+  - generate-tfvars.ts Generates terraform.tfvars from .env
+  - oidc-key.ts Generates or rotates OIDC ES256 signing key
+  - ssh-ca-key.ts Generates or rotates Ed25519 SSH CA key
+  - seed-d1.ts D1 database seeder for standard permissions, roles, and clients
+- terraform/ Cloudflare infrastructure declarations
+- biome.json Monorepo linter and formatter configuration
+- package.json Workspace definitions and unified scripts
+</FileTree>

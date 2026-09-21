@@ -1,0 +1,24 @@
+{
+ "compilerOptions": {
+  "lib": ["ESNext"],
+  "types": ["bun", "@cloudflare/workers-types"],
+  "target": "ESNext",
+  "module": "Preserve",
+  "moduleResolution": "Bundler",
+  "moduleDetection": "force",
+  "strict": true,
+  "noEmit": true,
+  "verbatimModuleSyntax": true,
+  "skipLibCheck": true,
+  "noFallthroughCasesInSwitch": true,
+  "noImplicitOverride": true,
+  "paths": {
+   "@/*": ["./src/*"],
+   "@db/*": ["./src/db/*"],
+   "@lib/*": ["./src/lib/*"],
+   "@middleware/*": ["./src/middleware/*"],
+   "@routes/*": ["./src/routes/*"]
+  }
+ },
+ "include": ["./src", "./drizzle.config.ts", "./worker-configuration.d.ts"]
+}
