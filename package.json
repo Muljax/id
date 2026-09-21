@@ -18,14 +18,16 @@
 		"seed": "bun scripts/seed-d1.ts",
 		"seed:local": "bun scripts/seed-d1.ts --local",
 		"deploy": "bun run vars && bun run build && terraform -chdir=terraform apply && bun run seed",
-		"typecheck": "bun run typecheck:api && bun run typecheck:crypto && bun run typecheck:dashboard && bun run typecheck:docs",
+		"typecheck": "bun run typecheck:api && bun run typecheck:crypto && bun run typecheck:rebac && bun run typecheck:dashboard && bun run typecheck:docs",
 		"typecheck:crypto": "bun --cwd=packages/crypto run typecheck",
+		"typecheck:rebac": "bun --cwd=packages/rebac run typecheck",
 		"typecheck:dashboard": "bun --cwd=apps/dashboard run typecheck",
 		"typecheck:api": "bun --cwd=apps/api run typecheck",
 		"typecheck:docs": "bun --cwd=apps/docs run typecheck",
-		"test": "bun --cwd=apps/api test && bun --cwd=packages/crypto test",
+		"test": "bun --cwd=apps/api test && bun --cwd=packages/crypto test && bun --cwd=packages/rebac test",
 		"test:api": "bun --cwd=apps/api test",
 		"test:crypto": "bun --cwd=packages/crypto test",
+		"test:rebac": "bun --cwd=packages/rebac test",
 		"prepare": "husky"
 	},
 	"devDependencies": {
