@@ -321,7 +321,6 @@ export function MermaidModal({
 			</div>
 
 			{/* Canvas Body */}
-			{/* biome-ignore lint/a11y/noStaticElementInteractions: Interactive panning/zooming canvas */}
 			<div
 				ref={containerRef}
 				onMouseDown={handleMouseDown}

@@ -17,6 +17,7 @@
       "version": "1.7.0",
       "dependencies": {
         "@hono/zod-openapi": "^1.6.3",
+        "@id/crypto": "workspace:*",
         "@simplewebauthn/server": "14.0.2",
         "argon2-wasm-edge": "1.0.23",
         "drizzle-orm": "1.0.0-rc.5-ab785fc",
@@ -107,6 +108,18 @@
         "husky": "9.1.7",
         "typescript": "7.0.2",
         "vite": "8.3.0",
+      },
+    },
+    "packages/crypto": {
+      "name": "@id/crypto",
+      "version": "1.0.0",
+      "dependencies": {
+        "argon2-wasm-edge": "1.0.23",
+      },
+      "devDependencies": {
+        "@types/bun": "1.4.2",
+        "@types/node": "26.6.2",
+        "typescript": "7.0.2",
       },
     },
   },
@@ -298,6 +311,8 @@
     "@iconify/types": ["@iconify/types@2.0.0", "", {}, "sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg=="],
 
     "@iconify/utils": ["@iconify/utils@3.1.7", "", { "dependencies": { "@antfu/install-pkg": "^2.0.1", "@iconify/types": "^2.0.0", "import-meta-resolve": "^4.2.0" } }, "sha512-JZHlwdID+dy+lTgbYC8NEC4zeugqeYsc6jewvzb4c58kHauJn+X7rNwQjxz5p2qSjqaEeQoLkCIQ9v/H4PK0/w=="],
+
+    "@id/crypto": ["@id/crypto@workspace:packages/crypto"],
 
     "@img/colour": ["@img/colour@1.1.0", "", {}, "sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ=="],
 

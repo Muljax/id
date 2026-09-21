@@ -305,11 +305,7 @@ export async function requireElevatedSession(c: Context<AppEnv>, next: Next) {
 	}
 
 	const session = c.get("session");
-	if (
-		!session ||
-		!session.elevatedUntil ||
-		session.elevatedUntil < Date.now()
-	) {
+	if (!session?.elevatedUntil || session.elevatedUntil < Date.now()) {
 		return c.json(
 			{
 				error: "forbidden",

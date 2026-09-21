@@ -122,20 +122,18 @@ export async function createTestOAuthClient(
 	});
 
 	return {
-		client:
-			(await schema.oauthClients.$inferSelect,
-			{
-				id,
-				name: options.name || "Test Client",
-				clientType,
-				clientSecretHash,
-				redirectUris: options.redirectUris || [
-					"https://app.example.com/callback",
-				],
-				scopes: options.scopes || ["openid", "profile", "email"],
-				createdAt: now,
-				updatedAt: now,
-			}),
+		client: {
+			id,
+			name: options.name || "Test Client",
+			clientType,
+			clientSecretHash,
+			redirectUris: options.redirectUris || [
+				"https://app.example.com/callback",
+			],
+			scopes: options.scopes || ["openid", "profile", "email"],
+			createdAt: now,
+			updatedAt: now,
+		},
 		clientSecret,
 	};
 }

@@ -5,25 +5,7 @@ import { passkeyChallenges } from "../db/schema";
 
 const CHALLENGE_DURATION = 5 * 60 * 1000;
 
-/**
- * Encodes a byte array as a Base64 string.
- *
- * @param buffer The bytes to encode.
- * @returns The Base64-encoded value.
- */
-export function arrayBufferToBase64(buffer: Uint8Array): string {
-	return buffer.toBase64();
-}
-
-/**
- * Decodes a Base64 string into a byte array.
- *
- * @param value The Base64-encoded value to decode.
- * @returns The decoded byte array.
- */
-export function base64ToUint8Array(value: string) {
-	return new Uint8Array(Uint8Array.fromBase64(value));
-}
+export { arrayBufferToBase64, base64ToUint8Array } from "@id/crypto/webauthn";
 
 /**
  * Creates a passkey challenge.
