@@ -28,6 +28,7 @@
 		"test:api": "bun --cwd=apps/api test",
 		"test:crypto": "bun --cwd=packages/crypto test",
 		"test:rebac": "bun --cwd=packages/rebac test",
+		"bench:rebac": "bun --cwd=packages/rebac run bench",
 		"prepare": "husky"
 	},
 	"devDependencies": {
@@ -36,6 +37,11 @@
 		"@commitlint/config-conventional": "21.2.2",
 		"@types/bun": "1.4.2",
 		"husky": "9.1.7",
-		"typescript": "7.0.2"
+		"miniflare": "^3.20241218.0",
+		"typescript": "7.0.2",
+		"workerd": "^1.20260918.1"
+	},
+	"dependencies": {
+		"drizzle-orm": "1.0.0-rc.5-ab785fc"
 	}
 }
