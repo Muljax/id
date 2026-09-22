@@ -1,196 +1,274 @@
 import { describe, expect, test } from "bun:test";
+import {
+	assertPermissionCeiling,
+	PermissionCeilingError,
+} from "../src/ceiling";
 import { RebacEngine } from "../src/engine";
-import { defineSchema, defineType } from "../src/schema";
+import { define, is, schema } from "../src/schema";
 import { MemoryTupleStore } from "../src/store";
+import type { Tuple } from "../src/types";
+import {
+	createDocumentSchema,
+	generateCyclicKnotTuples,
+	generateDeepChainTuples,
+	generateFanOutTuples,
+} from "./helpers/fixtures";
 
-describe("@id/rebac: RebacEngine Graph Evaluation", () => {
-	const testSchema = defineSchema([
-		defineType("user", {}),
-		defineType("group", {
-			member: "direct",
-			admin: "direct",
-			effective_member: "member or admin",
-		}),
-		defineType("document", {
-			owner: "direct",
-			editor: "direct | owner",
-			viewer: "direct | editor | parent->viewer",
-			parent: "direct",
-		}),
-		defineType("folder", {
-			owner: "direct",
-			viewer: "direct | owner",
-		}),
-	]);
+describe("@id/rebac: RebacEngine Graph Resolution & Security", () => {
+	const testSchema = createDocumentSchema();
 
-	test("evaluates direct relationships", async () => {
+	test("evaluates direct role assignments in O(1)", async () => {
 		const store = new MemoryTupleStore([
-			{
-				object: "document:budget.xlsx",
-				relation: "owner",
-				subject: "user:cfo-bob",
-			},
+			{ object: "document:1", relation: "owner", subject: "user:alice" },
 		]);
-
-		const engine = new RebacEngine({ schema: testSchema, store });
-
-		const res1 = await engine.check({
-			object: "document:budget.xlsx",
-			relation: "owner",
-			subject: "user:cfo-bob",
-		});
-		expect(res1.allowed).toBe(true);
-
-		const res2 = await engine.check({
-			object: "document:budget.xlsx",
-			relation: "owner",
-			subject: "user:intern-alice",
-		});
-		expect(res2.allowed).toBe(false);
-	});
-
-	test("evaluates computed usersets (owner implies editor)", async () => {
-		const store = new MemoryTupleStore([
-			{
-				object: "document:specs.md",
-				relation: "owner",
-				subject: "user:lead-dev",
-			},
-		]);
-
 		const engine = new RebacEngine({ schema: testSchema, store });
 
 		const res = await engine.check({
-			object: "document:specs.md",
-			relation: "editor",
-			subject: "user:lead-dev",
-		});
-		expect(res.allowed).toBe(true);
-	});
-
-	test("evaluates group membership and nested usersets", async () => {
-		const store = new MemoryTupleStore([
-			{
-				object: "group:eng",
-				relation: "member",
-				subject: "user:alice",
-			},
-			{
-				object: "document:architecture.md",
-				relation: "viewer",
-				subject: "group:eng#member",
-			},
-		]);
-
-		const engine = new RebacEngine({ schema: testSchema, store });
-
-		// Alice is in group:eng -> can view architecture.md
-		const resAlice = await engine.check({
-			object: "document:architecture.md",
-			relation: "viewer",
+			object: "document:1",
+			can: "edit",
 			subject: "user:alice",
 		});
-		expect(resAlice.allowed).toBe(true);
-
-		// Bob is not in group:eng
-		const resBob = await engine.check({
-			object: "document:architecture.md",
-			relation: "viewer",
-			subject: "user:bob",
-		});
-		expect(resBob.allowed).toBe(false);
+		expect(res.allowed).toBe(true);
 	});
 
-	test("evaluates hierarchical tuple-to-userset (folder->document inheritance)", async () => {
+	test("evaluates cross-entity traversals and nested folder inheritance", async () => {
 		const store = new MemoryTupleStore([
-			{
-				object: "folder:secret-projects",
-				relation: "viewer",
-				subject: "user:cto-dan",
-			},
-			{
-				object: "document:project-apollo.doc",
-				relation: "parent",
-				subject: "folder:secret-projects",
-			},
+			{ object: "folder:root", relation: "owner", subject: "user:alice" },
+			{ object: "folder:sub", relation: "parent", subject: "folder:root" },
+			{ object: "document:1", relation: "folder", subject: "folder:sub" },
 		]);
-
 		const engine = new RebacEngine({ schema: testSchema, store });
 
 		const res = await engine.check({
-			object: "document:project-apollo.doc",
-			relation: "viewer",
-			subject: "user:cto-dan",
+			object: "document:1",
+			can: "view",
+			subject: "user:alice",
 		});
 		expect(res.allowed).toBe(true);
 	});
 
-	test("detects and avoids infinite recursive loops (cycle prevention)", async () => {
+	test("evaluates ad-hoc group sharing", async () => {
 		const store = new MemoryTupleStore([
-			{
-				object: "group:team-a",
-				relation: "member",
-				subject: "group:team-b#member",
-			},
-			{
-				object: "group:team-b",
-				relation: "member",
-				subject: "group:team-a#member",
-			},
+			{ object: "group:eng", relation: "member", subject: "user:bob" },
+			{ object: "document:1", relation: "group", subject: "group:eng" },
 		]);
-
 		const engine = new RebacEngine({ schema: testSchema, store });
 
 		const res = await engine.check({
-			object: "group:team-a",
-			relation: "member",
-			subject: "user:stranger",
+			object: "document:1",
+			can: "view",
+			subject: "user:bob",
+		});
+		expect(res.allowed).toBe(true);
+	});
+
+	test("evaluates unless exclusions (blocked overrides all grants)", async () => {
+		const store = new MemoryTupleStore([
+			{ object: "document:1", relation: "owner", subject: "user:mallory" },
+			{ object: "document:1", relation: "blocked", subject: "user:mallory" },
+		]);
+		const engine = new RebacEngine({ schema: testSchema, store });
+
+		const res = await engine.check({
+			object: "document:1",
+			can: "view",
+			subject: "user:mallory",
 		});
 		expect(res.allowed).toBe(false);
 	});
 
-	test("lists accessible objects of a type", async () => {
-		const store = new MemoryTupleStore([
-			{ object: "document:doc-1", relation: "viewer", subject: "user:alice" },
-			{ object: "document:doc-2", relation: "viewer", subject: "user:alice" },
-			{ object: "document:doc-3", relation: "viewer", subject: "user:bob" },
-		]);
+	test("evaluates self identity check", async () => {
+		const User = define("user", {
+			roles: ["active"],
+			can: {
+				edit_profile: is("self").or("active"),
+			},
+		});
+		const userSchema = schema({ User });
+		const store = new MemoryTupleStore([]);
+		const engine = new RebacEngine({ schema: userSchema, store });
 
-		const engine = new RebacEngine({ schema: testSchema, store });
-
-		const docs = await engine.listObjects({
-			objectType: "document",
-			relation: "viewer",
+		const selfRes = await engine.check({
+			object: "user:alice",
+			can: "edit_profile",
 			subject: "user:alice",
 		});
-		expect(docs).toEqual(["document:doc-1", "document:doc-2"]);
+		expect(selfRes.allowed).toBe(true);
+
+		const otherRes = await engine.check({
+			object: "user:alice",
+			can: "edit_profile",
+			subject: "user:bob",
+		});
+		expect(otherRes.allowed).toBe(false);
+	});
+
+	test("prevents infinite loops in cyclic graphs", async () => {
+		const Group = define("group", (self) => ({
+			relations: {
+				linkedGroup: self as any,
+			},
+			roles: ["direct_member"],
+			can: {
+				member: is("direct_member").or(self.linkedGroup("member")),
+			},
+		}));
+
+		const cyclicSchema = schema({ Group });
+		const store = new MemoryTupleStore(generateCyclicKnotTuples(10));
+		const engine = new RebacEngine({ schema: cyclicSchema, store });
+
+		const res = await engine.check({
+			object: "group:0",
+			can: "member",
+			subject: "user:unauthorized-stranger",
+		});
+		expect(res.allowed).toBe(false);
+	});
+
+	test("resolves deep linear hierarchy (30-hop chain)", async () => {
+		const Node = define("node", (self) => ({
+			relations: { parent: self as any },
+			roles: ["admin"],
+			can: { view: is("admin").or(self.parent("view")) },
+		}));
+		const chainSchema = schema({ Node });
+		const store = new MemoryTupleStore(
+			generateDeepChainTuples(30, "user:root-alice"),
+		);
+		const engine = new RebacEngine({
+			schema: chainSchema,
+			store,
+			maxDepth: 50,
+		});
+
+		const res = await engine.check({
+			object: "node:30",
+			can: "view",
+			subject: "user:root-alice",
+		});
+		expect(res.allowed).toBe(true);
+	});
+
+	test("evaluates high fan-out graph with 1,000 teams and subteams", async () => {
+		const Group = define("group", { roles: ["member"] });
+		const Document = define("document", (self) => ({
+			relations: { sharedWith: Group },
+			roles: ["owner"],
+			can: { view: is("owner").or(self.sharedWith(Group.member)) },
+		}));
+		const fanOutSchema = schema({ Group, Document });
+		const store = new MemoryTupleStore(
+			generateFanOutTuples(100, 10, "user:needle"),
+		);
+		const engine = new RebacEngine({ schema: fanOutSchema, store });
+
+		const res = await engine.check({
+			object: "document:mega-spec",
+			can: "view",
+			subject: "user:needle",
+		});
+		expect(res.allowed).toBe(true);
+	});
+
+	test("lists accessible objects of a given type", async () => {
+		const store = new MemoryTupleStore([
+			{ object: "document:1", relation: "owner", subject: "user:alice" },
+			{ object: "document:2", relation: "viewer", subject: "user:alice" },
+			{ object: "document:3", relation: "owner", subject: "user:bob" },
+		]);
+		const engine = new RebacEngine({ schema: testSchema, store });
+
+		const objects = await engine.listObjects({
+			objectType: "document",
+			can: "view",
+			subject: "user:alice",
+		});
+		expect(objects.sort()).toEqual(["document:1", "document:2"]);
 	});
 
 	test("evaluates contextual tuples dynamically", async () => {
 		const store = new MemoryTupleStore([]);
 		const engine = new RebacEngine({ schema: testSchema, store });
 
-		// Without context, access is denied
-		const res1 = await engine.check({
-			object: "document:dynamic.txt",
-			relation: "viewer",
-			subject: "user:guest",
-		});
-		expect(res1.allowed).toBe(false);
+		const contextualTuples: Tuple[] = [
+			{
+				object: "document:ephemeral",
+				relation: "viewer",
+				subject: "user:guest",
+			},
+		];
 
-		// With contextual tuple passed in request, access is granted
-		const res2 = await engine.check({
-			object: "document:dynamic.txt",
-			relation: "viewer",
+		const res = await engine.check({
+			object: "document:ephemeral",
+			can: "view",
 			subject: "user:guest",
-			contextualTuples: [
-				{
-					object: "document:dynamic.txt",
-					relation: "viewer",
-					subject: "user:guest",
-				},
-			],
+			contextualTuples,
 		});
-		expect(res2.allowed).toBe(true);
+		expect(res.allowed).toBe(true);
+	});
+
+	test("enforces configurable permission ceilings on tuple assignment", async () => {
+		const Org = define("org", {
+			roles: ["admin", "member"],
+		});
+		const orgSchema = schema({ Org });
+		const store = new MemoryTupleStore([
+			{ object: "org:root", relation: "admin", subject: "user:superadmin" },
+			{ object: "org:engineering", relation: "admin", subject: "user:lead" },
+			{
+				object: "org:engineering",
+				relation: "member",
+				subject: "user:developer",
+			},
+		]);
+		const engine = new RebacEngine({ schema: orgSchema, store });
+
+		const ceilingOpts = {
+			superAdmin: { object: "org:root", can: "admin" },
+			requiredAbilities: ["admin"],
+		};
+
+		// 1. Superadmin can grant on any org
+		await expect(
+			assertPermissionCeiling(
+				"user:superadmin",
+				{
+					object: "org:marketing",
+					relation: "member",
+					subject: "user:new-hire",
+				},
+				engine,
+				ceilingOpts,
+			),
+		).resolves.toBeUndefined();
+
+		// 2. Lead can grant on their own org
+		await expect(
+			assertPermissionCeiling(
+				"user:lead",
+				{
+					object: "org:engineering",
+					relation: "member",
+					subject: "user:new-hire",
+				},
+				engine,
+				ceilingOpts,
+			),
+		).resolves.toBeUndefined();
+
+		// 3. Regular developer cannot grant
+		await expect(
+			assertPermissionCeiling(
+				"user:developer",
+				{
+					object: "org:engineering",
+					relation: "admin",
+					subject: "user:new-hire",
+				},
+				engine,
+				ceilingOpts,
+			),
+		).rejects.toThrow(PermissionCeilingError);
 	});
 });

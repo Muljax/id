@@ -1,71 +1,82 @@
 import { describe, expect, test } from "bun:test";
+import { ENTERPRISE_REBAC_SCHEMA } from "../src/models/enterprise";
+import { SYSTEM_REBAC_SCHEMA } from "../src/models/system";
 import {
-	defineSchema,
-	defineType,
-	exclusion,
-	intersection,
-	parseRelationDsl,
-	tupleToUserset,
-	union,
+	define,
+	formatRuleAst,
+	is,
+	schema,
+	schemaFromAst,
+	schemaFromJSON,
 } from "../src/schema";
+import { createDocumentSchema } from "./helpers/fixtures";
 
-describe("@id/rebac: Schema & Relation DSL Parser", () => {
-	test("parses direct and computed userset DSL expressions", () => {
-		expect(parseRelationDsl("direct")).toEqual({ type: "this" });
-		expect(parseRelationDsl("this")).toEqual({ type: "this" });
-		expect(parseRelationDsl("admin")).toEqual({
-			type: "computed_userset",
-			relation: "admin",
-		});
+describe("@id/rebac: Schema DSL, AST Formatting, JSON & Mermaid", () => {
+	test("defines entities with roles, relations, and computed abilities", () => {
+		const docSchema = createDocumentSchema();
+		const doc = docSchema.getEntity("document");
+
+		expect(doc).toBeDefined();
+		expect(doc?.roles).toEqual(["owner", "editor", "viewer", "blocked"]);
+		expect(doc?.abilities.view.kind).toBe("subtract");
 	});
 
-	test("parses tuple-to-userset expressions", () => {
-		expect(parseRelationDsl("parent->viewer")).toEqual(
-			tupleToUserset("parent", "viewer"),
-		);
+	test("pretty-prints schema AST into human-readable text format", () => {
+		const docSchema = createDocumentSchema();
+		const formatted = docSchema.format();
+
+		expect(formatted).toContain("entity document {");
+		expect(formatted).toContain("roles: [owner, editor, viewer, blocked]");
+		expect(formatted).toContain("folder: folder");
+		expect(formatted).toContain("view:");
+		expect(formatted).toContain("subtract(");
+		expect(formatted).toContain('traverse(folder -> folder.ability("view"))');
 	});
 
-	test("parses union and intersection expressions", () => {
-		expect(parseRelationDsl("admin or member")).toEqual(
-			union(
-				{ type: "computed_userset", relation: "admin" },
-				{ type: "computed_userset", relation: "member" },
-			),
-		);
+	test("pretty-prints individual RuleAst nodes", () => {
+		const docSchema = createDocumentSchema();
+		const viewRule = docSchema.getEntity("document")?.abilities.view;
+		expect(viewRule).toBeDefined();
 
-		expect(parseRelationDsl("admin and member")).toEqual(
-			intersection(
-				{ type: "computed_userset", relation: "admin" },
-				{ type: "computed_userset", relation: "member" },
-			),
-		);
+		const formatted = formatRuleAst(viewRule!);
+		expect(formatted).toContain("subtract(");
+		expect(formatted).toContain('role("blocked")');
 	});
 
-	test("parses exclusion expressions", () => {
-		expect(parseRelationDsl("member and not blocked")).toEqual(
-			exclusion(
-				{ type: "computed_userset", relation: "member" },
-				{ type: "computed_userset", relation: "blocked" },
-			),
-		);
-	});
+	test("serializes schema to JSON AST and roundtrips with schemaFromJSON", () => {
+		const docSchema = createDocumentSchema();
+		const json = docSchema.toJSON(2);
 
-	test("defines multi-type schema correctly", () => {
-		const schema = defineSchema([
-			defineType("document", {
-				owner: "direct",
-				editor: "direct | owner",
-				viewer: "direct | editor | parent->viewer",
-				parent: "direct",
-			}),
-			defineType("folder", {
-				owner: "direct",
-				viewer: "direct | owner",
-			}),
+		expect(json).toContain('"document"');
+		expect(json).toContain('"kind": "subtract"');
+
+		const reloaded = schemaFromJSON(json);
+		expect(reloaded.getEntity("document")?.roles).toEqual([
+			"owner",
+			"editor",
+			"viewer",
+			"blocked",
 		]);
+		expect(reloaded.getEntity("document")?.abilities.view.kind).toBe(
+			"subtract",
+		);
+	});
 
-		expect(schema.types.document).toBeDefined();
-		expect(schema.types.folder).toBeDefined();
-		expect(schema.types.document.relations.viewer).toBeDefined();
+	test("generates valid Mermaid diagram for Core System Schema", () => {
+		const mermaid = SYSTEM_REBAC_SCHEMA.toMermaid();
+		expect(mermaid.startsWith("flowchart TD")).toBe(true);
+		expect(mermaid).toContain("subgraph organization");
+		expect(mermaid).toContain("subgraph ssh_host");
+		expect(mermaid).toContain("subgraph secret_vault");
+	});
+
+	test("generates valid Mermaid diagram for Enterprise Multi-Tier Fabric Schema", () => {
+		const mermaid = ENTERPRISE_REBAC_SCHEMA.toMermaid();
+		expect(mermaid.startsWith("flowchart TD")).toBe(true);
+		expect(mermaid).toContain("subgraph holding_company");
+		expect(mermaid).toContain("subgraph cloud_tenant");
+		expect(mermaid).toContain("subgraph iceberg_table");
+		expect(mermaid).toContain("subgraph release_gate");
+		expect(mermaid).toContain("subgraph audit_log_sink");
 	});
 });

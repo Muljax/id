@@ -24,15 +24,29 @@
 		"./store": {
 			"import": "./src/store.ts",
 			"types": "./src/store.ts"
+		},
+		"./drizzle": {
+			"import": "./src/stores/drizzle.ts",
+			"types": "./src/stores/drizzle.ts"
 		}
 	},
 	"scripts": {
 		"test": "bun test",
+		"bench": "bun bench/bench.ts",
 		"typecheck": "bunx tsc --noEmit"
+	},
+	"peerDependencies": {
+		"drizzle-orm": ">=0.30.0"
+	},
+	"peerDependenciesMeta": {
+		"drizzle-orm": {
+			"optional": true
+		}
 	},
 	"devDependencies": {
 		"@types/bun": "1.4.2",
 		"@types/node": "26.6.2",
+		"drizzle-orm": "1.0.0-rc.5-ab785fc",
 		"typescript": "7.0.2"
 	}
 }

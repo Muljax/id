@@ -1,8 +1,8 @@
 import type { ObjectRef, SubjectRef, Tuple, TupleFilter } from "./types";
 
-const OBJECT_REGEX = /^[a-zA-Z0-9_.-]+:[a-zA-Z0-9_.-]+$/;
+const OBJECT_REGEX = /^[a-zA-Z0-9_.-]+:[a-zA-Z0-9_.:/@-]+$/;
 const RELATION_REGEX = /^[a-zA-Z0-9_.-]+$/;
-const SUBJECT_REGEX = /^[a-zA-Z0-9_.-]+:[a-zA-Z0-9_.-]+(#[a-zA-Z0-9_.-]+)?$/;
+const SUBJECT_REGEX = /^[a-zA-Z0-9_.-]+:[a-zA-Z0-9_.:/@-]+(#[a-zA-Z0-9_.-]+)?$/;
 
 /**
  * Parses an object string (`<type>:<id>`) into an `ObjectRef`.

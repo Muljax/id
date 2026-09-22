@@ -1,17 +1,26 @@
-import { MemoryTupleStore } from "./store";
-import { parseObject, parseSubject } from "./tuple";
+import { createMergedStore } from "./engine/context";
+import {
+	listAccessibleObjects,
+	listMatchingSubjects,
+} from "./engine/discovery";
+import { asyncSome, evaluateRule } from "./engine/evaluator";
+import { expandUserset } from "./engine/expansion";
+import { formatObject, parseObject, parseSubject } from "./tuple";
 import type {
 	CheckRequest,
 	CheckResult,
-	ExpandRequest,
-	ListObjectsRequest,
-	ListSubjectsRequest,
-	RewriteRule,
+	RuleAst,
+	RuleExpression,
 	Schema,
 	Tuple,
 	TupleStore,
 	UsersetTreeNode,
 } from "./types";
+
+export * from "./engine/context";
+export * from "./engine/discovery";
+export * from "./engine/evaluator";
+export * from "./engine/expansion";
 
 export interface RebacEngineOptions {
 	schema: Schema;
@@ -19,16 +28,28 @@ export interface RebacEngineOptions {
 	maxDepth?: number;
 }
 
+const astIdMap = new WeakMap<object, number>();
+let nextAstId = 1;
+
+function getTargetKey(target: string | RuleAst): string {
+	if (typeof target === "string") {
+		return target;
+	}
+	let id = astIdMap.get(target);
+	if (!id) {
+		id = nextAstId++;
+		astIdMap.set(target, id);
+	}
+	return `ast#${id}`;
+}
+
 /**
- * ReBAC Graph Evaluation Engine.
- *
- * Implements Zanzibar-style recursive relationship resolution with cycle detection,
- * contextual tuple merging, and set rewrites (union, intersection, exclusion, tuple-to-userset).
+ * High-performance Zanzibar evaluation engine orchestrator.
  */
 export class RebacEngine {
-	private schema: Schema;
-	private store: TupleStore;
-	private maxDepth: number;
+	readonly schema: Schema;
+	readonly store: TupleStore;
+	readonly maxDepth: number;
 
 	constructor(options: RebacEngineOptions) {
 		this.schema = options.schema;
@@ -37,320 +58,279 @@ export class RebacEngine {
 	}
 
 	/**
-	 * Checks whether a subject has a given relationship on an object.
+	 * Evaluates whether a subject has a specific role or capability on an object.
 	 */
 	async check(request: CheckRequest): Promise<CheckResult> {
-		const visited = new Set<string>();
+		const { object, abilityOrRole, subject, contextualTuples } =
+			this.normalizeRequest(request);
+
+		const activeStack = new Set<string>();
+		const memoCache = new Map<string, boolean>();
 		let evaluatedNodes = 0;
 
-		const activeStore = request.contextualTuples?.length
-			? this.createMergedStore(request.contextualTuples)
+		const activeStore = contextualTuples?.length
+			? createMergedStore(this.store, contextualTuples)
 			: this.store;
 
+		const subjectClosureCache = new Map<string, Promise<Set<string>>>();
+
+		const getSubjectClosure = async (sub: string): Promise<Set<string>> => {
+			if (subjectClosureCache.has(sub)) {
+				return subjectClosureCache.get(sub)!;
+			}
+			const promise = (async () => {
+				const closure = new Set<string>([sub]);
+				const queue = [sub];
+				const subVisited = new Set<string>();
+
+				while (queue.length > 0) {
+					const curr = queue.shift()!;
+					if (subVisited.has(curr)) continue;
+					subVisited.add(curr);
+
+					const directTuples = await activeStore.readTuples({ subject: curr });
+					for (const t of directTuples) {
+						closure.add(t.object);
+						const usersetRef = `${t.object}#${t.relation}`;
+						closure.add(usersetRef);
+						if (!subVisited.has(usersetRef)) {
+							queue.push(usersetRef);
+						}
+						if (!subVisited.has(t.object)) {
+							queue.push(t.object);
+						}
+					}
+				}
+				return closure;
+			})();
+			subjectClosureCache.set(sub, promise);
+			return promise;
+		};
+
 		const evaluate = async (
-			object: string,
-			relation: string,
-			targetSubject: string,
+			currObj: string,
+			currTarget: string | RuleAst,
+			currSub: string,
 			depth: number,
 		): Promise<boolean> => {
 			if (depth > this.maxDepth) {
+				throw new Error(
+					`ReBAC evaluation depth limit (${this.maxDepth}) exceeded for ${currObj} on ${currSub}. Cycle detected.`,
+				);
+			}
+
+			const targetKey = getTargetKey(currTarget);
+			const memoKey = `${currObj}#${targetKey}@${currSub}`;
+
+			// 1. Instant return for already-resolved nodes (Diamond DAG memoization)
+			if (memoCache.has(memoKey)) {
+				return memoCache.get(memoKey)!;
+			}
+
+			// 2. Active Ancestor Loop Detection: If key is on active call stack, break cycle!
+			if (activeStack.has(memoKey)) {
 				return false;
 			}
 
-			const visitKey = `${object}#${relation}@${targetSubject}`;
-			if (visited.has(visitKey)) {
-				return false; // Cycle detected
-			}
-			visited.add(visitKey);
+			activeStack.add(memoKey);
 			evaluatedNodes++;
 
-			const objRef = parseObject(object);
-			const typeDef = this.schema.types[objRef.type];
+			let result = false;
+			try {
+				// Direct AST evaluation
+				if (typeof currTarget !== "string") {
+					result = await evaluateRule(
+						currTarget,
+						currObj,
+						currSub,
+						depth,
+						activeStore,
+						evaluate,
+						getSubjectClosure,
+					);
+				} else if (currTarget === "self") {
+					result = currObj === currSub;
+				} else {
+					const objRef = parseObject(currObj);
+					const entity = this.schema.getEntity(objRef.type);
 
-			// If type or relation is not defined in schema, fallback to direct lookup
-			const rule = typeDef?.relations[relation] ?? { type: "this" };
+					// Check if target is a direct Role
+					if (entity?.roles.includes(currTarget)) {
+						const tuples = await activeStore.readTuples({
+							object: currObj,
+							relation: currTarget,
+						});
 
-			return await this.evaluateRule(
-				rule,
-				object,
-				relation,
-				targetSubject,
-				depth,
-				activeStore,
-				evaluate,
-			);
-		};
+						const usersets: Tuple[] = [];
+						let directHit = false;
 
-		const allowed = await evaluate(
-			request.object,
-			request.relation,
-			request.subject,
-			0,
-		);
-
-		return {
-			allowed,
-			evaluatedNodes,
-		};
-	}
-
-	private async evaluateRule(
-		rule: RewriteRule,
-		object: string,
-		relation: string,
-		targetSubject: string,
-		depth: number,
-		store: TupleStore,
-		evaluate: (
-			obj: string,
-			rel: string,
-			sub: string,
-			d: number,
-		) => Promise<boolean>,
-	): Promise<boolean> {
-		switch (rule.type) {
-			case "this": {
-				// 1. Direct match: <object>#<relation>@<targetSubject>
-				const directTuples = await store.readTuples({
-					object,
-					relation,
-				});
-
-				for (const tuple of directTuples) {
-					if (tuple.subject === targetSubject) {
-						return true;
-					}
-
-					// 2. Userset expansion: if tuple.subject is <type>:<id>#<subRelation>,
-					// check if targetSubject is a member of that userset
-					if (tuple.subject.includes("#")) {
-						const parsed = parseSubject(tuple.subject);
-						if (parsed.relation) {
-							const parentObj = `${parsed.type}:${parsed.id}`;
-							const isMember = await evaluate(
-								parentObj,
-								parsed.relation,
-								targetSubject,
-								depth + 1,
-							);
-							if (isMember) {
-								return true;
+						for (const tuple of tuples) {
+							if (tuple.subject === currSub) {
+								directHit = true;
+								break;
+							}
+							if (tuple.subject.includes("#")) {
+								usersets.push(tuple);
 							}
 						}
-					}
-				}
 
-				return false;
-			}
+						if (directHit) {
+							result = true;
+						} else if (usersets.length === 0) {
+							result = false;
+						} else {
+							// Reverse Subject Transitive Closure Check
+							const closure = await getSubjectClosure(currSub);
+							let matchedClosure = false;
+							for (const u of usersets) {
+								const parsed = parseSubject(u.subject);
+								const baseObj = formatObject({
+									type: parsed.type,
+									id: parsed.id,
+								});
+								if (closure.has(u.subject) || closure.has(baseObj)) {
+									matchedClosure = true;
+									break;
+								}
+							}
 
-			case "computed_userset": {
-				return await evaluate(object, rule.relation, targetSubject, depth + 1);
-			}
+							if (matchedClosure) {
+								result = true;
+							} else {
+								result = await asyncSome(usersets, async (tuple) => {
+									const parsedSub = parseSubject(tuple.subject);
+									if (!parsedSub.relation) return false;
+									const usersetObj = formatObject({
+										type: parsedSub.type,
+										id: parsedSub.id,
+									});
+									return evaluate(
+										usersetObj,
+										parsedSub.relation,
+										currSub,
+										depth + 1,
+									);
+								});
+							}
+						}
+					} else {
+						// Check if target is a defined ability
+						const abilityRule = entity?.abilities[currTarget];
+						if (abilityRule) {
+							result = await evaluateRule(
+								abilityRule,
+								currObj,
+								currSub,
+								depth,
+								activeStore,
+								evaluate,
+								getSubjectClosure,
+							);
+						} else {
+							// Fallback: check direct tuple relation matching the string
+							const fallbackTuples = await activeStore.readTuples({
+								object: currObj,
+								relation: currTarget,
+							});
 
-			case "tuple_to_userset": {
-				// Find intermediate objects via tuplesetRelation
-				const intermediateTuples = await store.readTuples({
-					object,
-					relation: rule.tuplesetRelation,
-				});
-
-				for (const t of intermediateTuples) {
-					const intermediateObj = t.subject;
-					// If subject is of format `<type>:<id>`, traverse
-					if (!intermediateObj.includes("#")) {
-						const hasAccess = await evaluate(
-							intermediateObj,
-							rule.computedRelation,
-							targetSubject,
-							depth + 1,
-						);
-						if (hasAccess) {
-							return true;
+							result = fallbackTuples.some((t) => t.subject === currSub);
 						}
 					}
 				}
 
-				return false;
+				memoCache.set(memoKey, result);
+				return result;
+			} finally {
+				activeStack.delete(memoKey);
 			}
-
-			case "union": {
-				for (const child of rule.children) {
-					const ok = await this.evaluateRule(
-						child,
-						object,
-						relation,
-						targetSubject,
-						depth + 1,
-						store,
-						evaluate,
-					);
-					if (ok) {
-						return true;
-					}
-				}
-				return false;
-			}
-
-			case "intersection": {
-				for (const child of rule.children) {
-					const ok = await this.evaluateRule(
-						child,
-						object,
-						relation,
-						targetSubject,
-						depth + 1,
-						store,
-						evaluate,
-					);
-					if (!ok) {
-						return false;
-					}
-				}
-				return true;
-			}
-
-			case "exclusion": {
-				const baseOk = await this.evaluateRule(
-					rule.base,
-					object,
-					relation,
-					targetSubject,
-					depth + 1,
-					store,
-					evaluate,
-				);
-				if (!baseOk) {
-					return false;
-				}
-
-				const subtractOk = await this.evaluateRule(
-					rule.subtract,
-					object,
-					relation,
-					targetSubject,
-					depth + 1,
-					store,
-					evaluate,
-				);
-				return !subtractOk;
-			}
-		}
-	}
-
-	/**
-	 * Lists all objects of a given type accessible to a subject under a relation.
-	 */
-	async listObjects(request: ListObjectsRequest): Promise<string[]> {
-		const store = request.contextualTuples?.length
-			? this.createMergedStore(request.contextualTuples)
-			: this.store;
-
-		const candidateTuples = await store.readTuples({
-			objectType: request.objectType,
-		});
-
-		const uniqueObjects = new Set<string>();
-		for (const t of candidateTuples) {
-			uniqueObjects.add(t.object);
-		}
-
-		const allowedObjects: string[] = [];
-		for (const obj of uniqueObjects) {
-			const res = await this.check({
-				object: obj,
-				relation: request.relation,
-				subject: request.subject,
-				contextualTuples: request.contextualTuples,
-			});
-			if (res.allowed) {
-				allowedObjects.push(obj);
-			}
-		}
-
-		return allowedObjects.sort();
-	}
-
-	/**
-	 * Lists all direct and indirect subjects holding a relation on an object.
-	 */
-	async listSubjects(request: ListSubjectsRequest): Promise<string[]> {
-		const store = request.contextualTuples?.length
-			? this.createMergedStore(request.contextualTuples)
-			: this.store;
-
-		const allTuples = await store.readTuples({});
-		const candidateSubjects = new Set<string>();
-
-		for (const t of allTuples) {
-			if (!t.subject.includes("#")) {
-				if (
-					!request.subjectType ||
-					parseSubject(t.subject).type === request.subjectType
-				) {
-					candidateSubjects.add(t.subject);
-				}
-			}
-		}
-
-		const allowedSubjects: string[] = [];
-		for (const sub of candidateSubjects) {
-			const res = await this.check({
-				object: request.object,
-				relation: request.relation,
-				subject: sub,
-				contextualTuples: request.contextualTuples,
-			});
-			if (res.allowed) {
-				allowedSubjects.push(sub);
-			}
-		}
-
-		return allowedSubjects.sort();
-	}
-
-	/**
-	 * Expands an authorization relation into a userset explanation tree.
-	 */
-	async expand(request: ExpandRequest): Promise<UsersetTreeNode> {
-		const store = request.contextualTuples?.length
-			? this.createMergedStore(request.contextualTuples)
-			: this.store;
-
-		const objRef = parseObject(request.object);
-		const typeDef = this.schema.types[objRef.type];
-		const rule = typeDef?.relations[request.relation] ?? { type: "this" };
-
-		const directTuples = await store.readTuples({
-			object: request.object,
-			relation: request.relation,
-		});
-
-		return {
-			type: "leaf",
-			subjects: directTuples.map((t) => t.subject),
 		};
+
+		const allowed = await evaluate(object, abilityOrRole, subject, 0);
+		return { allowed, evaluatedNodes };
 	}
 
-	private createMergedStore(contextualTuples: Tuple[]): TupleStore {
-		const merged = new MemoryTupleStore();
-		// In an edge runtime, contextual tuples augment the base store
+	/**
+	 * Lists all objects of a given type accessible by a subject under a role or capability.
+	 */
+	async listObjects(request: {
+		objectType: string;
+		can?: string;
+		relation?: string;
+		subject: string;
+		contextualTuples?: Tuple[];
+	}): Promise<string[]> {
+		const activeStore = request.contextualTuples?.length
+			? createMergedStore(this.store, request.contextualTuples)
+			: this.store;
+
+		return listAccessibleObjects(request, activeStore, (r) => this.check(r));
+	}
+
+	/**
+	 * Lists all direct and indirect subjects with a specific role or capability on an object.
+	 */
+	async listSubjects(request: {
+		object: string;
+		can?: string;
+		relation?: string;
+		subjectType?: string;
+		contextualTuples?: Tuple[];
+	}): Promise<string[]> {
+		const activeStore = request.contextualTuples?.length
+			? createMergedStore(this.store, request.contextualTuples)
+			: this.store;
+
+		return listMatchingSubjects(request, activeStore, (r) => this.check(r));
+	}
+
+	/**
+	 * Expands the tree of subjects for a given object and relation.
+	 */
+	async expand(request: {
+		object: string;
+		relation: string;
+		contextualTuples?: Tuple[];
+	}): Promise<UsersetTreeNode> {
+		const activeStore = request.contextualTuples?.length
+			? createMergedStore(this.store, request.contextualTuples)
+			: this.store;
+
+		return expandUserset(request, activeStore);
+	}
+
+	private normalizeRequest(request: CheckRequest): {
+		object: string;
+		abilityOrRole: string | RuleAst;
+		subject: string;
+		contextualTuples?: Tuple[];
+	} {
+		if ("user" in request) {
+			const abilityOrRole: string | RuleAst =
+				typeof request.can === "string"
+					? request.can
+					: (request.can as RuleExpression).ast;
+			return {
+				object: request.on,
+				abilityOrRole,
+				subject: request.user,
+				contextualTuples: request.contextualTuples,
+			};
+		}
+
+		let object = "";
+		if ("object" in request && typeof request.object === "string") {
+			object = request.object;
+		} else {
+			const req = request as { objectType: string; objectId: string };
+			object = formatObject({ type: req.objectType, id: req.objectId });
+		}
+
+		const target = request.can || request.relation || "";
 		return {
-			readTuples: async (filter) => {
-				const baseResults = await this.store.readTuples(filter);
-				const ctxResults = await merged.readTuples(filter);
-				const seen = new Set<string>();
-				const combined: Tuple[] = [];
-				for (const t of [...baseResults, ...ctxResults, ...contextualTuples]) {
-					const k = `${t.object}#${t.relation}@${t.subject}`;
-					if (!seen.has(k)) {
-						seen.add(k);
-						combined.push(t);
-					}
-				}
-				return combined;
-			},
-			writeTuples: async (tuples) => this.store.writeTuples(tuples),
-			deleteTuples: async (tuples) => this.store.deleteTuples(tuples),
+			object,
+			abilityOrRole: target,
+			subject: request.subject,
+			contextualTuples: request.contextualTuples,
 		};
 	}
 }

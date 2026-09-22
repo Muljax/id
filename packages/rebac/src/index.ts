@@ -5,3 +5,6 @@ export * from "./store";
 export * from "./engine";
 export * from "./ceiling";
 export * from "./models/system";
+export { ENTERPRISE_REBAC_SCHEMA } from "./models/enterprise";
+export * as EnterpriseModel from "./models/enterprise";
+export * from "./stores/drizzle";
