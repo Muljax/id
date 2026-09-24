@@ -41,7 +41,7 @@
 		"@simplewebauthn/server": "14.0.2",
 		"argon2-wasm-edge": "1.0.23",
 		"drizzle-orm": "1.0.0-rc.5-ab785fc",
-		"hono": "4.13.8",
+		"hono": "4.13.9",
 		"yaml": "^2.7.0",
 		"zod": "^4.6.5"
 	}
