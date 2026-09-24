@@ -19,7 +19,7 @@
 		"@tailwindcss/vite": "4.3.3",
 		"@tanstack/react-form": "^1.33.5",
 		"@tanstack/react-query": "^5.102.8",
-		"@tanstack/react-router": "1.170.38",
+		"@tanstack/react-router": "1.170.39",
 		"hono": "4.13.8",
 		"leaflet": "^1.9.4",
 		"lucide-react": "1.47.0",
