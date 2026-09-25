@@ -33,7 +33,7 @@
 		"drizzle-kit": "1.0.0-rc.5-ab785fc",
 		"husky": "9.1.7",
 		"typescript": "7.0.2",
-		"wrangler": "4.135.0"
+		"wrangler": "4.141.0"
 	},
 	"dependencies": {
 		"@hono/zod-openapi": "^1.6.3",
